@@ -1,0 +1,175 @@
+/* ============================================================
+   FODDEB — api.js  (assets/js/services/api.js)
+   Connecteur Google Apps Script (GAS) — base de données Sheets
+   ============================================================ */
+
+'use strict';
+
+const FODDEB_API = (() => {
+
+  /* Remplacez par l'URL de votre déploiement GAS */
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJ38GiGFlEb_eboz3XD5J1BoWGWXxUB79EcDD8Iv1oMIcQ2Q1G7nZlvVmNxllPYXvubQ/exec';
+
+  /* -------- Requête générique -------- */
+  const request = async (action, payload = {}) => {
+    const body = JSON.stringify({ action, ...payload });
+    const resp = await fetch(GAS_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' }, // GAS nécessite text/plain pour éviter preflight CORS
+      body
+    });
+    if (!resp.ok) throw new Error(`Erreur réseau : ${resp.status}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  };
+
+  /* ============================================================
+     AUTHENTIFICATION
+  ============================================================ */
+  const auth = {
+    login: (identifier, passwordHash, recaptchaToken) =>
+      request('auth_login', { identifier, passwordHash, recaptchaToken }),
+
+    sendOTP: (userId, email) =>
+      request('auth_send_otp', { userId, email }),
+
+    verifyOTP: (userId, otp) =>
+      request('auth_verify_otp', { userId, otp }),
+
+    resetPassword: (email) =>
+      request('auth_reset_password', { email }),
+
+    changePassword: (userId, oldHash, newHash) =>
+      request('auth_change_password', { userId, oldHash, newHash }),
+  };
+
+  /* ============================================================
+     MEMBRES
+  ============================================================ */
+  const members = {
+    list:      (page = 1, perPage = 20, search = '') =>
+                 request('members_list', { page, perPage, search }),
+
+    get:       (id) =>
+                 request('members_get', { id }),
+
+    create:    (data) =>
+                 request('members_create', data),
+
+    update:    (id, data) =>
+                 request('members_update', { id, ...data }),
+
+    delete:    (id) =>
+                 request('members_delete', { id }),
+
+    validate:  (id) =>
+                 request('members_validate', { id }),
+
+    reject:    (id, reason) =>
+                 request('members_reject', { id, reason }),
+
+    setRole:   (id, role) =>
+                 request('members_set_role', { id, role }),
+
+    stats:     () =>
+                 request('members_stats'),
+
+    exportCSV: () =>
+                 request('members_export'),
+
+    /* Upload fichier vers Google Drive via GAS
+     * context   : 'projet' | 'membre'
+     * contextId : ID du projet ou du membre (dossier Drive cible)
+     * Retourne  : { success, url, fileName }
+     */
+    uploadFile: (base64, fileName, mimeType, context, contextId) =>
+                  request('upload_file', { base64, fileName, mimeType, context, contextId }),
+  };
+
+  /* ============================================================
+     DONS
+  ============================================================ */
+  const dons = {
+    list:      (page = 1, filters = {}) => request('dons_list', { page, ...filters }),
+    get:       (id)                     => request('dons_get', { id }),
+    create:    (data)                   => request('dons_create', data),
+    confirm:   (id, fedapayRef)         => request('dons_confirm', { id, fedapayRef }),
+    stats:     ()                       => request('dons_stats'),
+    history:   (userId)                 => request('dons_history', { userId }),
+    exportCSV: ()                       => request('dons_export'),
+  };
+
+  /* ============================================================
+     PROJETS
+  ============================================================ */
+  const projets = {
+    list:           (filters = {})   => request('projets_list', filters),
+    get:            (id)             => request('projets_get', { id }),
+    create:         (data)           => request('projets_create', data),
+    update:         (id, data)       => request('projets_update', { id, ...data }),
+    delete:         (id)             => request('projets_delete', { id }),
+    addActivity:    (projetId, data) => request('projets_add_activity', { projetId, ...data }),
+    updateProgress: (id, progress)   => request('projets_update_progress', { id, progress }),
+    stats:          ()               => request('projets_stats'),
+  };
+
+  /* ============================================================
+     ACTUALITES
+  ============================================================ */
+  const news = {
+    list:    (page = 1, perPage = 10) => request('news_list', { page, perPage }),
+    get:     (id)                     => request('news_get', { id }),
+    create:  (data)                   => request('news_create', data),
+    update:  (id, data)               => request('news_update', { id, ...data }),
+    delete:  (id)                     => request('news_delete', { id }),
+    publish: (id)                     => request('news_publish', { id }),
+  };
+
+  /* ============================================================
+     NEWSLETTER
+  ============================================================ */
+  const newsletter = {
+    subscribe:   (email, nom = '') => request('newsletter_subscribe', { email, nom }),
+    unsubscribe: (email)           => request('newsletter_unsubscribe', { email }),
+    list:        ()                => request('newsletter_list'),
+    send:        (subject, body, test = false) => request('newsletter_send', { subject, body, test }),
+    stats:       ()                => request('newsletter_stats'),
+  };
+
+  /* ============================================================
+     CONTACT
+  ============================================================ */
+  const contact = {
+    send: (data) => request('contact_send', data),
+    list: ()     => request('contact_list'),
+  };
+
+  /* ============================================================
+     TABLEAU DE BORD
+  ============================================================ */
+  const dashboard = {
+    stats:         ()                 => request('dashboard_stats'),
+    recentDons:    (limit = 5)        => request('dashboard_recent_dons', { limit }),
+    recentMembers: (limit = 5)        => request('dashboard_recent_members', { limit }),
+    chartDons:     (period = 'month') => request('dashboard_chart_dons', { period }),
+    chartMembers:  (period = 'month') => request('dashboard_chart_members', { period }),
+    alerts:        ()                 => request('dashboard_alerts'),
+  };
+
+  /* ============================================================
+     FEDAPAY — Paiement
+  ============================================================ */
+  const fedapay = {
+    initTransaction: (amount, customer, description) =>
+                       request('fedapay_init', { amount, customer, description }),
+    checkStatus:     (transactionId) =>
+                       request('fedapay_status', { transactionId }),
+  };
+
+  /* -------- Public API -------- */
+  return { auth, members, dons, projets, news, newsletter, contact, dashboard, fedapay };
+
+})();
+
+window.FODDEB_API = FODDEB_API;

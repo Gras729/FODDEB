@@ -996,6 +996,23 @@ async function submitForm() {
       createdAt:    new Date().toISOString(),
     };
 
+    // ── Test réseau direct (diagnostic) ──
+    // Vérifie que le serveur est joignable avec la même URL avant Phase 1
+    const GAS_URL = document.querySelector('script[src*="api.js"]') ? null :
+      'https://script.google.com/macros/s/AKfycbxJ38GiGFlEb_eboz3XD5J1BoWGWXxUB79EcDD8Iv1oMIcQ2Q1G7nZlvVmNxllPYXvubQ/exec';
+
+    try {
+      const ping = await fetch(
+        'https://script.google.com/macros/s/AKfycbxJ38GiGFlEb_eboz3XD5J1BoWGWXxUB79EcDD8Iv1oMIcQ2Q1G7nZlvVmNxllPYXvubQ/exec',
+        { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'members_check_email', email: 'ping@diagnostic.com' }) }
+      );
+      console.log('[DIAGNOSTIC] Ping GAS OK — status', ping.status, ping.url);
+    } catch(pingErr) {
+      console.error('[DIAGNOSTIC] Ping GAS FAILED :', pingErr.name, pingErr.message);
+      throw new Error('[Ping échoué — URL GAS peut-être expirée] ' + pingErr.message);
+    }
+
     let createResult;
     try {
       createResult = await FODDEB_API.members.create(textPayload);

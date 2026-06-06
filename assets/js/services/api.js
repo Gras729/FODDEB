@@ -3,8 +3,6 @@
    Connecteur Google Apps Script (GAS) — base de données Sheets
    ============================================================ */
 
-// Chargement automatique de config.js s'il n'est pas encore présent.
-// Evite d'ajouter une balise <script> dans chaque HTML.
 if (!window.FODDEB_CONFIG) {
   document.write('<script src="/assets/js/config.js"><\/script>');
 }
@@ -13,22 +11,18 @@ if (!window.FODDEB_CONFIG) {
 
 const FODDEB_API = (() => {
 
-  /* Remplacez par l'URL de votre déploiement GAS */
-  // URL du proxy serverless Vercel — GAS_URL est en variable d'environnement côté serveur.
-  // Ne jamais remettre l'URL GAS directement ici.
   const GAS_URL = '/api/gas';
 
-  /* -------- Requête générique — timeout 60 s -------- */
+  /* -------- Requête générique — timeout adaptatif -------- */
   const request = async (action, payload = {}, timeoutMs = 15_000) => {
     const body       = JSON.stringify({ action, ...payload });
     const controller = new AbortController();
-    // Timeout adaptatif : 15s par défaut, 30s pour les uploads Drive
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const timer      = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const resp = await fetch(GAS_URL, {
-        method:   'POST',
-        headers:  { 'Content-Type': 'text/plain' }, // simple request → pas de preflight CORS
-        signal:   controller.signal,
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        signal:  controller.signal,
         body,
       });
       clearTimeout(timer);
@@ -38,33 +32,42 @@ const FODDEB_API = (() => {
       return data;
     } catch (err) {
       clearTimeout(timer);
-      // Traduire les erreurs techniques en messages lisibles
       if (err.name === 'AbortError')
-        throw new Error('Délai dépassé (60 s). Vérifiez votre connexion et réessayez.');
+        throw new Error('Délai dépassé. Vérifiez votre connexion et réessayez.');
       if (err.message === 'Failed to fetch' || err.message === 'NetworkError when attempting to fetch resource.')
         throw new Error('Impossible de joindre le serveur. Vérifiez votre connexion internet.');
       throw err;
     }
   };
 
+  /* -------- Lecture session robuste (supporte ID/id, Role/role) -------- */
+  const getSession = () => {
+    try {
+      const u = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+      if (!u) return null;
+      return {
+        // Normalisation des clés : supporte majuscule et minuscule
+        id:   u.ID   || u.id   || '',
+        role: u.Role || u.role || 'member',
+        raw:  u,
+      };
+    } catch { return null; }
+  };
+
   /* ============================================================
      AUTHENTIFICATION
   ============================================================ */
   const auth = {
-    login: (identifier, passwordHash, recaptchaToken) =>
-      request('auth_login', { identifier, passwordHash, recaptchaToken }),
-
-    sendOTP: (userId, email) =>
-      request('auth_send_otp', { userId, email }),
-
-    verifyOTP: (userId, otp) =>
-      request('auth_verify_otp', { userId, otp }),
-
-    resetPassword: (email) =>
-      request('auth_reset_password', { email }),
-
+    login:          (identifier, passwordHash, recaptchaToken) =>
+                      request('auth_login', { identifier, passwordHash, recaptchaToken }),
+    sendOTP:        (userId, email) =>
+                      request('auth_send_otp', { userId, email }),
+    verifyOTP:      (userId, otp) =>
+                      request('auth_verify_otp', { userId, otp }),
+    resetPassword:  (email) =>
+                      request('auth_reset_password', { email }),
     changePassword: (userId, oldHash, newHash) =>
-      request('auth_change_password', { userId, oldHash, newHash }),
+                      request('auth_change_password', { userId, oldHash, newHash }),
   };
 
   /* ============================================================
@@ -73,57 +76,40 @@ const FODDEB_API = (() => {
   const members = {
     list:      (page = 1, perPage = 20, search = '') =>
                  request('members_list', { page, perPage, search }),
+    get:       (id)       => request('members_get', { id }),
+    create:    (data)     => request('members_create', data),
+    update:    (id, data) => request('members_update', { id, ...data }),
+    delete:    (id)       => request('members_delete', { id }),
+    validate:  (id)       => request('members_validate', { id }),
+    reject:    (id, reason) => request('members_reject', { id, reason }),
+    setRole:   (id, role) => request('members_set_role', { id, role }),
+    stats:     ()         => request('members_stats'),
+    exportCSV: ()         => request('members_export'),
 
-    get:       (id) =>
-                 request('members_get', { id }),
+    checkEmail: (email) => request('members_check_email', { email }),
+    checkPhone: (phone) => request('members_check_phone', { phone }),
+    checkCni:   (cni)   => request('members_check_cni',   { cni }),
 
-    create:    (data) =>
-                 request('members_create', data),
-
-    update:    (id, data) =>
-                 request('members_update', { id, ...data }),
-
-    delete:    (id) =>
-                 request('members_delete', { id }),
-
-    validate:  (id) =>
-                 request('members_validate', { id }),
-
-    reject:    (id, reason) =>
-                 request('members_reject', { id, reason }),
-
-    setRole:   (id, role) =>
-                 request('members_set_role', { id, role }),
-
-    stats:     () =>
-                 request('members_stats'),
-
-    exportCSV: () =>
-                 request('members_export'),
-
-    /* Upload fichier vers Google Drive via GAS
-     * context   : 'projet' | 'membre'
-     * contextId : ID du projet ou du membre (dossier Drive cible)
+    /* ─── Upload fichier PROJET vers Drive ─────────────────────────────
+     * FIX : renommé en uploadProjectFile pour éviter le conflit
+     * avec uploadFile (inscriptions membres).
+     * context   : 'projet'
+     * contextId : ID temporaire du projet (ex: 'proj_1717123456789')
      * Retourne  : { success, url, fileName }
      */
-    uploadFile: (base64, fileName, mimeType, context, contextId) =>
-                  request('upload_file', { base64, fileName, mimeType, context, contextId }, 30_000),
+    uploadProjectFile: (base64, fileName, mimeType, context, contextId) =>
+                         request('upload_file', { base64, fileName, mimeType, context, contextId }, 30_000),
 
-    /* Vérifications d'unicité — appels légers, pas de fichier */
-    checkEmail: (email) =>
-                  request('members_check_email', { email }),
-    checkPhone: (phone) =>
-                  request('members_check_phone', { phone }),
-    checkCni:   (cni)   =>
-                  request('members_check_cni',   { cni }),
-
-    /* Phase 2 — upload fichier individuel après création du compte */
+    /* ─── Upload fichier INSCRIPTION membre ────────────────────────────
+     * Phase 2 inscription — upload photo/CNI après création du compte
+     * memberId : ID du membre dans la feuille Membres
+     * fileType : 'photo' | 'cni' | 'autre'
+     */
     uploadFile: (memberId, fileType, base64, mime) =>
-                  request('member_upload_file',  { memberId, fileType, base64, mime }, 30_000),
+                  request('member_upload_file', { memberId, fileType, base64, mime }, 30_000),
 
     /* Phase 3 — email admin après tous les uploads */
-    finalize:   (memberId) =>
-                  request('member_finalize',     { memberId }),
+    finalize: (memberId) => request('member_finalize', { memberId }),
   };
 
   /* ============================================================
@@ -131,68 +117,73 @@ const FODDEB_API = (() => {
   ============================================================ */
   const dons = {
     list:      (page = 1, filters = {}) => request('dons_list', { page, ...filters }),
-    get:       (id)                     => request('dons_get', { id }),
-    create:    (data)                   => request('dons_create', data),
-    confirm:   (id, fedapayRef)         => request('dons_confirm', { id, fedapayRef }),
-    stats:     ()                       => request('dons_stats'),
-    history:   (userId)                 => request('dons_history', { userId }),
-    exportCSV: ()                       => request('dons_export'),
+    get:       (id)               => request('dons_get', { id }),
+    create:    (data)             => request('dons_create', data),
+    confirm:   (id, fedapayRef)   => request('dons_confirm', { id, fedapayRef }),
+    stats:     ()                 => request('dons_stats'),
+    history:   (userId)           => request('dons_history', { userId }),
+    exportCSV: ()                 => request('dons_export'),
   };
 
   /* ============================================================
      PROJETS
   ============================================================ */
   const projets = {
-    list:           (filters = {})   => {
-      // Injecter automatiquement membreId et role depuis la session
-      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+    list: (filters = {}) => {
+      /* Injection automatique membreId + role depuis session.
+       * getSession() normalise ID/id et Role/role → pas de '' silencieux. */
+      const sess = getSession();
       return request('projets_list', {
-        membreId: (user && user.ID)   || '',
-        role:     (user && user.Role) || 'member',
+        membreId: sess ? sess.id   : '',
+        role:     sess ? sess.role : 'member',
         ...filters,
       });
     },
-    get:            (id)             => request('projets_get', { id }),
-    create:         (data)           => {
-      // Injecter automatiquement membreId depuis la session
-      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+
+    get: (id) => request('projets_get', { id }),
+
+    create: (data) => {
+      const sess = getSession();
       return request('projets_create', {
-        membreId: (user && user.ID) || '',
+        membreId: sess ? sess.id : '',
         ...data,
       });
     },
-    update:         (id, data)       => {
-      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+
+    update: (id, data) => {
+      const sess = getSession();
       return request('projets_update', {
         id,
-        membreId: (user && user.ID)   || '',
-        role:     (user && user.Role) || 'member',
+        membreId: sess ? sess.id   : '',
+        role:     sess ? sess.role : 'member',
         ...data,
       });
     },
-    delete:         (id)             => {
-      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+
+    delete: (id) => {
+      const sess = getSession();
       return request('projets_delete', {
         id,
-        membreId: (user && user.ID)   || '',
-        role:     (user && user.Role) || 'member',
+        membreId: sess ? sess.id   : '',
+        role:     sess ? sess.role : 'member',
       });
     },
+
     addActivity:    (projetId, data) => request('projets_add_activity', { projetId, ...data }),
     updateProgress: (id, progress)   => request('projets_update_progress', { id, progress }),
     stats:          ()               => request('projets_stats'),
   };
 
   /* ============================================================
-     ACTUALITES
+     ACTUALITÉS
   ============================================================ */
   const news = {
     list:    (page = 1, perPage = 10) => request('news_list', { page, perPage }),
-    get:     (id)                     => request('news_get', { id }),
-    create:  (data)                   => request('news_create', data),
-    update:  (id, data)               => request('news_update', { id, ...data }),
-    delete:  (id)                     => request('news_delete', { id }),
-    publish: (id)                     => request('news_publish', { id }),
+    get:     (id)       => request('news_get', { id }),
+    create:  (data)     => request('news_create', data),
+    update:  (id, data) => request('news_update', { id, ...data }),
+    delete:  (id)       => request('news_delete', { id }),
+    publish: (id)       => request('news_publish', { id }),
   };
 
   /* ============================================================
@@ -236,7 +227,6 @@ const FODDEB_API = (() => {
                        request('fedapay_status', { transactionId }),
   };
 
-  /* -------- Public API -------- */
   return { auth, members, dons, projets, news, newsletter, contact, dashboard, fedapay };
 
 })();

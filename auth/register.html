@@ -970,52 +970,59 @@ async function submitForm() {
       );
     }
 
-    btn.innerHTML = '<span class="spinner"></span> Envoi du dossier…';
+    // ══════════════════════════════════════════════════
+    // PHASE 1 — Envoi des champs texte uniquement (< 2 Ko)
+    // ══════════════════════════════════════════════════
+    btn.innerHTML = '<span class="spinner"></span> Création du compte…';
 
-    // ── Payload — noms alignés sur membersCreate() dans Member.gs ──
-    const formData = {
-      prenom:          document.getElementById('prenom').value.trim(),
-      nom:             document.getElementById('nom').value.trim(),
-      email:           document.getElementById('email').value.trim(),
-      telephone:       document.getElementById('telephone').value.trim(),
-      genre:           document.getElementById('genre').value,
-      typeMemb:        document.querySelector('input[name="typeMemb"]:checked')?.value,
-      organisation:    document.getElementById('orgNom').value.trim(),
-      poste:           document.getElementById('poste').value.trim(),
-      departement:     document.getElementById('departement').value,
-      domaine:         document.getElementById('domaine').value,
-      motivation:      document.getElementById('motivation').value.trim(),
-      username:        document.getElementById('username').value.trim(),
-      cniNum:          document.getElementById('cniNum').value.trim(),
-      newsletter:      document.getElementById('newsletter_opt').checked,
-      passwordHash:    pwdHash,
-      statut:          'pending',
-      // Pièces jointes — noms exacts attendus par Member.gs
-      photoBase64:     photoB64,
-      photoMime:       FILES.photo.type.startsWith('image/') ? 'image/jpeg' : FILES.photo.type,
-      cniBase64:       cniB64,
-      cniMime:         FILES.cni.type,
-      recepissBase64:  recepB64,
-      recepissMime:    FILES.recepisse.type,
-      signatureBase64: signatureB64,
+    const textPayload = {
+      prenom:       document.getElementById('prenom').value.trim(),
+      nom:          document.getElementById('nom').value.trim(),
+      email:        document.getElementById('email').value.trim(),
+      telephone:    document.getElementById('telephone').value.trim(),
+      genre:        document.getElementById('genre').value,
+      typeMemb:     document.querySelector('input[name="typeMemb"]:checked')?.value,
+      organisation: document.getElementById('orgNom').value.trim(),
+      poste:        document.getElementById('poste').value.trim(),
+      departement:  document.getElementById('departement').value,
+      domaine:      document.getElementById('domaine').value,
+      motivation:   document.getElementById('motivation').value.trim(),
+      username:     document.getElementById('username').value.trim(),
+      cniNum:       document.getElementById('cniNum').value.trim(),
+      newsletter:   document.getElementById('newsletter_opt').checked,
+      passwordHash: pwdHash,
+      statut:       'pending',
       recaptchaToken,
-      createdAt:       new Date().toISOString(),
+      createdAt:    new Date().toISOString(),
     };
 
-    // ── Diagnostic taille payload ──
-    const payloadStr  = JSON.stringify({ action: 'members_create', ...formData });
-    const payloadMo   = (new Blob([payloadStr]).size / 1024 / 1024).toFixed(2);
-    console.log('[FODDEB] Payload size : ' + payloadMo + ' Mo');
-    if (parseFloat(payloadMo) > 10) {
-      throw new Error(
-        'Dossier trop volumineux (' + payloadMo + ' Mo, max 10 Mo). ' +
-        'Réduisez la taille des fichiers (PDF max 3 Mo, photo max 2 Mo) et réessayez.'
-      );
+    const createResult = await FODDEB_API.members.create(textPayload);
+    if (!createResult.success) throw new Error(createResult.error || "Erreur lors de la création du compte");
+    const memberId = createResult.id;
+
+    // ══════════════════════════════════════════════════
+    // PHASE 2 — Upload des fichiers un par un (~1–4 Mo chacun)
+    // ══════════════════════════════════════════════════
+    const uploads = [
+      { type: 'photo',     b64: photoB64,    mime: FILES.photo.type.startsWith('image/') ? 'image/jpeg' : FILES.photo.type },
+      { type: 'cni',       b64: cniB64,      mime: FILES.cni.type },
+      { type: 'recepiss',  b64: recepB64,    mime: FILES.recepisse.type },
+      { type: 'signature', b64: signatureB64, mime: 'image/png' },
+    ];
+
+    for (let i = 0; i < uploads.length; i++) {
+      const { type, b64, mime } = uploads[i];
+      if (!b64) continue;
+      btn.innerHTML = '<span class="spinner"></span> Envoi des fichiers (' + (i + 1) + '/4)…';
+      const upResult = await FODDEB_API.members.uploadFile(memberId, type, b64, mime);
+      if (!upResult.success) throw new Error('Erreur upload ' + type + ' : ' + upResult.error);
     }
 
-    // ── Appel API GAS ──
-    const result = await FODDEB_API.members.create(formData);
-    if (!result.success) throw new Error(result.error || "Erreur lors de l'inscription");
+    // ══════════════════════════════════════════════════
+    // PHASE 3 — Finalisation : email admin avec tous les liens Drive
+    // ══════════════════════════════════════════════════
+    btn.innerHTML = '<span class="spinner"></span> Finalisation…';
+    await FODDEB_API.members.finalize(memberId);
 
     document.getElementById('regFormWrap').style.display = 'none';
     document.getElementById('regSuccess').classList.add('visible');

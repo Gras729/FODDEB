@@ -109,6 +109,14 @@ const FODDEB_API = (() => {
                   request('members_check_phone', { phone }),
     checkCni:   (cni)   =>
                   request('members_check_cni',   { cni }),
+
+    /* Phase 2 — upload fichier individuel après création du compte */
+    uploadFile: (memberId, fileType, base64, mime) =>
+                  request('member_upload_file',  { memberId, fileType, base64, mime }),
+
+    /* Phase 3 — email admin après tous les uploads */
+    finalize:   (memberId) =>
+                  request('member_finalize',     { memberId }),
   };
 
   /* ============================================================

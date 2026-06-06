@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rejoindre le reseau — FODDEB</title>
+  <title>Rejoindre le réseau — FODDEB</title>
   <link rel="manifest" href="/manifest.json"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -145,6 +145,16 @@
     .btn-next:disabled,.btn-submit:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;}
     .spinner{width:17px;height:17px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
     @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes shake{
+      0%,100%{transform:translateX(0)}
+      15%    {transform:translateX(-7px)}
+      30%    {transform:translateX( 7px)}
+      45%    {transform:translateX(-5px)}
+      60%    {transform:translateX( 5px)}
+      75%    {transform:translateX(-3px)}
+      90%    {transform:translateX( 3px)}
+    }
+    .shake{animation:shake .45s cubic-bezier(.36,.07,.19,.97) both;}
     .reg-success{display:none;text-align:center;padding:40px 20px;}
     .reg-success.visible{display:block;}
     .success-circle{width:88px;height:88px;border-radius:50%;background:var(--g0);border:3px solid var(--g1);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;color:var(--g7);animation:popIn .5s cubic-bezier(.34,1.56,.64,1);}
@@ -174,13 +184,13 @@
     <div class="auth-logo-icon">
       <img src="/assets/img/logo.png" alt="Logo FODDEB" onerror="this.style.display='none';this.parentElement.textContent='FOD'"/>
     </div>
-    <div class="auth-logo-text"><strong>FODDEB</strong><span>Droits de l'Enfant au Benin</span></div>
+    <div class="auth-logo-text"><strong>FODDEB</strong><span>Droits de l'Enfant au Bénin</span></div>
   </div>
   <div class="left-content">
-    <h2 class="left-title">Rejoignez<br/>notre <span>reseau</span></h2>
-    <p class="left-desc">En devenant membre du FODDEB, vous integrez un collectif engage pour les droits de l'enfant dans les 12 departements du Benin.</p>
+    <h2 class="left-title">Rejoignez<br/>notre <span>réseau</span></h2>
+    <p class="left-desc">En devenant membre du FODDEB, vous intégrez un collectif engagé pour les droits de l'enfant dans les 12 départements du Bénin.</p>
     <div class="left-benefits">
-      <div class="benefit"><div class="benefit-icon"><iconify-icon icon="mdi:account-group-outline"></iconify-icon></div><span class="benefit-text">Acces au reseau des OSC membres</span></div>
+      <div class="benefit"><div class="benefit-icon"><iconify-icon icon="mdi:account-group-outline"></iconify-icon></div><span class="benefit-text">Accès au réseau des OSC membres</span></div>
       <div class="benefit"><div class="benefit-icon"><iconify-icon icon="mdi:clipboard-list-outline"></iconify-icon></div><span class="benefit-text">Participation aux projets collectifs</span></div>
       <div class="benefit"><div class="benefit-icon"><iconify-icon icon="mdi:email-newsletter"></iconify-icon></div><span class="benefit-text">Newsletter mensuelle et ressources exclusives</span></div>
       <div class="benefit"><div class="benefit-icon"><iconify-icon icon="mdi:map-marker-radius-outline"></iconify-icon></div><span class="benefit-text">Visibilite sur la carte d'impact FODDEB</span></div>
@@ -191,7 +201,7 @@
       <div class="devise-tag">Epanouissement</div>
     </div>
   </div>
-  <div class="left-bottom">Agla Akplomey, Cotonou, Benin · Fond. 10 Sept. 2015</div>
+  <div class="left-bottom">Agla Akplomey, Cotonou, Bénin · Fond. 10 Sept. 2015</div>
 </div>
 
 <!-- RIGHT -->
@@ -216,15 +226,19 @@
     <!-- STEP 1 -->
     <div class="reg-section active" id="step1">
       <h2 class="reg-section-title">Vos informations personnelles</h2>
-      <p class="reg-section-sub">Ces informations permettront a l'administrateur de valider votre adhesion au reseau.</p>
+      <p class="reg-section-sub">Ces informations permettront à l'administrateur de valider votre adhésion au réseau.</p>
       <div class="form-row">
-        <div class="form-group"><label class="fl" for="prenom">Prenom <span class="req">*</span></label><div class="iw"><input type="text" id="prenom" class="fi" placeholder="Votre prenom" autocomplete="given-name"/><iconify-icon icon="mdi:account-outline" class="ii"></iconify-icon></div><span class="ferr" id="prenom-err"></span></div>
+        <div class="form-group"><label class="fl" for="prenom">Prénom <span class="req">*</span></label><div class="iw"><input type="text" id="prenom" class="fi" placeholder="Votre prénom" autocomplete="given-name"/><iconify-icon icon="mdi:account-outline" class="ii"></iconify-icon></div><span class="ferr" id="prenom-err"></span></div>
         <div class="form-group"><label class="fl" for="nom">Nom <span class="req">*</span></label><div class="iw"><input type="text" id="nom" class="fi" placeholder="Votre nom" autocomplete="family-name"/><iconify-icon icon="mdi:account-outline" class="ii"></iconify-icon></div><span class="ferr" id="nom-err"></span></div>
       </div>
       <div class="form-group"><label class="fl" for="email">Email <span class="req">*</span></label><div class="iw"><input type="email" id="email" class="fi" placeholder="votre@email.com" autocomplete="email"/><iconify-icon icon="mdi:email-outline" class="ii"></iconify-icon></div><span class="ferr" id="email-err"></span></div>
       <div class="form-row">
-        <div class="form-group"><label class="fl" for="telephone">Telephone <span class="req">*</span></label><div class="iw"><input type="tel" id="telephone" class="fi" placeholder="+229 XX XX XX XX" autocomplete="tel"/><iconify-icon icon="mdi:phone-outline" class="ii"></iconify-icon></div><span class="ferr" id="tel-err"></span></div>
-        <div class="form-group"><label class="fl" for="genre">Genre</label><select id="genre" class="fsel"><option value="">Selectionnez</option><option value="F">Femme</option><option value="M">Homme</option><option value="N">Prefere ne pas preciser</option></select></div>
+        <div class="form-group"><label class="fl" for="telephone">Téléphone <span class="req">*</span></label><div class="iw"><input type="tel" id="telephone" class="fi" placeholder="+229 XX XX XX XX" autocomplete="tel"/><iconify-icon icon="mdi:phone-outline" class="ii"></iconify-icon></div><span class="ferr" id="tel-err"></span></div>
+        <div class="form-group"><label class="fl" for="genre">Genre</label><select id="genre" class="fsel"><option value="">Sélectionnez</option><option value="F">Femme</option><option value="M">Homme</option><option value="N">Préfère ne pas préciser</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl" for="cniNum">N° CNI <span class="req">*</span></label><div class="iw"><input type="text" id="cniNum" class="fi" placeholder="Ex : A-123456789" autocomplete="off" maxlength="20"/><iconify-icon icon="mdi:card-account-details-outline" class="ii"></iconify-icon></div><span class="ferr" id="cniNum-err"></span></div>
+        <div class="form-group" style="align-self:flex-end"><p style="font-size:12px;color:var(--gray-500);line-height:1.5;margin:0 0 6px">Numéro imprimé sur votre carte nationale d'identité.</p></div>
       </div>
       <div class="reg-nav"><button type="button" class="btn-next" onclick="goStep(2)">Suivant <iconify-icon icon="mdi:arrow-right"></iconify-icon></button></div>
     </div>
@@ -232,12 +246,12 @@
     <!-- STEP 2 -->
     <div class="reg-section" id="step2">
       <h2 class="reg-section-title">Votre organisation</h2>
-      <p class="reg-section-sub">Informations sur la structure pour laquelle vous souhaitez adherer au reseau FODDEB.</p>
+      <p class="reg-section-sub">Informations sur la structure pour laquelle vous souhaitez adhérer au réseau FODDEB.</p>
       <div class="form-group">
         <label class="fl">Type de membre <span class="req">*</span></label>
         <div class="type-grid">
           <input type="radio" name="typeMemb" id="t1" value="ong" class="type-opt" checked/>
-          <label for="t1"><iconify-icon icon="mdi:domain" class="ti"></iconify-icon><span class="tl">ONG / Association</span><span class="td">Organisation non gouvernementale enregistree</span></label>
+          <label for="t1"><iconify-icon icon="mdi:domain" class="ti"></iconify-icon><span class="tl">ONG / Association</span><span class="td">Organisation non gouvernementale enregistrée</span></label>
           <input type="radio" name="typeMemb" id="t2" value="institution" class="type-opt"/>
           <label for="t2"><iconify-icon icon="mdi:bank-outline" class="ti"></iconify-icon><span class="tl">Institution</span><span class="td">Organisme public ou parapublic</span></label>
           <input type="radio" name="typeMemb" id="t3" value="reseau" class="type-opt"/>
@@ -249,9 +263,9 @@
       <div class="form-group"><label class="fl" for="orgNom">Nom de l'organisation <span class="req">*</span></label><input type="text" id="orgNom" class="fi no-icon" placeholder="Nom complet"/><span class="ferr" id="orgNom-err"></span></div>
       <div class="form-row">
         <div class="form-group"><label class="fl" for="poste">Fonction / Poste <span class="req">*</span></label><input type="text" id="poste" class="fi no-icon" placeholder="Ex: Directeur executif"/><span class="ferr" id="poste-err"></span></div>
-        <div class="form-group"><label class="fl" for="departement">Departement <span class="req">*</span></label>
+        <div class="form-group"><label class="fl" for="departement">Département <span class="req">*</span></label>
           <select id="departement" class="fsel">
-            <option value="">Selectionnez</option>
+            <option value="">Sélectionnez</option>
             <option>Alibori</option><option>Atacora</option><option>Atlantique</option>
             <option>Borgou</option><option>Collines</option><option>Couffo</option>
             <option>Donga</option><option>Littoral</option><option>Mono</option>
@@ -262,14 +276,14 @@
       </div>
       <div class="form-group"><label class="fl" for="domaine">Domaine d'intervention principal</label>
         <select id="domaine" class="fsel">
-          <option value="">Selectionnez</option>
-          <option>Protection de l'enfant</option><option>Education et formation</option>
+          <option value="">Sélectionnez</option>
+          <option>Protection de l'enfant</option><option>Éducation et formation</option>
           <option>Sante</option><option>Numerique et TIC</option>
           <option>Developpement local</option><option>Environnement et Climat</option>
           <option>Droits des femmes</option><option>Autre</option>
         </select>
       </div>
-      <div class="form-group"><label class="fl" for="motivation">Motivation <span class="req">*</span></label><textarea id="motivation" class="fta" placeholder="Expliquez pourquoi vous souhaitez rejoindre le reseau FODDEB."></textarea><span class="ferr" id="motiv-err"></span></div>
+      <div class="form-group"><label class="fl" for="motivation">Motivation <span class="req">*</span></label><textarea id="motivation" class="fta" placeholder="Expliquez pourquoi vous souhaitez rejoindre le réseau FODDEB."></textarea><span class="ferr" id="motiv-err"></span></div>
       <div class="reg-nav"><button type="button" class="btn-prev" onclick="goStep(1)"><iconify-icon icon="mdi:arrow-left"></iconify-icon> Retour</button><button type="button" class="btn-next" onclick="goStep(3)">Suivant <iconify-icon icon="mdi:arrow-right"></iconify-icon></button></div>
     </div>
 
@@ -279,16 +293,16 @@
       <p class="reg-section-sub">Formats acceptes : JPG, PNG, PDF. Taille max. 5 Mo par fichier.</p>
       <div class="alert-info">
         <iconify-icon icon="mdi:information-outline"></iconify-icon>
-        <span>Les trois documents et la signature sont <strong>obligatoires</strong> pour valider votre adhesion.</span>
+        <span>Les trois documents et la signature sont <strong>obligatoires</strong> pour valider votre adhésion.</span>
       </div>
 
       <!-- Photo -->
       <div class="form-group">
-        <label class="fl">Photo d'identite recente <span class="req">*</span><span class="file-required-badge"><iconify-icon icon="mdi:alert-circle-outline"></iconify-icon>Obligatoire</span></label>
+        <label class="fl">Photo d'identité récente <span class="req">*</span><span class="file-required-badge"><iconify-icon icon="mdi:alert-circle-outline"></iconify-icon>Obligatoire</span></label>
         <div class="file-upload-wrap" id="wrap-photo" onclick="triggerFile('file-photo')" role="button" tabindex="0">
           <div class="file-upload-inner">
             <iconify-icon icon="mdi:camera-account-outline"></iconify-icon>
-            <p>Cliquez pour ajouter votre photo d'identite</p>
+            <p>Cliquez pour ajouter votre photo d'identité</p>
             <span>JPG ou PNG — max 2 Mo</span>
           </div>
           <div class="file-status"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span id="label-photo">Aucun fichier</span></div>
@@ -300,7 +314,7 @@
 
       <!-- CNI -->
       <div class="form-group">
-        <label class="fl">Carte nationale d'identite en cours de validite <span class="req">*</span><span class="file-required-badge"><iconify-icon icon="mdi:alert-circle-outline"></iconify-icon>Obligatoire</span></label>
+        <label class="fl">Carte nationale d'identité en cours de validité <span class="req">*</span><span class="file-required-badge"><iconify-icon icon="mdi:alert-circle-outline"></iconify-icon>Obligatoire</span></label>
         <div class="file-upload-wrap" id="wrap-cni" onclick="triggerFile('file-cni')" role="button" tabindex="0">
           <div class="file-upload-inner">
             <iconify-icon icon="mdi:card-account-details-outline"></iconify-icon>
@@ -309,22 +323,22 @@
           </div>
           <div class="file-status"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span id="label-cni">Aucun fichier</span></div>
         </div>
-        <input type="file" id="file-cni" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="handleFile(this,'cni',5)"/>
+        <input type="file" id="file-cni" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="handleFile(this,'cni',3)"/>
         <span class="ferr" id="cni-err"></span>
       </div>
 
-      <!-- Recepisse -->
+      <!-- Récépissé -->
       <div class="form-group">
-        <label class="fl">Recepisse de l'organisation <span class="req">*</span><span class="file-required-badge"><iconify-icon icon="mdi:alert-circle-outline"></iconify-icon>Obligatoire</span></label>
+        <label class="fl">Récépissé de l'organisation <span class="req">*</span><span class="file-required-badge"><iconify-icon icon="mdi:alert-circle-outline"></iconify-icon>Obligatoire</span></label>
         <div class="file-upload-wrap" id="wrap-recepisse" onclick="triggerFile('file-recepisse')" role="button" tabindex="0">
           <div class="file-upload-inner">
             <iconify-icon icon="mdi:file-document-outline"></iconify-icon>
-            <p>Cliquez pour ajouter le recepisse</p>
+            <p>Cliquez pour ajouter le récépissé</p>
             <span>Document officiel de reconnaissance — PDF ou image, max 5 Mo</span>
           </div>
           <div class="file-status"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span id="label-recepisse">Aucun fichier</span></div>
         </div>
-        <input type="file" id="file-recepisse" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="handleFile(this,'recepisse',5)"/>
+        <input type="file" id="file-recepisse" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="handleFile(this,'recepisse',3)"/>
         <span class="ferr" id="recepisse-err"></span>
       </div>
 
@@ -428,8 +442,8 @@
   <!-- SUCCESS -->
   <div class="reg-success" id="regSuccess" role="status" aria-live="polite">
     <div class="success-circle"><iconify-icon icon="mdi:check-bold" style="font-size:40px"></iconify-icon></div>
-    <h2>Demande envoyee !</h2>
-    <p>Votre demande d'adhesion a bien ete soumise avec tous les documents. Un administrateur l'examinera sous <strong>48 heures</strong>.</p>
+    <h2>Demande envoyée !</h2>
+    <p>Votre demande d'adhésion a bien été soumise avec tous les documents. Un administrateur l'examinera sous <strong>48 heures</strong>.</p>
     <div class="reg-success-info">
       <p><iconify-icon icon="mdi:email-check-outline" style="vertical-align:middle;margin-right:6px;color:var(--g7)"></iconify-icon>Email de confirmation envoye.</p>
       <p><iconify-icon icon="mdi:clock-outline" style="vertical-align:middle;margin-right:6px;color:var(--g7)"></iconify-icon>Delai : 24 a 48 heures ouvrables.</p>
@@ -449,14 +463,32 @@
 let currentStep = 1;
 const TOTAL = 4;
 
-function goStep(n) {
-  if (n > currentStep && !validateStep(currentStep)) return;
+async function goStep(n) {
+  if (n > currentStep) {
+    // ── Étape 1 → 2 : check email serveur FORCÉ avant de valider ──
+    // Contourne le bypass "taper sans blur" ou "delete+retype sans blur"
+    if (currentStep === 1) {
+      // Checks serveur en parallèle — email, téléphone, numéro CNI
+      const em    = document.getElementById('email').value.trim();
+      const tel   = document.getElementById('telephone').value.trim();
+      const cni   = document.getElementById('cniNum').value.trim();
+      const btn   = document.querySelector('#step1 .btn-next');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Vérification…'; }
+      await Promise.all([
+        (em  && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) ? checkEmailUniqueness(em)  : Promise.resolve(),
+        (tel && tel.length >= 8)                            ? checkPhoneUniqueness(tel) : Promise.resolve(),
+        (cni && cni.length >= 4)                            ? checkCniUniqueness(cni)   : Promise.resolve(),
+      ]);
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Suivant <iconify-icon icon="mdi:arrow-right"></iconify-icon>'; }
+    }
+    if (!validateStep(currentStep)) return;
+  }
   document.getElementById('step' + currentStep).classList.remove('active');
   currentStep = n;
   document.getElementById('step' + n).classList.add('active');
   updateProgress(n);
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  // Recalculer le canvas si on arrive à l'etape 3
+  // Recalculer le canvas si on arrive à l'étape 3
   if (n === 3) setTimeout(initSignaturePad, 50);
 }
 
@@ -488,25 +520,46 @@ function validateStep(step) {
   let ok = true;
   if (step === 1) {
     ['prenom','nom','email','telephone'].forEach(ce);
-    if (!document.getElementById('prenom').value.trim())   { se('prenom','Le prenom est requis.'); ok=false; }
+    if (!document.getElementById('prenom').value.trim())   { se('prenom','Le prénom est requis.'); ok=false; }
     if (!document.getElementById('nom').value.trim())      { se('nom','Le nom est requis.'); ok=false; }
-    const em = document.getElementById('email').value.trim();
-    if (!em)                                               { se('email', "L'email est requis."); ok=false; }
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))      { se('email','Email invalide.'); ok=false; }
-    if (!document.getElementById('telephone').value.trim()){ se('tel','Le telephone est requis.'); ok=false; }
+    const em    = document.getElementById('email').value.trim();
+    if (!em)                                                  { se('email', "L'email est requis."); ok=false; }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))       { se('email','Email invalide.'); ok=false; }
+    // Règle : 1 email = 1 compte — comparer à l'email flaggé par le serveur
+    else if (emailFlagged && em.toLowerCase() === emailFlagged) {
+      const errEl = document.getElementById('email-err');
+      errEl.innerHTML =
+        'Un compte existe déjà avec cet email. ' +
+        '<a href="/auth/login.html" style="color:var(--g9);font-weight:600">Se connecter</a>';
+      shakeEl(errEl);
+      ok = false;
+    }
+    if (!document.getElementById('telephone').value.trim())   { se('tel','Le téléphone est requis.'); ok=false; }
+    else if (phoneFlagged && document.getElementById('telephone').value.trim() === phoneFlagged) {
+      const pErr = document.getElementById('tel-err');
+      pErr.innerHTML = 'Ce numéro est déjà associé à un compte.';
+      shakeEl(pErr); ok = false;
+    }
+    const cniVal = document.getElementById('cniNum').value.trim();
+    if (!cniVal)                                               { se('cniNum','Le numéro de CNI est requis.'); ok=false; }
+    else if (cniFlagged && cniVal.toLowerCase() === cniFlagged) {
+      const cErr = document.getElementById('cniNum-err');
+      cErr.innerHTML = 'Ce numéro de CNI est déjà enregistré.';
+      shakeEl(cErr); ok = false;
+    }
   }
   if (step === 2) {
     ['orgNom','poste','dept','motiv'].forEach(ce);
     if (!document.getElementById('orgNom').value.trim())   { se('orgNom',"Nom de l'organisation requis."); ok=false; }
     if (!document.getElementById('poste').value.trim())    { se('poste','Le poste est requis.'); ok=false; }
-    if (!document.getElementById('departement').value)     { se('dept','Selectionnez un departement.'); ok=false; }
+    if (!document.getElementById('departement').value)     { se('dept','Sélectionnez un département.'); ok=false; }
     if (document.getElementById('motivation').value.trim().length < 30) { se('motiv','Motivation trop courte (min. 30 car.).'); ok=false; }
   }
   if (step === 3) {
     ['photo','cni','recepisse','sig'].forEach(id => { const el = document.getElementById(id+'-err'); if(el) el.textContent=''; });
-    if (!FILES.photo)     { se('photo',"La photo d'identite est obligatoire."); ok=false; }
+    if (!FILES.photo)     { se('photo',"La photo d'identité est obligatoire."); ok=false; }
     if (!FILES.cni)       { se('cni','La carte nationale est obligatoire.'); ok=false; }
-    if (!FILES.recepisse) { se('recepisse','Le recepisse est obligatoire.'); ok=false; }
+    if (!FILES.recepisse) { se('recepisse','Le récépissé est obligatoire.'); ok=false; }
     if (!sigSigned)       { se('sig','Votre signature est obligatoire.'); ok=false; }
   }
   if (step === 4) {
@@ -521,6 +574,10 @@ function validateStep(step) {
 
 /* ═══ FICHIERS ═══ */
 const FILES = { photo: null, cni: null, recepisse: null };
+// Règle 1 email = 1 compte — état persistant indépendant du DOM
+let emailFlagged = ''; // email confirmé comme existant côté serveur (string, pas bool)
+let phoneFlagged = ''; // téléphone confirmé comme existant côté serveur
+let cniFlagged   = ''; // numéro CNI confirmé comme existant côté serveur
 
 function triggerFile(id) { document.getElementById(id)?.click(); }
 
@@ -559,7 +616,7 @@ document.querySelectorAll('.file-upload-wrap').forEach(w => {
 /* ═══════════════════════════════════════════════
    SIGNATURE PAD — CORRECTION COMPLETE
    
-   Probleme precedent : le canvas avait width:100% en CSS
+   Problème précédent : le canvas avait width:100% en CSS
    mais les coordonnees de dessin etaient calculees par rapport
    aux coordonnees physiques du canvas (attributs width/height).
    
@@ -638,7 +695,7 @@ function initSignaturePad() {
     sigCtx.closePath();
   }
 
-  // Supprimer les anciens listeners si deja initialise
+  // Supprimer les anciens listeners si déjà initialisé
   sigCanvas.replaceWith(sigCanvas.cloneNode(true));
   sigCanvas = document.getElementById('sigCanvas');
   sigCtx = sigCanvas.getContext('2d');
@@ -665,7 +722,7 @@ function setSigned(val) {
   if (!el) return;
   if (val) {
     el.className = 'sig-status signed';
-    el.innerHTML = '<iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span>Signature enregistree</span>';
+    el.innerHTML = '<iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span>Signature enregistrée</span>';
   } else {
     el.className = 'sig-status empty';
     el.innerHTML = '<iconify-icon icon="mdi:pencil-outline"></iconify-icon><span>Signature en attente</span>';
@@ -689,7 +746,7 @@ function getSignatureDataURL() {
   return sigCanvas.toDataURL('image/png');
 }
 
-/* Recalculer le canvas si la fenetre est redimensionnee */
+/* Recalculer le canvas si la fenêtre est redimensionnée */
 let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
@@ -726,72 +783,237 @@ function togglePwd(inputId, iconId) {
 }
 
 /* ═══ SOUMISSION ═══ */
+/* ── Lecture fichier → base64 pur (sans préfixe "data:...;base64,") ── */
+/* Secoue un élément pour attirer l'attention — réapplicable à chaque appel */
+function shakeEl(el) {
+  if (!el) return;
+  el.classList.remove('shake');
+  // Force le reflow pour pouvoir relancer l'animation sur le même élément
+  void el.offsetWidth;
+  el.classList.add('shake');
+}
+
+/* ─────────────────────────────────────────────────
+ * Vérification des tailles de fichiers avant envoi
+ * Limites : image ≤ 2 Mo | PDF ≤ 3 Mo
+ * ───────────────────────────────────────────────── */
+const FILE_LIMITS = {
+  image: 2 * 1024 * 1024, // 2 Mo
+  pdf:   3 * 1024 * 1024, // 3 Mo
+};
+
+function checkFileSizes() {
+  const checks = [
+    { file: FILES.photo,     label: "Photo d'identité", errId: 'photo-err'     },
+    { file: FILES.cni,       label: 'CNI',               errId: 'cni-err'       },
+    { file: FILES.recepisse, label: 'Récépissé',         errId: 'recepisse-err' },
+  ];
+  let ok = true;
+  checks.forEach(({ file, label, errId }) => {
+    if (!file) return;
+    const limit   = file.type === 'application/pdf' ? FILE_LIMITS.pdf : FILE_LIMITS.image;
+    const limitMo = (limit / 1024 / 1024).toFixed(0);
+    const fileMo  = (file.size  / 1024 / 1024).toFixed(1);
+    if (file.size > limit) {
+      const errEl = document.getElementById(errId);
+      if (errEl) {
+        errEl.textContent = label + ' trop volumineux (' + fileMo + ' Mo) — max ' + limitMo + ' Mo.';
+        shakeEl(errEl);
+      }
+      ok = false;
+    }
+  });
+  return ok;
+}
+
 function fileToBase64(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload  = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('Lecture du fichier echouee'));
+    r.onerror = () => rej(new Error('Lecture du fichier échouée'));
     r.readAsDataURL(file);
   });
 }
 
+/**
+ * Compression côté client des images avant envoi.
+ * Réduit la taille jusqu'à ×10 → payload < 1 Mo par image.
+ * Les PDF passent sans compression (FileReader brut).
+ * maxWidth : 1200 px   quality : 0.78 JPEG
+ */
+function compressImage(file, maxWidth = 1200, quality = 0.78) {
+  // PDF → pas de compression canvas possible → base64 brut
+  if (file.type === 'application/pdf') return fileToBase64(file);
+
+  return new Promise((res, rej) => {
+    const img    = new Image();
+    const objURL = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objURL);
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      // Réduction proportionnelle si trop large
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      // Retourne le base64 pur sans préfixe
+      res(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objURL); rej(new Error('Compression échouée')); };
+    img.src = objURL;
+  });
+}
+
+/**
+ * Vérification email unique — appelée au blur du champ email.
+ * Affiche un feedback inline sans bloquer la navigation.
+ */
+async function checkPhoneUniqueness(phone) {
+  const errEl = document.getElementById('tel-err');
+  if (!phone || phone.length < 8) return;
+  try {
+    const result = await FODDEB_API.members.checkPhone(phone);
+    phoneFlagged = result.exists ? phone : '';
+    if (phoneFlagged) {
+      errEl.innerHTML = 'Ce numéro est déjà associé à un compte.';
+      shakeEl(errEl);
+    } else {
+      errEl.textContent = '';
+    }
+  } catch (_) { /* silencieux */ }
+}
+
+async function checkCniUniqueness(cni) {
+  const errEl = document.getElementById('cniNum-err');
+  if (!cni || cni.length < 4) return;
+  try {
+    const result = await FODDEB_API.members.checkCni(cni);
+    cniFlagged = result.exists ? cni.toLowerCase() : '';
+    if (cniFlagged) {
+      errEl.innerHTML = 'Ce numéro de CNI est déjà enregistré.';
+      shakeEl(errEl);
+    } else {
+      errEl.textContent = '';
+    }
+  } catch (_) { /* silencieux */ }
+}
+
+async function checkEmailUniqueness(email) {
+  const errEl = document.getElementById('email-err');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  try {
+    const result = await FODDEB_API.members.checkEmail(email);
+    // Stocker le résultat dans la variable d'état — résiste au effacement DOM par ce()
+    emailFlagged = result.exists ? email.toLowerCase() : '';
+    if (emailFlagged) {
+      errEl.innerHTML =
+        'Un compte existe déjà avec cet email. ' +
+        '<a href="/auth/login.html" style="color:var(--g9);font-weight:600">Se connecter</a>';
+      shakeEl(errEl);
+    } else {
+      errEl.textContent = '';
+    }
+  } catch (_) { /* silencieux — le GAS validera côté serveur */ }
+}
+
 async function submitForm() {
   if (!validateStep(4)) return;
+
+  // Sécurité finale côté client — le GAS rejette aussi côté serveur
+  const emailCurrent = document.getElementById('email').value.trim().toLowerCase();
+  if (emailFlagged && emailCurrent === emailFlagged) {
+    document.getElementById('email-err').innerHTML =
+      'Un compte existe déjà avec cet email. ' +
+      '<a href="/auth/login.html" style="color:var(--g9);font-weight:600">Se connecter</a>';
+    return;
+  }
+
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Envoi en cours...';
+  btn.innerHTML = '<span class="spinner"></span> Compression des fichiers…';
 
   try {
-    // Hash du mot de passe
-    const pwdBuf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(document.getElementById('pwd').value));
-    const pwdHash = Array.from(new Uint8Array(pwdBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    // ── Vérification taille fichiers — bloque avant tout traitement réseau ──
+    if (!checkFileSizes()) {
+      btn.disabled = false;
+      btn.innerHTML = '<iconify-icon icon="mdi:account-plus-outline"></iconify-icon> Soumettre ma demande';
+      return;
+    }
 
-    // Fichiers en base64
+    // ── Hash du mot de passe ──
+    const pwdBuf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(document.getElementById('pwd').value));
+    const pwdHash = Array.from(new Uint8Array(pwdBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // ── Compression images → base64 pur ──
+    // compressImage() réduit les photos JPEG/PNG jusqu'à ×10 avant envoi
+    // Les PDF (CNI, récépissé) passent sans compression
+    btn.innerHTML = '<span class="spinner"></span> Compression des fichiers…';
     const [photoB64, cniB64, recepB64] = await Promise.all([
-      fileToBase64(FILES.photo),
-      fileToBase64(FILES.cni),
-      fileToBase64(FILES.recepisse),
+      compressImage(FILES.photo),
+      compressImage(FILES.cni),
+      compressImage(FILES.recepisse),
     ]);
 
-    // Token reCAPTCHA
+    // ── Signature : canvas.toDataURL() renvoie le préfixe "data:image/png;base64," ──
+    // On le supprime — GAS appelle Utilities.base64Decode() directement
+    const sigDataURL   = getSignatureDataURL();
+    const signatureB64 = sigDataURL ? sigDataURL.split(',')[1] : '';
+
+    // ── Token reCAPTCHA ──
     let recaptchaToken = '';
     if (typeof grecaptcha !== 'undefined') {
       recaptchaToken = await new Promise(res =>
-        grecaptcha.ready(() => grecaptcha.execute('6LdU3tksAAAAAOAIdgtC7xsQURksQ9mHAZ3MVLXF', { action: 'register' }).then(res))
+        grecaptcha.ready(() =>
+          grecaptcha.execute('6LdU3tksAAAAAOAIdgtC7xsQURksQ9mHAZ3MVLXF', { action: 'register' }).then(res)
+        )
       );
     }
 
+    btn.innerHTML = '<span class="spinner"></span> Envoi du dossier…';
+
+    // ── Payload — noms alignés sur membersCreate() dans Member.gs ──
     const formData = {
-      prenom:        document.getElementById('prenom').value.trim(),
-      nom:           document.getElementById('nom').value.trim(),
-      email:         document.getElementById('email').value.trim(),
-      telephone:     document.getElementById('telephone').value.trim(),
-      genre:         document.getElementById('genre').value,
-      typeMemb:      document.querySelector('input[name="typeMemb"]:checked')?.value,
-      organisation:  document.getElementById('orgNom').value.trim(),
-      poste:         document.getElementById('poste').value.trim(),
-      departement:   document.getElementById('departement').value,
-      domaine:       document.getElementById('domaine').value,
-      motivation:    document.getElementById('motivation').value.trim(),
-      username:      document.getElementById('username').value.trim(),
-      newsletter:    document.getElementById('newsletter_opt').checked,
-      passwordHash:  pwdHash,
-      statut:        'pending',
-      photoIdentite: photoB64,
-      photoNom:      FILES.photo.name,
-      photoType:     FILES.photo.type,
-      carteIdentite: cniB64,
-      carteNom:      FILES.cni.name,
-      carteType:     FILES.cni.type,
-      recepisse:     recepB64,
-      recepisseNom:  FILES.recepisse.name,
-      recepisseType: FILES.recepisse.type,
-      signature:     getSignatureDataURL(),
+      prenom:          document.getElementById('prenom').value.trim(),
+      nom:             document.getElementById('nom').value.trim(),
+      email:           document.getElementById('email').value.trim(),
+      telephone:       document.getElementById('telephone').value.trim(),
+      genre:           document.getElementById('genre').value,
+      typeMemb:        document.querySelector('input[name="typeMemb"]:checked')?.value,
+      organisation:    document.getElementById('orgNom').value.trim(),
+      poste:           document.getElementById('poste').value.trim(),
+      departement:     document.getElementById('departement').value,
+      domaine:         document.getElementById('domaine').value,
+      motivation:      document.getElementById('motivation').value.trim(),
+      username:        document.getElementById('username').value.trim(),
+      cniNum:          document.getElementById('cniNum').value.trim(),
+      newsletter:      document.getElementById('newsletter_opt').checked,
+      passwordHash:    pwdHash,
+      statut:          'pending',
+      // Pièces jointes — noms exacts attendus par Member.gs
+      photoBase64:     photoB64,
+      photoMime:       FILES.photo.type.startsWith('image/') ? 'image/jpeg' : FILES.photo.type,
+      cniBase64:       cniB64,
+      cniMime:         FILES.cni.type,
+      recepissBase64:  recepB64,
+      recepissMime:    FILES.recepisse.type,
+      signatureBase64: signatureB64,
       recaptchaToken,
-      createdAt:     new Date().toISOString(),
+      createdAt:       new Date().toISOString(),
     };
 
-    // Appel API GAS reel
+    // ── Diagnostic taille payload ──
+    const payloadStr  = JSON.stringify({ action: 'members_create', ...formData });
+    const payloadMo   = (new Blob([payloadStr]).size / 1024 / 1024).toFixed(2);
+    console.log('[FODDEB] Payload size : ' + payloadMo + ' Mo');
+    if (parseFloat(payloadMo) > 10) {
+      throw new Error(
+        'Dossier trop volumineux (' + payloadMo + ' Mo, max 10 Mo). ' +
+        'Réduisez la taille des fichiers (PDF max 3 Mo, photo max 2 Mo) et réessayez.'
+      );
+    }
+
+    // ── Appel API GAS ──
     const result = await FODDEB_API.members.create(formData);
     if (!result.success) throw new Error(result.error || "Erreur lors de l'inscription");
 
@@ -800,7 +1022,19 @@ async function submitForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
   } catch (err) {
-    alert(err.message || 'Une erreur est survenue. Veuillez reessayer.');
+    // Mapping des erreurs réseau vers messages lisibles
+    let msg = err.message || 'Une erreur est survenue.';
+    if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('networkerror')) {
+      msg = 'Erreur réseau. Vérifiez votre connexion et réessayez. Si le problème persiste, contactez-nous.';
+    } else if (msg.toLowerCase().includes('timeout') || msg.toLowerCase().includes('aborted')) {
+      msg = 'Le serveur met trop de temps à répondre. Réessayez dans quelques instants.';
+    } else if (msg.includes('email existe')) {
+      // Erreur renvoyée par le GAS — rediriger l'utilisateur
+      msg = 'Un compte existe déjà avec cet email. Veuillez vous connecter.';
+      document.getElementById('email-err').innerHTML =
+        msg + ' <a href="/auth/login.html" style="color:var(--g9);font-weight:600">Se connecter</a>';
+    }
+    alert(msg);
     btn.disabled = false;
     btn.innerHTML = '<iconify-icon icon="mdi:account-plus-outline"></iconify-icon> Soumettre ma demande';
   }
@@ -808,8 +1042,52 @@ async function submitForm() {
 
 /* ═══ INIT ═══ */
 document.addEventListener('DOMContentLoaded', () => {
-  // Le canvas sera initialise quand l'utilisateur arrivera a l'etape 3
+  // Le canvas sera initialisé quand l'utilisateur arrivera à l'étape 3
   // pour s'assurer que le canvas est visible et ses dimensions connues
+
+  // ── Règle : une adresse email = un seul compte ──
+  // Vérification au blur (perte de focus) du champ email
+  const emailInput = document.getElementById('email');
+  if (emailInput) {
+    emailInput.addEventListener('blur', () => {
+      checkEmailUniqueness(emailInput.value.trim());
+    });
+    // Réinitialiser l'état si l'email est différent du dernier email flaggé
+    emailInput.addEventListener('input', () => {
+      const current = emailInput.value.trim().toLowerCase();
+      if (current !== emailFlagged) {
+        emailFlagged = '';
+        const el = document.getElementById('email-err');
+        if (el) el.textContent = '';
+      }
+    });
+  }
+
+  // ── Téléphone — unicité ──
+  const telInput = document.getElementById('telephone');
+  if (telInput) {
+    telInput.addEventListener('blur', () => checkPhoneUniqueness(telInput.value.trim()));
+    telInput.addEventListener('input', () => {
+      if (telInput.value.trim() !== phoneFlagged) {
+        phoneFlagged = '';
+        const el = document.getElementById('tel-err');
+        if (el) el.textContent = '';
+      }
+    });
+  }
+
+  // ── Numéro CNI — unicité ──
+  const cniInput = document.getElementById('cniNum');
+  if (cniInput) {
+    cniInput.addEventListener('blur', () => checkCniUniqueness(cniInput.value.trim()));
+    cniInput.addEventListener('input', () => {
+      if (cniInput.value.trim().toLowerCase() !== cniFlagged) {
+        cniFlagged = '';
+        const el = document.getElementById('cniNum-err');
+        if (el) el.textContent = '';
+      }
+    });
+  }
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

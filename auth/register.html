@@ -996,9 +996,15 @@ async function submitForm() {
       createdAt:    new Date().toISOString(),
     };
 
-    const createResult = await FODDEB_API.members.create(textPayload);
-    if (!createResult.success) throw new Error(createResult.error || "Erreur lors de la création du compte");
+    let createResult;
+    try {
+      createResult = await FODDEB_API.members.create(textPayload);
+    } catch(e) {
+      throw new Error('[Phase 1] ' + e.message);
+    }
+    if (!createResult.success) throw new Error('[Phase 1] ' + (createResult.error || "Erreur création compte"));
     const memberId = createResult.id;
+    console.log('[FODDEB] Phase 1 OK — memberId:', memberId);
 
     // ══════════════════════════════════════════════════
     // PHASE 2 — Upload des fichiers un par un (~1–4 Mo chacun)
@@ -1014,8 +1020,14 @@ async function submitForm() {
       const { type, b64, mime } = uploads[i];
       if (!b64) continue;
       btn.innerHTML = '<span class="spinner"></span> Envoi des fichiers (' + (i + 1) + '/4)…';
-      const upResult = await FODDEB_API.members.uploadFile(memberId, type, b64, mime);
-      if (!upResult.success) throw new Error('Erreur upload ' + type + ' : ' + upResult.error);
+      let upResult;
+      try {
+        upResult = await FODDEB_API.members.uploadFile(memberId, type, b64, mime);
+      } catch(e) {
+        throw new Error('[Phase 2 — ' + type + '] ' + e.message);
+      }
+      if (!upResult.success) throw new Error('[Phase 2 — ' + type + '] ' + (upResult.error || 'Erreur upload'));
+      console.log('[FODDEB] Phase 2 OK —', type, '→', upResult.url);
     }
 
     // ══════════════════════════════════════════════════

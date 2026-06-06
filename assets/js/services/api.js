@@ -136,11 +136,41 @@ const FODDEB_API = (() => {
      PROJETS
   ============================================================ */
   const projets = {
-    list:           (filters = {})   => request('projets_list', filters),
+    list:           (filters = {})   => {
+      // Injecter automatiquement membreId et role depuis la session
+      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+      return request('projets_list', {
+        membreId: (user && user.ID)   || '',
+        role:     (user && user.Role) || 'member',
+        ...filters,
+      });
+    },
     get:            (id)             => request('projets_get', { id }),
-    create:         (data)           => request('projets_create', data),
-    update:         (id, data)       => request('projets_update', { id, ...data }),
-    delete:         (id)             => request('projets_delete', { id }),
+    create:         (data)           => {
+      // Injecter automatiquement membreId depuis la session
+      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+      return request('projets_create', {
+        membreId: (user && user.ID) || '',
+        ...data,
+      });
+    },
+    update:         (id, data)       => {
+      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+      return request('projets_update', {
+        id,
+        membreId: (user && user.ID)   || '',
+        role:     (user && user.Role) || 'member',
+        ...data,
+      });
+    },
+    delete:         (id)             => {
+      const user = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+      return request('projets_delete', {
+        id,
+        membreId: (user && user.ID)   || '',
+        role:     (user && user.Role) || 'member',
+      });
+    },
     addActivity:    (projetId, data) => request('projets_add_activity', { projetId, ...data }),
     updateProgress: (id, progress)   => request('projets_update_progress', { id, progress }),
     stats:          ()               => request('projets_stats'),

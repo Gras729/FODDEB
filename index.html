@@ -17,11 +17,10 @@
 
   <!-- Iconify -->
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
-<script src="/assets/js/config.js"></script>   <!-- 1er — injecte reCAPTCHA -->
+<script src="/assets/js/config.js"></script><!-- 1er — injecte reCAPTCHA via FODDEB_CONFIG.RECAPTCHA_SITE_KEY -->
 <script src="/assets/js/utils.js"></script>
 <script src="/assets/js/services/api.js"></script>
-  <!-- reCAPTCHA v3 — remplacer VOTRE_SITE_KEY par la clé publique Google Console -->
-  <script src="https://www.google.com/recaptcha/api.js?render=FODDEB_CONFIG.RECAPTCHA_SITE_KEY" async defer></script>
+<!-- reCAPTCHA v3 injecté dynamiquement par config.js — NE PAS dupliquer ici -->
 
   <style>
     /* ===== RESET & BASE ===== */
@@ -1528,7 +1527,7 @@
         <h2 class="section-title" id="projects-title">Actions sur le terrain</h2>
         <p class="section-lead">Des projets concrets qui transforment la vie des enfants et des communautés à travers tout le Bénin.</p>
       </div>
-      <div class="projects-grid fade-in">
+      <div class="projects-grid fade-in" id="projects-grid">
 
         <!-- Projet en cours 1 -->
         <div class="project-card">
@@ -1662,7 +1661,7 @@
         <h2 class="section-title" id="news-title">Les dernières nouvelles</h2>
         <p class="section-lead">Restez informés de nos activités, événements et avancées sur le terrain.</p>
       </div>
-      <div class="news-grid fade-in">
+      <div class="news-grid fade-in" id="news-grid">
         <div class="news-main">
           <div class="news-main-img" aria-hidden="true" style="background:linear-gradient(135deg, #C62828 0%, #FF6B6B 100%)">
             <iconify-icon icon="mdi:trophy-outline" width="48" style="color:rgba(255,255,255,.4)"></iconify-icon>
@@ -1741,7 +1740,7 @@
         <!-- 1. Sensibilisation adolescentes -->
         <div class="gal-card" data-cat="sensibilisation">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--gold-700) 0%, var(--gold-900) 100%)">
-            <img src="assets/img/gallery/sensib-abomey-calavi.jpg" alt="" />
+            <img src="assets/img/gallery/sensib-abomey-calavi.jpg" alt="" loading="lazy" onload="this.classList.add('loaded')" onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:account-group-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Sensibilisation</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-sensib">Sensibilisation</span><div class="gal-title">Séance de sensibilisation des adolescentes et jeunes filles — Violences en ligne</div><div class="gal-photo-note"><iconify-icon icon="mdi:map-marker-outline" width="12"></iconify-icon>Abomey-Calavi, 2024</div></div>
@@ -1750,7 +1749,12 @@
         <!-- 2. Concours presse cérémonie -->
         <div class="gal-card" data-cat="concours">
           <div class="gal-img" style="background:linear-gradient(135deg, #C62828 0%, #FF6B6B 100%)">
-            <img src="assets/img/gallery/concours-presse-ceremony.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (concours-presse-ceremony.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:trophy-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Concours Presse</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-concours">Concours</span><div class="gal-title">Cérémonie de remise de prix — 2ème édition du concours de presse</div><div class="gal-photo-note"><iconify-icon icon="mdi:calendar-outline" width="12"></iconify-icon">Décembre 2024</div></div>
@@ -1759,7 +1763,12 @@
         <!-- 3. Atelier FAPHB Genre -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-faphb-genre.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (atelier-faphb-genre.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Atelier FAPHB — Renforcement de capacités sur le genre et l'inclusion</div><div class="gal-photo-note"><iconify-icon icon="mdi:people-outline" width="12"></iconify-icon">Membres FAPHB</div></div>
@@ -1768,7 +1777,12 @@
         <!-- 4. Atelier renouvellement CCNE -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-ccne-guide.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (atelier-ccne-guide.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Atelier de relecture du guide — Renouvellement du Conseil Consultatif National des Enfants</div><div class="gal-photo-note"><iconify-icon icon="mdi:check-circle-outline" width="12"></iconify-icon">2024</div></div>
@@ -1777,7 +1791,12 @@
         <!-- 5. Atelier jury concours -->
         <div class="gal-card" data-cat="concours">
           <div class="gal-img" style="background:linear-gradient(135deg, #C62828 0%, #FF6B6B 100%)">
-            <img src="assets/img/gallery/atelier-jury-concours.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (atelier-jury-concours.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1474377207190-a7d8b3334068?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:trophy-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Concours</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-concours">Concours</span><div class="gal-title">Atelier d'installation du jury et appropriation des contours du concours de presse</div><div class="gal-photo-note"><iconify-icon icon="mdi:clipboard-check-outline" width="12"></iconify-icon">Pré-concours</div></div>
@@ -1786,7 +1805,12 @@
         <!-- 6. Atelier groupes enfants -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-groupes-enfants.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (atelier-groupes-enfants.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1590650153854-d1f9cde52e45?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Renforcement des capacités des groupes organisés d'enfants</div><div class="gal-photo-note"><iconify-icon icon="mdi:account-multiple-outline" width="12"></iconify-icon">Jeunes leaders</div></div>
@@ -1795,7 +1819,12 @@
         <!-- 7. Formation réseaux sociaux -->
         <div class="gal-card" data-cat="formation">
           <div class="gal-img" style="background:linear-gradient(135deg, #1A56B0 0%, #3B82F6 100%)">
-            <img src="assets/img/gallery/formation-reseaux-sociaux.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (formation-reseaux-sociaux.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:laptop-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Formation</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-formation">Formation</span><div class="gal-title">Formation — Utilisation des réseaux sociaux pour défendre les droits des enfants</div><div class="gal-photo-note"><iconify-icon icon="mdi:share-social-outline" width="12"></iconify-icon>Plaidoyer numérique</div></div>
@@ -1804,7 +1833,12 @@
         <!-- 8. Atelier partenariat Plan Intl -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-plan-intl.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (atelier-plan-intl.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1578020190125-f4f7c18bc9cb?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Renforcement de partenariat — Nouvelles stratégies de Plan International Bénin</div><div class="gal-photo-note"><iconify-icon icon="mdi:handshake-outline" width="12"></iconify-icon>OSC membres</div></div>
@@ -1813,7 +1847,12 @@
         <!-- 9. Rencontre semestrielle OSC -->
         <div class="gal-card" data-cat="rencontre">
           <div class="gal-img" style="background:linear-gradient(135deg, #6B21A8 0%, #A855F7 100%)">
-            <img src="assets/img/gallery/rencontre-osc-semestrielle.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (rencontre-osc-semestrielle.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1604480133435-25c93bab0bb5?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:handshake-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Rencontre</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-rencontre">Rencontre</span><div class="gal-title">Rencontre semestrielle de synergie des OSC et réseaux de promotion des droits de l'enfant</div><div class="gal-photo-note"><iconify-icon icon="mdi:map-outline" width="12"></iconify-icon">12 Départements</div></div>
@@ -1822,7 +1861,12 @@
         <!-- 10. Elle Inspire Donga -->
         <div class="gal-card" data-cat="sensibilisation">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--gold-700) 0%, var(--gold-900) 100%)">
-            <img src="assets/img/gallery/elle-inspire-donga.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (elle-inspire-donga.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1627556704283-bc72dcd12621?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:account-group-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Elle Inspire</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-sensib">Sensibilisation</span><div class="gal-title">Activité Elle Inspire — Autonomisation des filles et jeunes femmes</div><div class="gal-photo-note"><iconify-icon icon="mdi:map-marker-outline" width="12"></iconify-icon">Donga, 2024</div></div>
@@ -1831,7 +1875,12 @@
         <!-- 11. Rencontre Ouémé -->
         <div class="gal-card" data-cat="rencontre">
           <div class="gal-img" style="background:linear-gradient(135deg, #6B21A8 0%, #A855F7 100%)">
-            <img src="assets/img/gallery/rencontre-ogueme.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (rencontre-ogueme.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:handshake-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Rencontre</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-rencontre">Rencontre</span><div class="gal-title">Rencontre semestrielle de la Coordination Départementale de l'Ouémé</div><div class="gal-photo-note"><iconify-icon icon="mdi:calendar-outline" width="12"></iconify-icon">Septembre 2024</div></div>
@@ -1840,7 +1889,12 @@
         <!-- 12. Atelier contenu médiatique -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-contenu-media.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (atelier-contenu-media.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Élaboration du contenu médiatique et conception visuelle pour le plaidoyer</div><div class="gal-photo-note"><iconify-icon icon="mdi:palette-outline" width="12"></iconify-icon">Communication</div></div>
@@ -1849,7 +1903,12 @@
         <!-- 13. Atelier handicap -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-handicap-inclusion.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (atelier-handicap-inclusion.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1516026672322-1851c00b9ec8?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Commission interministérielle — Inclusion des personnes handicapées</div><div class="gal-photo-note"><iconify-icon icon="mdi:accessibility-outline" width="12"></iconify-icon">Politique publique</div></div>
@@ -1858,7 +1917,12 @@
         <!-- 14. Séance restitution SC -->
         <div class="gal-card" data-cat="plaidoyer">
           <div class="gal-img" style="background:linear-gradient(135deg, #9D174D 0%, #EC4899 100%)">
-            <img src="assets/img/gallery/restitution-societe-civile.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (restitution-societe-civile.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1551836022-8b2858c9c69b?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:bullhorn-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Plaidoyer</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-plaidoyer">Plaidoyer</span><div class="gal-title">Séance de restitution de la délégation de la société civile auprès des autorités</div><div class="gal-photo-note"><iconify-icon icon="mdi:microphone-outline" width="12"></iconify-icon">Advocacy</div></div>
@@ -1867,7 +1931,12 @@
         <!-- 15. Séance Garde des Sceaux -->
         <div class="gal-card" data-cat="plaidoyer">
           <div class="gal-img" style="background:linear-gradient(135deg, #9D174D 0%, #EC4899 100%)">
-            <img src="assets/img/gallery/entretien-garde-sceaux.jpg" alt="" />
+            <!-- TODO: remplacer par la vraie photo terrain FODDEB (entretien-garde-sceaux.jpg) -->
+            <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
+            <img src="https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?auto=format&fit=crop&w=600&q=80"
+                 alt="" loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.remove()" />
             <div class="gal-placeholder"><iconify-icon icon="mdi:bullhorn-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Plaidoyer</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-plaidoyer">Plaidoyer</span><div class="gal-title">Séance d'entretien de la délégation OSC avec le Garde des Sceaux</div><div class="gal-photo-note"><iconify-icon icon="mdi:gavel-outline" width="12"></iconify-icon>Août 2024 • Cotonou</div></div>
@@ -2298,27 +2367,20 @@
   </button>
 
   <!-- ===== SCRIPTS ===== -->
-
-  <!-- Utils FODDEB (toast, validation, loader) -->
-  <script src="/assets/js/utils.js"></script>
-  <!-- Connecteur GAS (FODDEB_API) -->
-  <script src="/assets/js/services/api.js"></script>
+  <!-- utils.js et api.js déjà chargés dans <head> — NE PAS redéclarer ici -->
 
   <script>
     'use strict';
 
-    /* ── Clé publique reCAPTCHA v3 ─────────────────────────────
-       Remplacer par la vraie valeur depuis Google Cloud Console
-       (Clé de SITE, pas la clé secrète)
-    ─────────────────────────────────────────────────────────── */
-    const RECAPTCHA_SITE_KEY = 'VOTRE_SITE_KEY';
-
-    /* ── Helper reCAPTCHA ─────────────────────────────────────── */
+    /* ── Helper reCAPTCHA v3 ──────────────────────────────────────────
+       Utilise FODDEB_CONFIG.RECAPTCHA_SITE_KEY (chargé via config.js).
+       La clé secrète reste dans GAS (Script Properties : RECAPTCHA_SECRET).
+    ─────────────────────────────────────────────────────────────────── */
     async function getRecaptchaToken(action) {
       return new Promise((resolve) => {
-        if (typeof grecaptcha === 'undefined') { resolve(''); return; }
+        if (typeof grecaptcha === 'undefined' || !window.FODDEB_CONFIG) { resolve(''); return; }
         grecaptcha.ready(() => {
-          grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
+          grecaptcha.execute(window.FODDEB_CONFIG.RECAPTCHA_SITE_KEY, { action })
             .then(resolve)
             .catch(() => resolve(''));
         });
@@ -2564,6 +2626,156 @@
         }
       });
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CONNEXION GAS — Projets & Actualités
+       Chargement dynamique depuis Google Sheets via FODDEB_API.
+       Fallback silencieux : le HTML statique reste affiché si GAS KO.
+       ─────────────────────────────────────────────────────────────
+       TODO : remplacer les données statiques HTML par des entrées
+              réelles dans Google Sheets (feuilles Projets + Actualites).
+              Les projets doivent avoir le statut "valide" pour s'afficher
+              aux visiteurs non connectés.
+    ═══════════════════════════════════════════════════════════════ */
+
+    /* ── Palette couleurs projets selon Domaine ─────────────────── */
+    const DOMAINE_STYLE = {
+      'Protection':       { bg: '#1B4A6B', icon: 'mdi:account-child-outline' },
+      'Citoyenneté':      { bg: '#1B3A1F', icon: 'mdi:bank-outline' },
+      'Gouvernance':      { bg: '#2E4A1B', icon: 'mdi:vote-outline' },
+      'Droits de l\'enfant': { bg: '#4A1B2F', icon: 'mdi:shield-account-outline' },
+      'Média & Plaidoyer': { bg: '#8B3A62', icon: 'mdi:trophy-outline' },
+      'Autonomisation':   { bg: '#6B4C9A', icon: 'mdi:flower-outline' },
+    };
+
+    /* ── Render : carte projet ──────────────────────────────────── */
+    function renderProjetCard(p) {
+      const st     = (p.Statut || '').toLowerCase();
+      const isActif = st === 'en_cours' || st === 'actif';
+      const style   = DOMAINE_STYLE[p.Domaine] || { bg: 'var(--green-800)', icon: 'mdi:clipboard-list-outline' };
+      const dateStr = p.DateDebut && p.DateFin
+        ? `${p.DateDebut} – ${p.DateFin}`
+        : (p.DateDebut || '');
+      const partenaire = p.Partenaires || p.Responsable || '';
+      const dept       = p.Departement || 'National';
+
+      return `
+        <div class="project-card">
+          <div class="project-img" style="background:${style.bg}">
+            <iconify-icon icon="${style.icon}" width="48" style="color:rgba(255,255,255,.4);position:relative;z-index:1"></iconify-icon>
+            <span class="project-status ${isActif ? 'status-active' : 'status-done'}">${isActif ? 'En cours' : 'Réalisé'}</span>
+          </div>
+          <div class="project-body">
+            <div class="project-tag">${p.Domaine || 'Projet'}</div>
+            <h3>${p.Titre || ''}</h3>
+            <p>${p.Description || ''}</p>
+            <div class="project-meta">
+              <span class="project-meta-item">
+                <iconify-icon icon="mdi:map-marker-outline" width="15"></iconify-icon>${dept}
+              </span>
+              ${partenaire ? `<span class="project-meta-item">
+                <iconify-icon icon="mdi:handshake-outline" width="15"></iconify-icon>${partenaire}
+              </span>` : ''}
+              ${dateStr ? `<span class="project-meta-item">
+                <iconify-icon icon="mdi:calendar-outline" width="15"></iconify-icon>${dateStr}
+              </span>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    /* ── Render : carte actualité ───────────────────────────────── */
+    function renderActuCard(a, isMain) {
+      const dateLabel = a.DatePublication
+        ? FODDEB.formatDate(a.DatePublication, { month: 'long', year: 'numeric' })
+        : '';
+      if (isMain) {
+        return `
+          <div class="news-main">
+            <div class="news-main-img" aria-hidden="true" style="background:linear-gradient(135deg,#C62828 0%,#FF6B6B 100%)">
+              ${a.Image
+                ? `<img src="${a.Image}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" onerror="this.remove()">`
+                : `<iconify-icon icon="mdi:newspaper-variant-outline" width="48" style="color:rgba(255,255,255,.4)"></iconify-icon>`}
+              <span style="font-size:13px;color:rgba(255,255,255,.6)">${a.Categorie || 'Actualité'}</span>
+            </div>
+            <div class="news-main-body">
+              <div class="news-date">
+                <iconify-icon icon="mdi:calendar-outline" width="14"></iconify-icon>${dateLabel}
+              </div>
+              <h3>${a.Titre || ''}</h3>
+              <p>${a.Excerpt || ''}</p>
+            </div>
+          </div>`;
+      }
+      return `
+        <div class="news-small">
+          <div class="news-small-img" aria-hidden="true" style="background:var(--gold-100);color:var(--gold-700)">
+            <iconify-icon icon="mdi:newspaper-outline" width="24"></iconify-icon>
+          </div>
+          <div>
+            <h4>${a.Titre || ''}</h4>
+            <div class="news-date">
+              <iconify-icon icon="mdi:calendar-outline" width="12"></iconify-icon>
+              ${dateLabel}${a.Categorie ? ' • ' + a.Categorie : ''}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    /* ── Init : chargement asynchrone au DOMContentLoaded ──────── */
+    document.addEventListener('DOMContentLoaded', async () => {
+
+      /* ─── Projets ─────────────────────────────────────────────
+         Appelle projets_list depuis GAS.
+         Pour les visiteurs publics, le GAS retourne uniquement
+         les projets avec Statut === 'valide'.
+         Si le GAS ne répond pas, le HTML statique reste intact.
+      ───────────────────────────────────────────────────────── */
+      try {
+        const resP = await FODDEB_API.projets.list({ limit: 6 });
+        if (resP && resP.data && resP.data.length > 0) {
+          const grid = document.getElementById('projects-grid');
+          if (grid) {
+            // Préserver le bouton "Voir tous nos projets"
+            const btnVoir = grid.querySelector('a.btn');
+            grid.innerHTML = resP.data.map(p => renderProjetCard(p)).join('');
+            if (btnVoir) grid.appendChild(btnVoir);
+          }
+        }
+      } catch (e) {
+        /* Fallback silencieux — HTML statique conservé */
+        console.warn('[FODDEB] projets_list indisponible :', e.message);
+      }
+
+      /* ─── Actualités ──────────────────────────────────────────
+         Appelle news_list depuis GAS.
+         Filtre côté client : Statut === 'publie' uniquement.
+         Si 0 résultats ou erreur, HTML statique conservé.
+      ───────────────────────────────────────────────────────── */
+      try {
+        const resN = await FODDEB_API.news.list(1, 10);
+        if (resN && resN.data) {
+          const published = resN.data.filter(a =>
+            (a.Statut || '').toLowerCase() === 'publie'
+          ).slice(0, 4);
+          if (published.length > 0) {
+            const newsGrid = document.getElementById('news-grid');
+            if (newsGrid) {
+              const [main, ...rest] = published;
+              newsGrid.innerHTML =
+                renderActuCard(main, true) +
+                (rest.length > 0
+                  ? `<div class="news-sidebar">${rest.map(a => renderActuCard(a, false)).join('')}</div>`
+                  : '');
+            }
+          }
+        }
+      } catch (e) {
+        /* Fallback silencieux — HTML statique conservé */
+        console.warn('[FODDEB] news_list indisponible :', e.message);
+      }
+
+    }); /* fin DOMContentLoaded */
   </script>
 
 </body>

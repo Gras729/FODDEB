@@ -36,18 +36,18 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, error: 'Configuration serveur manquante' });
   }
 
-  // En-têtes CORS systématiques
-  const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim());
-  const origin = req.headers.origin || '';
-  const allowOrigin = (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS[0] === '*' || ALLOWED_ORIGINS.includes(origin))
-    ? (origin || '*')
-    : null;
+  // En-têtes CORS
+  // Si ALLOWED_ORIGINS est vide → tout accepter (dev / premier déploiement)
+  // Si défini → liste séparée par virgules ex: https://foddeb.vercel.app,https://foddeb.com
+  const origin          = req.headers.origin || '*';
+  const allowedList     = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean);
+  const originAccepted  = allowedList.length === 0 || allowedList.includes(origin);
 
-  if (!allowOrigin) {
-    return res.status(403).json({ success: false, error: 'Origine non autorisée' });
+  if (!originAccepted) {
+    return res.status(403).json({ success: false, error: 'Origine non autorisée : ' + origin });
   }
 
-  res.setHeader('Access-Control-Allow-Origin',  allowOrigin);
+  res.setHeader('Access-Control-Allow-Origin',  origin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

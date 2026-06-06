@@ -17,9 +17,7 @@
 
   <!-- Iconify -->
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
-<script src="/assets/js/config.js"></script>   <!-- 1er — injecte reCAPTCHA -->
-<script src="/assets/js/utils.js"></script>
-<script src="/assets/js/services/api.js"></script>
+<script src="/assets/js/config.js"></script><!-- config en premier -->
   <!-- reCAPTCHA v3 — remplacer VOTRE_SITE_KEY par la clé publique Google Console -->
   <script src="https://www.google.com/recaptcha/api.js?render=FODDEB_CONFIG.RECAPTCHA_SITE_KEY" async defer></script>
 
@@ -1137,7 +1135,7 @@
         </div>
         <div class="hero-stats">
           <div class="hero-stat">
-            <strong>200+</strong>
+            <strong id="statMembres">200+</strong>
             <span>Organisations membres</span>
           </div>
           <div class="hero-stat">
@@ -1145,64 +1143,18 @@
             <span>Départements couverts</span>
           </div>
           <div class="hero-stat">
-            <strong>10k+</strong>
+            <strong id="statBeneficiaires">10k+</strong>
             <span>Enfants bénéficiaires</span>
           </div>
         </div>
       </div>
 
-      <div class="hero-visual" aria-hidden="true">
-        <div class="hero-card">
-          <div class="hero-card-header">
-            <div class="hero-card-icon icon-green">
-              <iconify-icon icon="mdi:shield-check-outline" width="22"></iconify-icon>
-            </div>
-            <div>
-              <div class="hero-card-title">Projet en cours</div>
-              <div class="hero-card-sub">Protection de l'enfance</div>
-            </div>
-          </div>
-          <div class="hero-card-body">Lutte contre les violences basées sur le genre et exploitation infantile dans les zones rurales.</div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:72%"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:rgba(255,255,255,.5)">
-            <span>Progression</span>
-            <span>72%</span>
-          </div>
-        </div>
-
-        <div class="hero-card">
-          <div class="hero-card-header">
-            <div class="hero-card-icon icon-gold">
-              <iconify-icon icon="mdi:school-outline" width="22"></iconify-icon>
-            </div>
-            <div>
-              <div class="hero-card-title">Éducation pour tous</div>
-              <div class="hero-card-sub">Accès à l'école primaire</div>
-            </div>
-          </div>
-          <div class="hero-card-body">Accompagnement scolaire, distribution de kits pédagogiques et formation professionnelle pour les jeunes déscolarisés.</div>
-          <div class="progress-bar" style="margin-top:10px">
-            <div class="progress-fill" style="width:85%"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:rgba(255,255,255,.5)">
-            <span>Progression</span>
-            <span>85%</span>
-          </div>
-        </div>
-
-        <div class="hero-card">
-          <div class="hero-card-header">
-            <div class="hero-card-icon icon-red">
-              <iconify-icon icon="mdi:heart-pulse" width="22"></iconify-icon>
-            </div>
-            <div>
-              <div class="hero-card-title">Santé communautaire</div>
-              <div class="hero-card-sub">Santé reproductive</div>
-            </div>
-          </div>
-          <div class="hero-card-body">Promotion des droits sexuels et reproductifs des femmes et adolescentes dans les communautés vulnérables.</div>
+      <div class="hero-visual" aria-hidden="true" id="heroProjectCards">
+        <!-- Cartes chargées dynamiquement depuis le Sheet (projets validés) -->
+        <div class="hero-card hero-card-skeleton">
+          <div style="height:14px;background:rgba(255,255,255,.1);border-radius:6px;width:60%;margin-bottom:10px"></div>
+          <div style="height:10px;background:rgba(255,255,255,.07);border-radius:4px;width:90%;margin-bottom:6px"></div>
+          <div style="height:10px;background:rgba(255,255,255,.07);border-radius:4px;width:75%"></div>
         </div>
       </div>
     </div>
@@ -1219,7 +1171,7 @@
       <div class="impact-item">
         <iconify-icon icon="mdi:account-group-outline" width="32" style="color:var(--dark);opacity:.5"></iconify-icon>
         <div>
-          <div class="impact-num">200+</div>
+          <div class="impact-num" id="impactMembres">200+</div>
           <div class="impact-label">OSC membres</div>
         </div>
       </div>
@@ -1233,14 +1185,14 @@
       <div class="impact-item">
         <iconify-icon icon="mdi:clipboard-list-outline" width="32" style="color:var(--dark);opacity:.5"></iconify-icon>
         <div>
-          <div class="impact-num">30+</div>
+          <div class="impact-num" id="impactProjets">30+</div>
           <div class="impact-label">Projets réalisés</div>
         </div>
       </div>
       <div class="impact-item">
         <iconify-icon icon="mdi:human-child" width="32" style="color:var(--dark);opacity:.5"></iconify-icon>
         <div>
-          <div class="impact-num">10k+</div>
+          <div class="impact-num" id="impactBeneficiaires">10k+</div>
           <div class="impact-label">Enfants bénéficiaires</div>
         </div>
       </div>
@@ -1741,7 +1693,7 @@
         <!-- 1. Sensibilisation adolescentes -->
         <div class="gal-card" data-cat="sensibilisation">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--gold-700) 0%, var(--gold-900) 100%)">
-            <img src="assets/img/gallery/sensib-abomey-calavi.jpg" alt="" />
+            <img src="assets/img/gallery/sensib-abomey-calavi.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:account-group-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Sensibilisation</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-sensib">Sensibilisation</span><div class="gal-title">Séance de sensibilisation des adolescentes et jeunes filles — Violences en ligne</div><div class="gal-photo-note"><iconify-icon icon="mdi:map-marker-outline" width="12"></iconify-icon>Abomey-Calavi, 2024</div></div>
@@ -1750,7 +1702,7 @@
         <!-- 2. Concours presse cérémonie -->
         <div class="gal-card" data-cat="concours">
           <div class="gal-img" style="background:linear-gradient(135deg, #C62828 0%, #FF6B6B 100%)">
-            <img src="assets/img/gallery/concours-presse-ceremony.jpg" alt="" />
+            <img src="assets/img/gallery/concours-presse-ceremony.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:trophy-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Concours Presse</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-concours">Concours</span><div class="gal-title">Cérémonie de remise de prix — 2ème édition du concours de presse</div><div class="gal-photo-note"><iconify-icon icon="mdi:calendar-outline" width="12"></iconify-icon">Décembre 2024</div></div>
@@ -1759,7 +1711,7 @@
         <!-- 3. Atelier FAPHB Genre -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-faphb-genre.jpg" alt="" />
+            <img src="assets/img/gallery/atelier-faphb-genre.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Atelier FAPHB — Renforcement de capacités sur le genre et l'inclusion</div><div class="gal-photo-note"><iconify-icon icon="mdi:people-outline" width="12"></iconify-icon">Membres FAPHB</div></div>
@@ -1768,7 +1720,7 @@
         <!-- 4. Atelier renouvellement CCNE -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-ccne-guide.jpg" alt="" />
+            <img src="assets/img/gallery/atelier-ccne-guide.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Atelier de relecture du guide — Renouvellement du Conseil Consultatif National des Enfants</div><div class="gal-photo-note"><iconify-icon icon="mdi:check-circle-outline" width="12"></iconify-icon">2024</div></div>
@@ -1777,7 +1729,7 @@
         <!-- 5. Atelier jury concours -->
         <div class="gal-card" data-cat="concours">
           <div class="gal-img" style="background:linear-gradient(135deg, #C62828 0%, #FF6B6B 100%)">
-            <img src="assets/img/gallery/atelier-jury-concours.jpg" alt="" />
+            <img src="assets/img/gallery/atelier-jury-concours.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:trophy-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Concours</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-concours">Concours</span><div class="gal-title">Atelier d'installation du jury et appropriation des contours du concours de presse</div><div class="gal-photo-note"><iconify-icon icon="mdi:clipboard-check-outline" width="12"></iconify-icon">Pré-concours</div></div>
@@ -1786,7 +1738,7 @@
         <!-- 6. Atelier groupes enfants -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-groupes-enfants.jpg" alt="" />
+            <img src="assets/img/gallery/atelier-groupes-enfants.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Renforcement des capacités des groupes organisés d'enfants</div><div class="gal-photo-note"><iconify-icon icon="mdi:account-multiple-outline" width="12"></iconify-icon">Jeunes leaders</div></div>
@@ -1795,7 +1747,7 @@
         <!-- 7. Formation réseaux sociaux -->
         <div class="gal-card" data-cat="formation">
           <div class="gal-img" style="background:linear-gradient(135deg, #1A56B0 0%, #3B82F6 100%)">
-            <img src="assets/img/gallery/formation-reseaux-sociaux.jpg" alt="" />
+            <img src="assets/img/gallery/formation-reseaux-sociaux.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:laptop-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Formation</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-formation">Formation</span><div class="gal-title">Formation — Utilisation des réseaux sociaux pour défendre les droits des enfants</div><div class="gal-photo-note"><iconify-icon icon="mdi:share-social-outline" width="12"></iconify-icon>Plaidoyer numérique</div></div>
@@ -1804,7 +1756,7 @@
         <!-- 8. Atelier partenariat Plan Intl -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-plan-intl.jpg" alt="" />
+            <img src="assets/img/gallery/atelier-plan-intl.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Renforcement de partenariat — Nouvelles stratégies de Plan International Bénin</div><div class="gal-photo-note"><iconify-icon icon="mdi:handshake-outline" width="12"></iconify-icon>OSC membres</div></div>
@@ -1813,7 +1765,7 @@
         <!-- 9. Rencontre semestrielle OSC -->
         <div class="gal-card" data-cat="rencontre">
           <div class="gal-img" style="background:linear-gradient(135deg, #6B21A8 0%, #A855F7 100%)">
-            <img src="assets/img/gallery/rencontre-osc-semestrielle.jpg" alt="" />
+            <img src="assets/img/gallery/rencontre-osc-semestrielle.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:handshake-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Rencontre</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-rencontre">Rencontre</span><div class="gal-title">Rencontre semestrielle de synergie des OSC et réseaux de promotion des droits de l'enfant</div><div class="gal-photo-note"><iconify-icon icon="mdi:map-outline" width="12"></iconify-icon">12 Départements</div></div>
@@ -1822,7 +1774,7 @@
         <!-- 10. Elle Inspire Donga -->
         <div class="gal-card" data-cat="sensibilisation">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--gold-700) 0%, var(--gold-900) 100%)">
-            <img src="assets/img/gallery/elle-inspire-donga.jpg" alt="" />
+            <img src="assets/img/gallery/elle-inspire-donga.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:account-group-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Elle Inspire</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-sensib">Sensibilisation</span><div class="gal-title">Activité Elle Inspire — Autonomisation des filles et jeunes femmes</div><div class="gal-photo-note"><iconify-icon icon="mdi:map-marker-outline" width="12"></iconify-icon">Donga, 2024</div></div>
@@ -1831,7 +1783,7 @@
         <!-- 11. Rencontre Ouémé -->
         <div class="gal-card" data-cat="rencontre">
           <div class="gal-img" style="background:linear-gradient(135deg, #6B21A8 0%, #A855F7 100%)">
-            <img src="assets/img/gallery/rencontre-ogueme.jpg" alt="" />
+            <img src="assets/img/gallery/rencontre-ogueme.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:handshake-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Rencontre</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-rencontre">Rencontre</span><div class="gal-title">Rencontre semestrielle de la Coordination Départementale de l'Ouémé</div><div class="gal-photo-note"><iconify-icon icon="mdi:calendar-outline" width="12"></iconify-icon">Septembre 2024</div></div>
@@ -1840,7 +1792,7 @@
         <!-- 12. Atelier contenu médiatique -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-contenu-media.jpg" alt="" />
+            <img src="assets/img/gallery/atelier-contenu-media.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Élaboration du contenu médiatique et conception visuelle pour le plaidoyer</div><div class="gal-photo-note"><iconify-icon icon="mdi:palette-outline" width="12"></iconify-icon">Communication</div></div>
@@ -1849,7 +1801,7 @@
         <!-- 13. Atelier handicap -->
         <div class="gal-card" data-cat="atelier">
           <div class="gal-img" style="background:linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%)">
-            <img src="assets/img/gallery/atelier-handicap-inclusion.jpg" alt="" />
+            <img src="assets/img/gallery/atelier-handicap-inclusion.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:school-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Atelier</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-atelier">Atelier</span><div class="gal-title">Commission interministérielle — Inclusion des personnes handicapées</div><div class="gal-photo-note"><iconify-icon icon="mdi:accessibility-outline" width="12"></iconify-icon">Politique publique</div></div>
@@ -1858,7 +1810,7 @@
         <!-- 14. Séance restitution SC -->
         <div class="gal-card" data-cat="plaidoyer">
           <div class="gal-img" style="background:linear-gradient(135deg, #9D174D 0%, #EC4899 100%)">
-            <img src="assets/img/gallery/restitution-societe-civile.jpg" alt="" />
+            <img src="assets/img/gallery/restitution-societe-civile.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:bullhorn-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Plaidoyer</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-plaidoyer">Plaidoyer</span><div class="gal-title">Séance de restitution de la délégation de la société civile auprès des autorités</div><div class="gal-photo-note"><iconify-icon icon="mdi:microphone-outline" width="12"></iconify-icon">Advocacy</div></div>
@@ -1867,7 +1819,7 @@
         <!-- 15. Séance Garde des Sceaux -->
         <div class="gal-card" data-cat="plaidoyer">
           <div class="gal-img" style="background:linear-gradient(135deg, #9D174D 0%, #EC4899 100%)">
-            <img src="assets/img/gallery/entretien-garde-sceaux.jpg" alt="" />
+            <img src="assets/img/gallery/entretien-garde-sceaux.jpg" alt="" / onerror="this.closest('.gal-card').style.display='none'">
             <div class="gal-placeholder"><iconify-icon icon="mdi:bullhorn-outline" width="32" style="color:rgba(255,255,255,.4)"></iconify-icon><span class="gal-placeholder-label">Plaidoyer</span></div>
           </div>
           <div class="gal-body"><span class="gal-cat cat-plaidoyer">Plaidoyer</span><div class="gal-title">Séance d'entretien de la délégation OSC avec le Garde des Sceaux</div><div class="gal-photo-note"><iconify-icon icon="mdi:gavel-outline" width="12"></iconify-icon>Août 2024 • Cotonou</div></div>
@@ -2541,6 +2493,95 @@
         navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
     }
+
+    // ── Données dynamiques depuis le Sheet ──────────────────────
+    async function loadDynamicData() {
+      try {
+        // 1. Hero-cards : 3 projets validés les plus récents
+        const res = await FODDEB_API.projets.list({});
+        if (res.success && res.data && res.data.length > 0) {
+          const DOMAIN_ICONS = {
+            'Protection':    { icon: 'mdi:shield-check-outline',  cls: 'icon-green' },
+            'Education':     { icon: 'mdi:school-outline',         cls: 'icon-gold'  },
+            'Sant':          { icon: 'mdi:heart-pulse',            cls: 'icon-red'   },
+            'Num':           { icon: 'mdi:laptop-outline',         cls: 'icon-green' },
+            'Environnement': { icon: 'mdi:leaf-outline',           cls: 'icon-green' },
+            'Developpement': { icon: 'mdi:home-group',             cls: 'icon-gold'  },
+          };
+          const getDI = d => {
+            const k = Object.keys(DOMAIN_ICONS).find(k => (d||'').includes(k));
+            return DOMAIN_ICONS[k] || { icon: 'mdi:clipboard-list-outline', cls: 'icon-green' };
+          };
+
+          const projets = res.data.slice(0, 3);
+          const container = document.getElementById('heroProjectCards');
+          if (container) {
+            container.innerHTML = projets.map(p => {
+              const di  = getDI(p.Domaine || p.domaine || '');
+              const prg = parseInt(p.Progression || p.progression) || 0;
+              const st  = (p.Statut || p.statut || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+              const stLabel = st === 'valide' ? 'Validé' : st === 'en_cours' ? 'En cours' : st === 'termine' ? 'Réalisé' : p.Statut || '';
+              return \`<div class="hero-card">
+                <div class="hero-card-header">
+                  <div class="hero-card-icon \${di.cls}">
+                    <iconify-icon icon="\${di.icon}" width="22"></iconify-icon>
+                  </div>
+                  <div>
+                    <div class="hero-card-title">\${p.Titre || p.titre || 'Projet'}</div>
+                    <div class="hero-card-sub">\${p.Domaine || p.domaine || stLabel}</div>
+                  </div>
+                </div>
+                <div class="hero-card-body">\${(p.Description || p.description || '').slice(0, 120)}\${(p.Description||p.description||'').length > 120 ? '…' : ''}</div>
+                \${prg > 0 ? \`<div class="progress-bar" style="margin-top:10px">
+                  <div class="progress-fill" style="width:\${prg}%"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:rgba(255,255,255,.5)">
+                  <span>Progression</span><span>\${prg}%</span>
+                </div>\` : ''}
+              </div>\`;
+            }).join('');
+          }
+
+          // 2. Impact strip : Projets réalisés = statut 'termine'
+          const termines = res.data.filter(p => {
+            const st = (p.Statut || p.statut || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+            return st === 'termine';
+          }).length;
+          const totalValides = res.data.length;
+
+          // Bénéficiaires total depuis les données
+          const totalBenef = res.data.reduce((s, p) => s + (parseInt(p.Beneficiaires || p.beneficiaires) || 0), 0);
+
+          const el = id => document.getElementById(id);
+          if (el('impactProjets') && termines > 0)
+            el('impactProjets').textContent = termines + '+';
+          if (el('impactBeneficiaires') && totalBenef > 0)
+            el('impactBeneficiaires').textContent = totalBenef >= 10000 ? Math.round(totalBenef/1000) + 'k+' : totalBenef + '+';
+          if (el('statBeneficiaires') && totalBenef > 0)
+            el('statBeneficiaires').textContent = totalBenef >= 10000 ? Math.round(totalBenef/1000) + 'k+' : totalBenef + '+';
+        }
+
+        // 3. Membres actifs depuis dashboardStats
+        try {
+          const stats = await FODDEB_API.dashboard.stats();
+          if (stats.success && stats.membres) {
+            const actifs = stats.membres.actifs || 0;
+            if (actifs > 0) {
+              const el = id => document.getElementById(id);
+              if (el('statMembres'))   el('statMembres').textContent   = actifs + '+';
+              if (el('impactMembres')) el('impactMembres').textContent = actifs + '+';
+            }
+          }
+        } catch(e) { /* stats non critiques */ }
+
+      } catch(err) {
+        // Échec silencieux — les valeurs statiques restent affichées
+        console.warn('loadDynamicData:', err.message);
+      }
+    }
+
+    // Charger après le DOM
+    document.addEventListener('DOMContentLoaded', loadDynamicData);
 
     // ── Galerie photos - filtre par catégorie ─────────────────
     function filterGalerie(category) {

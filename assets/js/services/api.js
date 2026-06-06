@@ -10,18 +10,34 @@ const FODDEB_API = (() => {
   /* Remplacez par l'URL de votre déploiement GAS */
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJ38GiGFlEb_eboz3XD5J1BoWGWXxUB79EcDD8Iv1oMIcQ2Q1G7nZlvVmNxllPYXvubQ/exec';
 
-  /* -------- Requête générique -------- */
+  /* -------- Requête générique — timeout 60 s -------- */
   const request = async (action, payload = {}) => {
-    const body = JSON.stringify({ action, ...payload });
-    const resp = await fetch(GAS_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'text/plain' }, // GAS nécessite text/plain pour éviter preflight CORS
-      body
-    });
-    if (!resp.ok) throw new Error(`Erreur réseau : ${resp.status}`);
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error);
-    return data;
+    const body       = JSON.stringify({ action, ...payload });
+    const controller = new AbortController();
+    // 60 secondes : laisse le temps aux uploads Drive (4 fichiers)
+    const timer = setTimeout(() => controller.abort(), 60_000);
+    try {
+      const resp = await fetch(GAS_URL, {
+        method:   'POST',
+        headers:  { 'Content-Type': 'text/plain' }, // simple request → pas de preflight CORS
+        redirect: 'follow',                          // GAS retourne un 302 — on suit explicitement
+        signal:   controller.signal,
+        body,
+      });
+      clearTimeout(timer);
+      if (!resp.ok) throw new Error(`Erreur réseau : ${resp.status}`);
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      return data;
+    } catch (err) {
+      clearTimeout(timer);
+      // Traduire les erreurs techniques en messages lisibles
+      if (err.name === 'AbortError')
+        throw new Error('Délai dépassé (60 s). Vérifiez votre connexion et réessayez.');
+      if (err.message === 'Failed to fetch' || err.message === 'NetworkError when attempting to fetch resource.')
+        throw new Error('Impossible de joindre le serveur. Vérifiez votre connexion internet.');
+      throw err;
+    }
   };
 
   /* ============================================================
@@ -85,6 +101,14 @@ const FODDEB_API = (() => {
      */
     uploadFile: (base64, fileName, mimeType, context, contextId) =>
                   request('upload_file', { base64, fileName, mimeType, context, contextId }),
+
+    /* Vérifications d'unicité — appels légers, pas de fichier */
+    checkEmail: (email) =>
+                  request('members_check_email', { email }),
+    checkPhone: (phone) =>
+                  request('members_check_phone', { phone }),
+    checkCni:   (cni)   =>
+                  request('members_check_cni',   { cni }),
   };
 
   /* ============================================================

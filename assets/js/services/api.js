@@ -3,13 +3,14 @@
    Connecteur Google Apps Script (GAS) — base de données Sheets
    ============================================================ */
 
-if (!window.FODDEB_CONFIG) {
-  document.write('<script src="/assets/js/config.js"><\/script>');
-}
-
+/* ── Guard double-inclusion ────────────────────────────────────────────────
+   'var' tolère la re-déclaration. config.js doit être chargé avant api.js.
+   'document.write' supprimé — config.js est chargé en 1er dans le <head>.
+   ────────────────────────────────────────────────────────────────────────── */
 'use strict';
 
-const FODDEB_API = (() => {
+// eslint-disable-next-line no-var
+var FODDEB_API = window.FODDEB_API || (() => {
 
   const GAS_URL = '/api/gas';
 

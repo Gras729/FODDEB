@@ -435,11 +435,16 @@ const getDomainCfg = d => {
 };
 
 const STATUS_CFG = {
-  en_cours: { label:'En cours',  cls:'sb-active' },
-  termine:  { label:'Terminé',   cls:'sb-done'   },
-  Terminé:  { label:'Terminé',   cls:'sb-done'   },
-  planifie: { label:'Planifié',  cls:'sb-planned' },
-  soumis:   { label:'En examen', cls:'sb-planned' },
+  en_cours:  { label:'En cours',  cls:'sb-active'  },
+  termine:   { label:'Terminé',   cls:'sb-done'    },
+  Terminé:   { label:'Terminé',   cls:'sb-done'    },
+  terminé:   { label:'Terminé',   cls:'sb-done'    },
+  planifie:  { label:'Planifié',  cls:'sb-planned' },
+  soumis:    { label:'En examen', cls:'sb-planned' },
+  'validé':  { label:'Validé',    cls:'sb-active'  },
+  valide:    { label:'Validé',    cls:'sb-active'  },
+  'à revoir':{ label:'À revoir',  cls:'sb-planned' },
+  suspendu:  { label:'Suspendu',  cls:'sb-planned' },
 };
 
 /* ── Formateurs ── */

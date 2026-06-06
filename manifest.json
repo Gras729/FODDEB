@@ -9,7 +9,11 @@
   "orientation": "any",
   "scope": "/",
   "lang": "fr",
-  "categories": ["education", "social", "nonprofit"],
+  "categories": [
+    "education",
+    "social",
+    "nonprofit"
+  ],
   "icons": [
     {
       "src": "/assets/icons/favicon-16x16.png",
@@ -93,29 +97,24 @@
   "shortcuts": [
     {
       "name": "Tableau de bord",
-      "url": "/admin/dashboard",
-      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
+      "url": "/dashboard/donor",
+      "icons": [
+        {
+          "src": "/assets/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Faire un don",
       "url": "/#don",
-      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/assets/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "FODDEB sur ordinateur"
-    },
-    {
-      "src": "/screenshots/mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "FODDEB sur mobile"
-    }
-  ]
+  "prefer_related_applications": false
 }

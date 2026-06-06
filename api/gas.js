@@ -17,6 +17,14 @@
 
 export default async function handler(req, res) {
 
+  // Preflight CORS — navigateurs envoient OPTIONS avant POST
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).end();
+  }
+
   // Uniquement POST accepté
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Méthode non autorisée' });
@@ -28,21 +36,20 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, error: 'Configuration serveur manquante' });
   }
 
-  // En-têtes CORS — autoriser uniquement le domaine de production
+  // En-têtes CORS systématiques
   const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim());
   const origin = req.headers.origin || '';
-  if (ALLOWED_ORIGINS.length > 0 && ALLOWED_ORIGINS[0] !== '*' && !ALLOWED_ORIGINS.includes(origin)) {
+  const allowOrigin = (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS[0] === '*' || ALLOWED_ORIGINS.includes(origin))
+    ? (origin || '*')
+    : null;
+
+  if (!allowOrigin) {
     return res.status(403).json({ success: false, error: 'Origine non autorisée' });
   }
 
-  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Origin',  allowOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  // Preflight OPTIONS
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
 
   try {
     // Extraire le body — Vercel le parse selon Content-Type

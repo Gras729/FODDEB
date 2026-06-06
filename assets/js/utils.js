@@ -5,7 +5,15 @@
 
 'use strict';
 
-const FODDEB = window.FODDEB || {};
+/* ── Guard double-inclusion ────────────────────────────────────────────────
+   'var' tolère la re-déclaration contrairement à 'const'.
+   Ce guard empêche la réinitialisation si le script est chargé 2×.
+   ────────────────────────────────────────────────────────────────────────── */
+if (window.__FODDEB_UTILS_LOADED__) { /* déjà initialisé — sortie précoce */ }
+else { window.__FODDEB_UTILS_LOADED__ = true; }
+
+// eslint-disable-next-line no-var
+var FODDEB = window.FODDEB || {};
 
 /* -------- Formatage -------- */
 FODDEB.formatCFA = (amount) =>

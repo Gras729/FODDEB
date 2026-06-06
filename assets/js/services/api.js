@@ -19,11 +19,11 @@ const FODDEB_API = (() => {
   const GAS_URL = '/api/gas';
 
   /* -------- Requête générique — timeout 60 s -------- */
-  const request = async (action, payload = {}) => {
+  const request = async (action, payload = {}, timeoutMs = 15_000) => {
     const body       = JSON.stringify({ action, ...payload });
     const controller = new AbortController();
-    // 60 secondes : laisse le temps aux uploads Drive (4 fichiers)
-    const timer = setTimeout(() => controller.abort(), 60_000);
+    // Timeout adaptatif : 15s par défaut, 30s pour les uploads Drive
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const resp = await fetch(GAS_URL, {
         method:   'POST',
@@ -107,7 +107,7 @@ const FODDEB_API = (() => {
      * Retourne  : { success, url, fileName }
      */
     uploadFile: (base64, fileName, mimeType, context, contextId) =>
-                  request('upload_file', { base64, fileName, mimeType, context, contextId }),
+                  request('upload_file', { base64, fileName, mimeType, context, contextId }, 30_000),
 
     /* Vérifications d'unicité — appels légers, pas de fichier */
     checkEmail: (email) =>
@@ -119,7 +119,7 @@ const FODDEB_API = (() => {
 
     /* Phase 2 — upload fichier individuel après création du compte */
     uploadFile: (memberId, fileType, base64, mime) =>
-                  request('member_upload_file',  { memberId, fileType, base64, mime }),
+                  request('member_upload_file',  { memberId, fileType, base64, mime }, 30_000),
 
     /* Phase 3 — email admin après tous les uploads */
     finalize:   (memberId) =>

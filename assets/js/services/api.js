@@ -3,6 +3,12 @@
    Connecteur Google Apps Script (GAS) — base de données Sheets
    ============================================================ */
 
+// Chargement automatique de config.js s'il n'est pas encore présent.
+// Evite d'ajouter une balise <script> dans chaque HTML.
+if (!window.FODDEB_CONFIG) {
+  document.write('<script src="/assets/js/config.js"><\/script>');
+}
+
 'use strict';
 
 const FODDEB_API = (() => {

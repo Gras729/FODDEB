@@ -446,7 +446,7 @@
 <!-- MODAL PROPOSER UN PROJET -->
 <div class="mo" id="projetM">
   <div class="modal">
-    <div class="mh"><h3 class="mt">Proposer un projet</h3><button class="mc" onclick="closeM('projetM')">&#x2715;</button></div>
+    <div class="mh"><h3 class="mt" id="pjModalTitre">Proposer un projet</h3><button class="mc" onclick="closeProjetModal()">&#x2715;</button></div>
     <div class="mb">
 
       <div class="fg">
@@ -540,7 +540,7 @@
       </p>
     </div>
     <div class="mf">
-      <button class="btn btn-o btn-sm" onclick="closeM('projetM')">Annuler</button>
+      <button class="btn btn-o btn-sm" onclick="closeProjetModal()">Annuler</button>
       <button class="btn btn-p btn-sm" id="pjBtn" onclick="submitProjet()">
         <iconify-icon icon="mdi:send-outline"></iconify-icon>Soumettre
       </button>
@@ -643,11 +643,12 @@ const COLORS   = ['#1B5E20','#1565C0','#6A1B9A','#C62828','#F57F17','#00695C'];
 const gc = i => COLORS[i % COLORS.length];
 
 const STAT_MAP = {
-  en_cours: '<span class="badge bs"><span class="bdot"></span>En cours</span>',
-  planifie: '<span class="badge bw"><span class="bdot"></span>Planifie</span>',
-  soumis:   '<span class="badge bi"><span class="bdot"></span>Soumis</span>',
-  termine:  '<span class="badge bi"><span class="bdot"></span>Termine</span>',
-  rejété:   '<span class="badge br"><span class="bdot"></span>Rejété</span>',
+  en_cours:  '<span class="badge bs"><span class="bdot"></span>En cours</span>',
+  planifie:  '<span class="badge bw"><span class="bdot"></span>Planifié</span>',
+  soumis:    '<span class="badge bi"><span class="bdot"></span>Soumis</span>',
+  termine:   '<span class="badge bi"><span class="bdot"></span>Terminé</span>',
+  rejété:    '<span class="badge br"><span class="bdot"></span>Rejeté</span>',
+  'à revoir':'<span class="badge" style="background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2"><span class="bdot" style="background:#E65100"></span>À revoir</span>',
 };
 
 const DOM_ICONS = {
@@ -915,32 +916,79 @@ async function loadProjets() {
 }
 
 /* ═══ DETAIL PROJET ═══ */
+/* ─── État global du mode édition ─────────────────────────────────────
+ * null  = création d'un nouveau projet
+ * objet = modification d'un projet existant (statut 'à revoir')
+ */
+let _editProjet = null;
+
+/* ═══ FERMETURE MODAL PROJET ═══
+ * Réinitialise le mode édition et restaure le libellé création.
+ */
+function closeProjetModal() {
+  _editProjet = null;
+  const titleEl = document.getElementById('pjModalTitre');
+  const btnEl   = document.getElementById('pjBtn');
+  if (titleEl) titleEl.textContent = 'Proposer un projet';
+  if (btnEl)   btnEl.innerHTML = '<iconify-icon icon="mdi:send-outline"></iconify-icon>Soumettre';
+  closeM('projetM');
+}
+
+/* ═══ OUVRIR EN MODE ÉDITION ═══
+ * Pré-remplit le formulaire avec les données du projet.
+ * Appelé depuis openProjetDetail() si statut === 'à revoir'.
+ */
+function openEditProjet(projet) {
+  _editProjet = projet;
+
+  const titleEl = document.getElementById('pjModalTitre');
+  const btnEl   = document.getElementById('pjBtn');
+  if (titleEl) titleEl.textContent = 'Modifier le projet';
+  if (btnEl)   btnEl.innerHTML = '<iconify-icon icon="mdi:content-save-outline"></iconify-icon>Enregistrer';
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('pjTitre',  projet.Titre         || projet.titre         || '');
+  set('pjDesc',   projet.Description   || projet.description   || '');
+  set('pjDept',   projet.Département   || projet.département   || '');
+  set('pjBenef',  projet.Beneficiaires || projet.beneficiaires || '');
+  set('pjBudget', projet.Budget        || projet.budget        || '');
+  set('pjDate',   projet.DateDebut     || projet.dateDebut     || '');
+
+  // Réinitialiser les zones de fichier (le membre rechargera s'il veut changer)
+  removeFile({ stopPropagation: () => {} }, 'img');
+  removeFile({ stopPropagation: () => {} }, 'doc');
+
+  closeM('projetDetailM');
+  openM('projetM');
+}
+
+/* ═══ DETAIL PROJET ═══ */
 function openProjetDetail(projet) {
-  const p      = typeof projet === 'string' ? JSON.parse(projet) : projet;
-  const titre  = p.Titre       || p.titre       || '—';
-  const statut = p.Statut      || p.statut      || 'soumis';
-  const dept   = p.Département || p.département || '—';
-  const budget = p.Budget      || p.budget      || '';
-  const benef  = p.Beneficiaires || p.beneficiaires || '';
-  const date   = p.DateDebut   || p.dateDebut   || '';
-  const dateFin= p.DateFin     || p.dateFin     || '';
-  const desc   = p.Description || p.description || '—';
-  const prog   = parseInt(p.Progression || p.progression || 0);
-  const fichier= p.FichierURL  || p.fichierurl  || '';
-  const imgURL = p.ImageURL    || p.imageurl    || '';
+  const p       = typeof projet === 'string' ? JSON.parse(projet) : projet;
+  const titre   = p.Titre         || p.titre         || '—';
+  const statut  = p.Statut        || p.statut         || 'soumis';
+  const dept    = p.Département   || p.département    || '—';
+  const budget  = p.Budget        || p.budget         || '';
+  const benef   = p.Beneficiaires || p.beneficiaires  || '';
+  const date    = p.DateDebut     || p.dateDebut      || '';
+  const dateFin = p.DateFin       || p.dateFin        || '';
+  const desc    = p.Description   || p.description    || '—';
+  const prog    = parseInt(p.Progression || p.progression || 0);
+  const fichier = p.FichierURL    || p.fichierurl     || '';
+  const imgURL  = p.ImageURL      || p.imageurl       || '';
 
-  document.getElementById('pdTitre').textContent    = titre;
-  document.getElementById('pdStatut').innerHTML     = STAT_MAP[statut] || statut;
-  document.getElementById('pdDept').textContent     = dept;
-  document.getElementById('pdBudget').textContent   = budget ? fmtXOF(budget) : '—';
-  document.getElementById('pdBenef').textContent    = fmtBenef(benef);
-  document.getElementById('pdDate').textContent     = fmtD(date);
-  document.getElementById('pdDateFin').textContent  = fmtD(dateFin);
-  document.getElementById('pdDesc').textContent     = desc;
-  document.getElementById('pdProg').style.width     = prog + '%';
-  document.getElementById('pdProgTxt').textContent  = prog + '%';
+  document.getElementById('pdTitre').textContent   = titre;
+  document.getElementById('pdStatut').innerHTML    = STAT_MAP[statut] || statut;
+  document.getElementById('pdDept').textContent    = dept;
+  document.getElementById('pdBudget').textContent  = budget ? fmtXOF(budget) : '—';
+  document.getElementById('pdBenef').textContent   = fmtBenef(benef);
+  document.getElementById('pdDate').textContent    = fmtD(date);
+  document.getElementById('pdDateFin').textContent = fmtD(dateFin);
+  document.getElementById('pdDesc').textContent    = desc;
+  document.getElementById('pdProg').style.width    = prog + '%';
+  document.getElementById('pdProgTxt').textContent = prog + '%';
 
-  // Image de couverture dans le detail
+  // Image de couverture dans le détail
   const imgWrap = document.getElementById('pdImgWrap');
   if (imgURL) {
     imgWrap.innerHTML = `<img src="${imgURL}" class="pd-cover" alt="${titre}" onerror="this.style.display='none'"/>`;
@@ -950,28 +998,40 @@ function openProjetDetail(projet) {
     imgWrap.innerHTML = `<div class="pd-cover-placeholder" style="background:${cfg.bg}"><iconify-icon icon="${cfg.icon}" style="color:${cfg.color}"></iconify-icon></div>`;
   }
 
-// Téléchargement direct pour les membres
-const wrap = document.getElementById('pdFichierWrap');
-if (fichier) {
-  const fileId = fichier.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1]
-               || fichier.match(/id=([a-zA-Z0-9_-]+)/)?.[1];
-  const dlUrl = fileId
-    ? `https://drive.google.com/uc?export=download&id=${fileId}`
-    : fichier;
-  wrap.innerHTML = `
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-400);margin-bottom:8px">Document joint</div>
-    <a href="${dlUrl}" target="_blank" rel="noopener"
-       style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--green-50);border:1.5px solid var(--green-100);border-radius:var(--rs);font-size:14px;font-weight:600;color:var(--green-800);">
-      <iconify-icon icon="mdi:download-outline" style="font-size:18px"></iconify-icon>
-      Télécharger — ${p.FichierNom || p.fichierNom || 'Document'}
-    </a>`;
-  wrap.style.display = 'block';
-} else {
-  wrap.innerHTML = '';
-  wrap.style.display = 'none';
-}
+  // Document joint — téléchargement direct
+  const wrap = document.getElementById('pdFichierWrap');
+  if (fichier) {
+    const fileId = fichier.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1]
+                 || fichier.match(/id=([a-zA-Z0-9_-]+)/)?.[1];
+    const dlUrl = fileId
+      ? `https://drive.google.com/uc?export=download&id=${fileId}`
+      : fichier;
+    wrap.innerHTML = `
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-400);margin-bottom:8px">Document joint</div>
+      <a href="${dlUrl}" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--green-50);border:1.5px solid var(--green-100);border-radius:var(--rs);font-size:14px;font-weight:600;color:var(--green-800);">
+        <iconify-icon icon="mdi:download-outline" style="font-size:18px"></iconify-icon>
+        Télécharger — ${p.FichierNom || p.fichierNom || 'Document'}
+      </a>`;
+    wrap.style.display = 'block';
+  } else {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+  }
 
-openM('projetDetailM');   // ← inchangé
+  // ─── Bouton "Modifier" — visible uniquement si statut = 'à revoir' ───
+  const footer = document.querySelector('#projetDetailM .mf');
+  document.getElementById('pdModifierBtn')?.remove(); // supprimer si déjà présent
+  if (statut === 'à revoir') {
+    const modBtn = document.createElement('button');
+    modBtn.id        = 'pdModifierBtn';
+    modBtn.className = 'btn btn-p btn-sm';
+    modBtn.innerHTML = '<iconify-icon icon="mdi:pencil-outline"></iconify-icon>Modifier';
+    modBtn.onclick   = () => openEditProjet(p);
+    footer.insertBefore(modBtn, footer.firstChild); // avant le bouton Fermer
+  }
+
+  openM('projetDetailM');
 }
 
 /* ═══ ACTIVITE ═══ */
@@ -1078,8 +1138,10 @@ function telecharger(url, titre) {
   window.open(url, '_blank');
 }
 
-/* ═══ SOUMETTRE PROJET ═══
- * Upload image + document vers GAS Drive avant de créer le projet
+/* ═══ SOUMETTRE / METTRE À JOUR UN PROJET ═══
+ * Gère CREATE (nouveau projet) et UPDATE (modification 'à revoir').
+ * FIX BUG UPLOAD : utilise uploadProjectFile (renommé dans api.js)
+ * pour éviter le conflit avec uploadFile (inscriptions membres).
  */
 async function submitProjet() {
   const titre = document.getElementById('pjTitre').value.trim();
@@ -1099,27 +1161,37 @@ async function submitProjet() {
     if (progLabel) { progLabel.style.display = 'block'; progLabel.textContent = msg; }
     if (progBar)   progBar.style.width = pct + '%';
   };
+  const resetProgress = () => {
+    if (progWrap)  progWrap.style.display  = 'none';
+    if (progLabel) progLabel.style.display = 'none';
+    if (progBar)   progBar.style.width = '0%';
+  };
 
   try {
-    // Générer un ID temporaire pour le dossier Drive
-    const projetId = 'proj_' + Date.now();
-    let imageURL = '';
-    let fichierURL = '';
-    let fichierNom = '';
+    // ID du dossier Drive : réutiliser l'ID existant en mode édition
+    const projetId = _editProjet
+      ? (_editProjet.ID || _editProjet.id || 'proj_' + Date.now())
+      : 'proj_' + Date.now();
 
-    // Upload image de couverture si présente
+    // Conserver les anciens fichiers si le membre n'en sélectionne pas de nouveaux
+    let imageURL   = _editProjet ? (_editProjet.ImageURL   || _editProjet.imageurl   || '') : '';
+    let fichierURL = _editProjet ? (_editProjet.FichierURL || _editProjet.fichierurl || '') : '';
+    let fichierNom = _editProjet ? (_editProjet.FichierNom || _editProjet.fichierNom || '') : '';
+
+    // Upload image de couverture si l'utilisateur en a sélectionné une nouvelle
     if (FILES.img) {
       setProgress(20, 'Upload de l\'image en cours…');
-      const resImg = await FODDEB_API.members.uploadFile(
+      // FIX : uploadProjectFile (anciennement uploadFile — signature incorrecte)
+      const resImg = await FODDEB_API.members.uploadProjectFile(
         FILES.img.base64, FILES.img.fileName, FILES.img.mimeType, 'projet', projetId
       );
       if (resImg.success) imageURL = resImg.url;
     }
 
-    // Upload document si présent
+    // Upload document si l'utilisateur en a sélectionné un nouveau
     if (FILES.doc) {
       setProgress(50, 'Upload du document en cours…');
-      const resDoc = await FODDEB_API.members.uploadFile(
+      const resDoc = await FODDEB_API.members.uploadProjectFile(
         FILES.doc.base64, FILES.doc.fileName, FILES.doc.mimeType, 'projet', projetId
       );
       if (resDoc.success) {
@@ -1128,51 +1200,67 @@ async function submitProjet() {
       }
     }
 
-    setProgress(75, 'Soumission du projet…');
+    setProgress(75, _editProjet ? 'Mise à jour du projet…' : 'Soumission du projet…');
 
-    const benef = parseInt(document.getElementById('pjBenef').value) || 0;
+    const benef  = parseInt(document.getElementById('pjBenef').value)   || 0;
+    const budget = parseFloat(document.getElementById('pjBudget').value) || 0;
 
-    const res = await FODDEB_API.projets.create({
+    const payload = {
       Titre:         titre,
       Description:   desc,
       Departement:   document.getElementById('pjDept').value,
-      Budget:        parseFloat(document.getElementById('pjBudget').value) || 0,
+      Budget:        budget,
       Beneficiaires: benef,
       DateDebut:     document.getElementById('pjDate').value,
       ImageURL:      imageURL,
       FichierURL:    fichierURL,
       FichierNom:    fichierNom,
-      Statut:        'soumis',
-      Progression:   0,
       Responsable:   (USER.Prénom || USER.prénom || '') + ' ' + (USER.Nom || USER.nom || ''),
-    });
+    };
+
+    let res;
+    if (_editProjet) {
+      // MODE MISE À JOUR — GAS vérifie propriété + statut 'à revoir' + force Statut='soumis'
+      const editId = _editProjet.ID || _editProjet.id;
+      res = await FODDEB_API.projets.update(editId, payload);
+    } else {
+      // MODE CRÉATION
+      res = await FODDEB_API.projets.create({
+        ...payload,
+        Statut:      'soumis',
+        Progression: 0,
+      });
+    }
 
     if (!res.success) throw new Error(res.error);
 
-    setProgress(100, 'Projet soumis avec succès !');
+    setProgress(100, _editProjet ? 'Projet mis à jour !' : 'Projet soumis avec succès !');
+
+    const msg = _editProjet
+      ? 'Projet mis à jour. L\'équipe FODDEB a été notifiée.'
+      : 'Proposition soumise. L\'équipe FODDEB vous contactera sous 5 jours.';
 
     setTimeout(() => {
-      closeM('projetM');
-      // Réinitialiser le formulaire
-      ['pjTitre','pjDesc','pjBudget','pjBenef','pjDate'].forEach(id => {
+      closeProjetModal();
+      ['pjTitre', 'pjDesc', 'pjBudget', 'pjBenef', 'pjDate'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
-      removeFile({ stopPropagation:()=>{} }, 'img');
-      removeFile({ stopPropagation:()=>{} }, 'doc');
-      if (progWrap)  progWrap.style.display  = 'none';
-      if (progLabel) progLabel.style.display = 'none';
-      toast('Proposition soumise. L\'equipe FODDEB vous contactera sous 5 jours.');
+      removeFile({ stopPropagation: () => {} }, 'img');
+      removeFile({ stopPropagation: () => {} }, 'doc');
+      resetProgress();
+      toast(msg);
       loadProjets();
     }, 800);
 
   } catch(e) {
-    if (progWrap)  progWrap.style.display  = 'none';
-    if (progLabel) progLabel.style.display = 'none';
+    resetProgress();
     toast('Erreur : ' + e.message, 'err');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<iconify-icon icon="mdi:send-outline"></iconify-icon>Soumettre';
+    btn.innerHTML = _editProjet
+      ? '<iconify-icon icon="mdi:content-save-outline"></iconify-icon>Enregistrer'
+      : '<iconify-icon icon="mdi:send-outline"></iconify-icon>Soumettre';
   }
 }
 

@@ -16,12 +16,12 @@
 
 window.FODDEB_CONFIG = Object.freeze({
 
-  // reCAPTCHA v3 — site key publique
-  // Changer ici si vous régénérez la clé dans Google Admin Console
+  // reCAPTCHA v3 — site key publique par conception Google
+  // La secret key reste dans GAS (Script Properties : RECAPTCHA_SECRET)
   RECAPTCHA_SITE_KEY: '6LdU3tksAAAAAOAIdgtC7xsQURksQ9mHAZ3MVLXF',
 
-  // Proxy API — ne pas modifier
-  // L'URL réelle de GAS est dans les variables Vercel, jamais ici
+  // Proxy Vercel → GAS — ne pas modifier
+  // La vraie URL GAS est dans les variables d'environnement Vercel (GAS_URL)
   API_ENDPOINT: '/api/gas',
 
   // Informations application
@@ -29,3 +29,17 @@ window.FODDEB_CONFIG = Object.freeze({
   APP_VERSION: '2.2.0',
 
 });
+
+// ─────────────────────────────────────────────────────────────────
+// Injection dynamique du script reCAPTCHA v3
+// Remplace les 5 balises <script src="recaptcha..."> dans les HTML.
+// À supprimer dans : admin/login.html, auth/login.html,
+//                    auth/register.html, index.html, pages/contact.html
+// ─────────────────────────────────────────────────────────────────
+(function () {
+  var s  = document.createElement('script');
+  s.src  = 'https://www.google.com/recaptcha/api.js?render='
+           + window.FODDEB_CONFIG.RECAPTCHA_SITE_KEY;
+  s.async = true;
+  document.head.appendChild(s);
+})();

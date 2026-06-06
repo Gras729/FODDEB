@@ -8,7 +8,9 @@
 const FODDEB_API = (() => {
 
   /* Remplacez par l'URL de votre déploiement GAS */
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxJ38GiGFlEb_eboz3XD5J1BoWGWXxUB79EcDD8Iv1oMIcQ2Q1G7nZlvVmNxllPYXvubQ/exec';
+  // URL du proxy serverless Vercel — GAS_URL est en variable d'environnement côté serveur.
+  // Ne jamais remettre l'URL GAS directement ici.
+  const GAS_URL = '/api/gas';
 
   /* -------- Requête générique — timeout 60 s -------- */
   const request = async (action, payload = {}) => {
@@ -20,7 +22,6 @@ const FODDEB_API = (() => {
       const resp = await fetch(GAS_URL, {
         method:   'POST',
         headers:  { 'Content-Type': 'text/plain' }, // simple request → pas de preflight CORS
-        redirect: 'follow',                          // GAS retourne un 302 — on suit explicitement
         signal:   controller.signal,
         body,
       });

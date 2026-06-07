@@ -108,9 +108,11 @@ const FODDEB_AUTH = (() => {
     const res = await FODDEB_API.auth.verifyOTP(stored.userId, otpInput);
     if (!res.valid) throw new Error(`Code OTP incorrect. ${3 - attempts} essai(s) restant(s).`);
 
-    // OTP validé → ouvrir session
+    // OTP validé → ouvrir session et sauvegarder le token de session
     const user = JSON.parse(sessionStorage.getItem('foddeb_pending_user') || '{}');
     FODDEB.session.set(user);
+    // sessionToken retourné par le GAS — stocker pour les appels sécurisés
+    if (res.sessionToken) FODDEB.session.setToken(res.sessionToken);
     otpStore.clear();
     sessionStorage.removeItem('foddeb_pending_user');
 

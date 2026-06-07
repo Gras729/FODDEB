@@ -856,12 +856,14 @@ function requireMember() {
 
 /* ═══ RENDER PROFIL ═══ */
 function renderUserInfo(user) {
-  const prénom  = user.Prénom  || user.prénom  || '';
-  const nom     = user.Nom     || user.nom     || '';
-  const email   = user.Email   || user.email   || '';
-  const tel     = user.Telephone || user.tel   || '—';
+  // Sheet stocke 'Prenom' (sans accent) — GAS auth retourne 'prenom' (minuscule)
+  const prénom  = user.Prenom || user.Prénom  || user.prenom  || '';
+  const nom     = user.Nom    || user.nom     || '';
+  const email   = user.Email  || user.email   || '';
+  const tel     = user.Telephone || user.tel  || '—';
   const org     = user.Organisation || user.org || '—';
-  const dept    = user.Département  || user.dept || '—';
+  // Sheet stocke 'Departement' (sans accent) — GAS auth retourne 'dept'
+  const dept    = user.Departement || user.Département || user.dept || '—';
   const role    = user.Role    || user.role    || 'member';
   const date    = user.DateAdhesion || user.date || '';
   const init    = ((prénom[0]||'') + (nom[0]||'')).toUpperCase() || '?';
@@ -872,7 +874,8 @@ function renderUserInfo(user) {
   const profAv = document.getElementById('profAv');
   if (profAv) {
     if (photoURL) {
-      profAv.innerHTML = `<img src="${photoURL}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`;
+      // driveImgUrl() convertit les URLs /view en uc?export=view — crossorigin requis pour html2canvas
+      profAv.innerHTML = `<img src="${driveImgUrl(photoURL)}" alt="Photo" crossorigin="anonymous" onerror="this.parentElement.textContent='${init}'"/>`;
     } else {
       profAv.textContent = init;
     }
@@ -987,12 +990,14 @@ function driveEmbedUrl(url) {
     return url;
   } catch { return url; }
 }
-// Convertit l'URL Drive /view en URL miniature directe pour <img>
+// Convertit toute URL Drive /view en URL directement affichable dans <img>.
+// Les URLs déjà en uc?export=view sont retournées sans modification.
+// Les anciennes entrées /view stockées dans le Sheet sont corrigées à la volée.
 function driveImgUrl(url) {
   if (!url) return '';
-  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (!m) return url;
-  return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w800`;
+  if (url.includes('uc?export=view')) return url;
+  const m = url.match(/\/file\/d\/([^/?]+)/);
+  return m ? 'https://drive.google.com/uc?export=view&id=' + m[1] : url;
 }
   
 /* ═══ PROJETS ═══ */
@@ -1543,8 +1548,12 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       const status = document.getElementById('photoUploadStatus');
       if (status) status.style.display = 'block';
       try {
+        // sessionToken transmis au GAS pour vérification d'identité côté serveur
+        const sessionToken = (FODDEB && FODDEB.session && FODDEB.session.getToken)
+          ? FODDEB.session.getToken()
+          : null;
         const res = await FODDEB_API.members.uploadProfilePhoto(
-          PENDING_PHOTO.base64, PENDING_PHOTO.mimeType, USER.ID || USER.id
+          PENDING_PHOTO.base64, PENDING_PHOTO.mimeType, USER.ID || USER.id, sessionToken
         );
         if (!res.success) throw new Error(res.error || 'Erreur upload');
         const updated = { ...USER, PhotoURL: res.url, photoURL: res.url };
@@ -1558,7 +1567,8 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
         // Mettre à jour le badge avatar
         const badgeAv = document.getElementById('badgeAv');
         if (badgeAv && res.url) {
-          badgeAv.innerHTML = `<img src="${res.url}" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+          // driveImgUrl() convertit /view → uc?export=view — crossorigin requis pour html2canvas
+          badgeAv.innerHTML = `<img src="${driveImgUrl(res.url)}" alt="Photo" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
         }
       } catch(e) {
         toast('Erreur upload photo : ' + e.message, 'err');
@@ -1625,7 +1635,8 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       const badgeAv = document.getElementById('badgeAv');
       if (badgeAv) {
         if (photo) {
-          badgeAv.innerHTML = `<img src="${photo}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`;
+          // driveImgUrl() convertit /view → uc?export=view — crossorigin requis pour html2canvas
+          badgeAv.innerHTML = `<img src="${driveImgUrl(photo)}" alt="Photo" crossorigin="anonymous" onerror="this.parentElement.textContent='${init}'"/>`;
         } else { badgeAv.textContent = init; }
       }
       const verifyUrl = 'https://foddeb.vercel.app/verify?id=' + encodeURIComponent(id); // UUID complet pour la vérification

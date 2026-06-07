@@ -773,6 +773,8 @@
   </div>
 </div>
 
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/services/auth.js"></script>
 <script src="/assets/js/services/api.js"></script>
 <script>
 'use strict';
@@ -1549,9 +1551,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       if (status) status.style.display = 'block';
       try {
         // sessionToken transmis au GAS pour vérification d'identité côté serveur
-        const sessionToken = (FODDEB && FODDEB.session && FODDEB.session.getToken)
-          ? FODDEB.session.getToken()
-          : null;
+        const sessionToken = FODDEB?.session?.getToken?.() ?? null;
         const res = await FODDEB_API.members.uploadProfilePhoto(
           PENDING_PHOTO.base64, PENDING_PHOTO.mimeType, USER.ID || USER.id, sessionToken
         );

@@ -1494,8 +1494,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     const fresh = await FODDEB_API.members.get(USER.ID || USER.id);
-    if (fresh.success && fresh.member) {
-      USER = { ...USER, ...fresh.member };
+    const freshData = fresh.membre || fresh.member; // compatibilité double clé
+    if (fresh.success && freshData) {
+      // Fusionner en préservant PhotoURL si le Sheet l'a enregistré
+      USER = { ...USER, ...freshData };
       sessionStorage.setItem('foddeb_user', JSON.stringify(USER));
       renderUserInfo(USER);
     }
@@ -1550,6 +1552,14 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
         USER = updated;
         toast('Photo de profil enregistrée ✓', 'ok');
         PENDING_PHOTO = null;
+        // Mettre à jour le badge si le modal est déjà ouvert
+        const badgeModal = document.getElementById('badgeM');
+        if (badgeModal && badgeModal.classList.contains('open')) renderBadge(USER);
+        // Mettre à jour le badge avatar
+        const badgeAv = document.getElementById('badgeAv');
+        if (badgeAv && res.url) {
+          badgeAv.innerHTML = `<img src="${res.url}" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+        }
       } catch(e) {
         toast('Erreur upload photo : ' + e.message, 'err');
       } finally {
@@ -1624,9 +1634,23 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
     }
 
     // Intercepter openM pour rendre le badge à l'ouverture
+    // USER est toujours le plus frais grâce au rechargement DOMContentLoaded
     const _origOpenM = openM;
-    openM = function(id) {
-      if (id === 'badgeM') renderBadge(USER);
+    openM = async function(id) {
+      if (id === 'badgeM') {
+        // Si PhotoURL absent dans USER local, tenter un rechargement rapide
+        if (!USER.PhotoURL && !USER.photoURL) {
+          try {
+            const ref = await FODDEB_API.members.get(USER.ID || USER.id);
+            const rd  = ref.membre || ref.member;
+            if (ref.success && rd) {
+              USER = { ...USER, ...rd };
+              sessionStorage.setItem('foddeb_user', JSON.stringify(USER));
+            }
+          } catch(e) { /* silencieux */ }
+        }
+        renderBadge(USER);
+      }
       _origOpenM(id);
     };
 

@@ -225,7 +225,7 @@
     .badge-info-item .bi-label { font-size:9px; font-weight:600; opacity:.5; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
     .badge-info-item .bi-val { font-size:12px; font-weight:600; }
     .badge-footer { display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,.1); }
-    .badge-id { font-size:9px; opacity:.5; font-family:monospace; }
+    .badge-id { font-size:11px; font-weight:700; font-family:monospace; color:rgba(249,168,37,.8); letter-spacing:.05em; }
     .badge-qr { width:52px; height:52px; background:#fff; border-radius:6px; padding:3px; display:flex; align-items:center; justify-content:center; }
     .badge-valid { font-size:9px; opacity:.6; display:flex; align-items:center; gap:4px; }
     .badge-valid-dot { width:6px; height:6px; border-radius:50%; background:#4CAF50; display:inline-block; }
@@ -1607,14 +1607,16 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       s('badgeOrg',  org.length > 18 ? org.slice(0,16)+'…' : org);
       s('badgeDept', dept.split(',')[0].trim());
       s('badgeDate', date ? new Date(date).getFullYear() : '—');
-      s('badgeId',   'ID: ' + id);
+      // Short ID pour affichage sur le badge (dérivé de l'UUID, lisible)
+      const shortId = m.ShortID || ('FOD-' + id.replace(/-/g,'').slice(0,6).toUpperCase());
+      s('badgeId',   shortId);
       const badgeAv = document.getElementById('badgeAv');
       if (badgeAv) {
         if (photo) {
           badgeAv.innerHTML = `<img src="${photo}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`;
         } else { badgeAv.textContent = init; }
       }
-      const verifyUrl = 'https://foddeb.vercel.app/verify?id=' + encodeURIComponent(id);
+      const verifyUrl = 'https://foddeb.vercel.app/verify?id=' + encodeURIComponent(id); // UUID complet pour la vérification
       const qrCanvas  = document.getElementById('qrCanvas');
       if (qrCanvas) drawSimpleQR(qrCanvas, verifyUrl);
     }

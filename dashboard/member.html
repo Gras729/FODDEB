@@ -493,9 +493,11 @@
   <div class="modal">
     <div class="mh"><h3 class="mt">Changer le mot de passe</h3><button class="mc" onclick="closeM('changePwdM')">&#x2715;</button></div>
     <div class="mb">
-      <div class="fg"><label class="fl">Mot de passe actuel</label><input type="password" id="cpOld" class="fi" placeholder="••••••••"/></div>
-      <div class="fg"><label class="fl">Nouveau mot de passe</label><input type="password" id="cpNew" class="fi" placeholder="Min. 8 caracteres"/></div>
-      <div class="fg"><label class="fl">Confirmer le nouveau</label><input type="password" id="cpConf" class="fi" placeholder="Repétéz le nouveau"/></div>
+      <form id="changePwdForm" onsubmit="handleChangePwd(event)" autocomplete="on" novalidate>
+      <div class="fg"><label class="fl">Mot de passe actuel</label><input type="password" id="cpOld" class="fi" placeholder="••••••••" autocomplete="current-password"/></div>
+      <div class="fg"><label class="fl">Nouveau mot de passe</label><input type="password" id="cpNew" class="fi" placeholder="Min. 8 caractères" autocomplete="new-password"/></div>
+      <div class="fg"><label class="fl">Confirmer le nouveau</label><input type="password" id="cpConf" class="fi" placeholder="Répétez le nouveau" autocomplete="new-password"/></div>
+      </form>
     </div>
     <div class="mf">
       <button class="btn btn-o btn-sm" onclick="closeM('changePwdM')">Annuler</button>
@@ -1608,7 +1610,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       s('badgeDept', dept.split(',')[0].trim());
       s('badgeDate', date ? new Date(date).getFullYear() : '—');
       // Short ID pour affichage sur le badge (dérivé de l'UUID, lisible)
-      const shortId = m.ShortID || ('FOD-' + id.replace(/-/g,'').slice(0,6).toUpperCase());
+      const shortId = user.ShortID || ('FOD-' + id.replace(/-/g,'').slice(0,6).toUpperCase());
       s('badgeId',   shortId);
       const badgeAv = document.getElementById('badgeAv');
       if (badgeAv) {

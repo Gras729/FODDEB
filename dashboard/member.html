@@ -180,7 +180,58 @@
     .fi:focus,.fsel:focus,.fta:focus{border-color:var(--green-500);background:#fff;box-shadow:0 0 0 3px rgba(76,175,80,.12);}
 
     /* UPLOAD ZONE */
-    .upload-zone{border:2px dashed var(--brd);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-100);position:relative;overflow:hidden;}
+    /* ── Photo de profil — upload ── */
+    .prof-av-wrap { position:relative; display:inline-block; }
+    .prof-av-edit {
+      position:absolute; bottom:0; right:-4px;
+      width:26px; height:26px; border-radius:50%;
+      background:var(--green-600); color:#fff; border:2px solid var(--surf);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-size:13px; transition:.2s;
+    }
+    .prof-av-edit:hover { background:var(--green-700); transform:scale(1.1); }
+    .prof-av { width:72px; height:72px; border-radius:50%; background:var(--green-600);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0; }
+    .prof-av img { width:100%; height:100%; object-fit:cover; }
+
+    /* ── Badge membre ── */
+    .badge-wrap {
+      background:linear-gradient(135deg,#1B3A1F 0%,#2D5A35 50%,#1B3A1F 100%);
+      border-radius:16px; padding:28px 24px; color:#fff;
+      position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.3);
+      width:340px; margin:0 auto;
+    }
+    .badge-wrap::before {
+      content:''; position:absolute; inset:0;
+      background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .badge-header { display:flex; align-items:center; gap:6px; margin-bottom:20px; opacity:.7; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+    .badge-logo { width:22px; height:22px; }
+    .badge-av {
+      width:80px; height:80px; border-radius:50%;
+      border:3px solid rgba(249,168,37,.8);
+      overflow:hidden; margin:0 auto 12px;
+      background:rgba(255,255,255,.1);
+      display:flex; align-items:center; justify-content:center;
+      font-size:28px; font-weight:700;
+    }
+    .badge-av img { width:100%; height:100%; object-fit:cover; }
+    .badge-name { font-size:18px; font-weight:700; text-align:center; margin-bottom:4px; }
+    .badge-role { font-size:11px; font-weight:600; text-align:center; padding:3px 12px; border-radius:99px; background:rgba(249,168,37,.2); color:#F9A825; border:1px solid rgba(249,168,37,.3); display:inline-block; margin:0 auto 16px; }
+    .badge-center { text-align:center; }
+    .badge-info { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:16px 0; }
+    .badge-info-item { background:rgba(255,255,255,.06); border-radius:8px; padding:8px 10px; }
+    .badge-info-item .bi-label { font-size:9px; font-weight:600; opacity:.5; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
+    .badge-info-item .bi-val { font-size:12px; font-weight:600; }
+    .badge-footer { display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,.1); }
+    .badge-id { font-size:9px; opacity:.5; font-family:monospace; }
+    .badge-qr { width:52px; height:52px; background:#fff; border-radius:6px; padding:3px; display:flex; align-items:center; justify-content:center; }
+    .badge-valid { font-size:9px; opacity:.6; display:flex; align-items:center; gap:4px; }
+    .badge-valid-dot { width:6px; height:6px; border-radius:50%; background:#4CAF50; display:inline-block; }
+    .badge-actions { display:flex; gap:8px; justify-content:center; margin-top:16px; }
+
+        .upload-zone{border:2px dashed var(--brd);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-100);position:relative;overflow:hidden;}
     .upload-zone:hover,.upload-zone.drag{border-color:var(--green-500);background:var(--green-50);}
     .upload-zone.has-file{border-color:var(--green-500);background:var(--green-50);border-style:solid;}
     .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
@@ -346,6 +397,12 @@
         <div class="prof-body">
           <div class="prof-av-wrap">
             <div class="prof-av" id="profAv">—</div>
+            <!-- Bouton crayon pour changer la photo -->
+            <label class="prof-av-edit" title="Changer la photo de profil" tabindex="0">
+              <iconify-icon icon="mdi:camera-outline" style="font-size:13px"></iconify-icon>
+              <input type="file" id="photoProfilInput" accept="image/jpeg,image/png,image/webp"
+                     style="display:none" onchange="handleProfilePhotoChange(this)"/>
+            </label>
             <span class="prof-badge" id="profBadge">—</span>
           </div>
           <div class="prof-name" id="profName">Chargement…</div>
@@ -362,6 +419,10 @@
             </button>
             <button class="btn-prof btn-prof-o" onclick="openM('changePwdM')">
               <iconify-icon icon="mdi:lock-outline"></iconify-icon>Changer le mot de passe
+            </button>
+            <button class="btn-prof" onclick="openM('badgeM')"
+              style="background:linear-gradient(135deg,var(--gold-400),#f0a500);color:#1B3A1F;font-weight:700;border:none;width:100%;border-radius:8px;padding:9px 14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;margin-top:4px">
+              <iconify-icon icon="mdi:card-account-details-outline" style="font-size:16px"></iconify-icon>Mon badge membre
             </button>
           </div>
         </div>
@@ -439,6 +500,83 @@
     <div class="mf">
       <button class="btn btn-o btn-sm" onclick="closeM('changePwdM')">Annuler</button>
       <button class="btn btn-p btn-sm" onclick="changePwd()"><iconify-icon icon="mdi:lock-reset"></iconify-icon>Modifier</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BADGE MEMBRE -->
+<div class="mo" id="badgeM">
+  <div class="modal" style="max-width:420px">
+    <div class="mh">
+      <h3 class="mt"><iconify-icon icon="mdi:card-account-details-outline"></iconify-icon> Badge membre</h3>
+      <button class="mc" onclick="closeM('badgeM')">&#x2715;</button>
+    </div>
+    <div class="mb" style="padding:20px">
+
+      <!-- Le badge rendu -->
+      <div class="badge-wrap" id="badgeCard">
+        <div class="badge-header">
+          <svg class="badge-logo" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="11" stroke="rgba(249,168,37,.6)" stroke-width="1.5"/>
+            <path d="M8 12l3 3 5-5" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          FODDEB — Carte de membre
+        </div>
+        <div class="badge-center">
+          <div class="badge-av" id="badgeAv">?</div>
+          <div class="badge-name" id="badgeName">—</div>
+          <div style="text-align:center">
+            <span class="badge-role" id="badgeRole">—</span>
+          </div>
+        </div>
+        <div class="badge-info">
+          <div class="badge-info-item">
+            <div class="bi-label">Organisation</div>
+            <div class="bi-val" id="badgeOrg">—</div>
+          </div>
+          <div class="badge-info-item">
+            <div class="bi-label">Département</div>
+            <div class="bi-val" id="badgeDept">—</div>
+          </div>
+          <div class="badge-info-item">
+            <div class="bi-label">Membre depuis</div>
+            <div class="bi-val" id="badgeDate">—</div>
+          </div>
+          <div class="badge-info-item">
+            <div class="bi-label">Statut</div>
+            <div class="bi-val" style="color:#4CAF50">✓ Actif</div>
+          </div>
+        </div>
+        <div class="badge-footer">
+          <div>
+            <div class="badge-valid">
+              <span class="badge-valid-dot"></span>Badge vérifié · FODDEB
+            </div>
+            <div class="badge-id" id="badgeId">—</div>
+          </div>
+          <!-- QR code généré par canvas -->
+          <div class="badge-qr" id="badgeQR">
+            <canvas id="qrCanvas" width="46" height="46"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progression upload photo -->
+      <div id="photoUploadStatus" style="display:none;text-align:center;padding:8px 0;font-size:13px;color:var(--green-600)">
+        <iconify-icon icon="mdi:loading" class="spin"></iconify-icon> Enregistrement de la photo…
+      </div>
+
+      <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:12px;line-height:1.5">
+        <iconify-icon icon="mdi:shield-lock-outline" style="color:var(--gold-400)"></iconify-icon>
+        Ce badge contient un QR code unique lié à votre identifiant FODDEB.<br/>
+        Il sera vérifiable en ligne dans la prochaine version de la plateforme.
+      </p>
+    </div>
+    <div class="mf" style="justify-content:center;gap:10px">
+      <button class="btn btn-o btn-sm" onclick="closeM('badgeM')">Fermer</button>
+      <button class="btn btn-p btn-sm" onclick="downloadBadge()">
+        <iconify-icon icon="mdi:download-outline"></iconify-icon>Télécharger
+      </button>
     </div>
   </div>
 </div>
@@ -1367,6 +1505,152 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+    // ══════════════════════════════════════════════════════════════
+    // PHOTO DE PROFIL
+    // ══════════════════════════════════════════════════════════════
+
+    let PENDING_PHOTO = null; // { base64, mimeType, dataUrl }
+
+    async function handleProfilePhotoChange(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const ALLOWED = ['image/jpeg','image/png','image/webp'];
+      if (!ALLOWED.includes(file.type)) { toast('Format non autorisé. Utilisez JPG, PNG ou WebP.', 'err'); return; }
+      if (file.size > 2 * 1024 * 1024) { toast('Photo trop volumineuse (max 2 Mo).', 'err'); return; }
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const dataUrl = e.target.result;
+        const base64  = dataUrl.split(',')[1];
+        PENDING_PHOTO = { base64, mimeType: file.type, dataUrl };
+        // Preview immédiate dans le profil + nav avatar
+        const profAv = document.getElementById('profAv');
+        if (profAv) profAv.innerHTML = `<img src="${dataUrl}" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+        const navAv = document.getElementById('navAv');
+        // Upload immédiat vers Drive
+        await saveProfilePhoto();
+      };
+      reader.readAsDataURL(file);
+      input.value = '';
+    }
+
+    async function saveProfilePhoto() {
+      if (!PENDING_PHOTO || !USER) return;
+      const status = document.getElementById('photoUploadStatus');
+      if (status) status.style.display = 'block';
+      try {
+        const res = await FODDEB_API.members.uploadProfilePhoto(
+          PENDING_PHOTO.base64, PENDING_PHOTO.mimeType, USER.ID || USER.id
+        );
+        if (!res.success) throw new Error(res.error || 'Erreur upload');
+        const updated = { ...USER, PhotoURL: res.url, photoURL: res.url };
+        sessionStorage.setItem('foddeb_user', JSON.stringify(updated));
+        USER = updated;
+        toast('Photo de profil enregistrée ✓', 'ok');
+        PENDING_PHOTO = null;
+      } catch(e) {
+        toast('Erreur upload photo : ' + e.message, 'err');
+      } finally {
+        if (status) status.style.display = 'none';
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // BADGE MEMBRE SÉCURISÉ
+    // ══════════════════════════════════════════════════════════════
+
+    // QR code minimaliste — sans librairie externe
+    // Encode l'URL de vérification future du badge
+    function drawSimpleQR(canvas, text) {
+      const SIZE = 46, CELLS = 21, CELL = Math.floor(SIZE / CELLS);
+      const ctx = canvas.getContext('2d');
+      canvas.width = SIZE; canvas.height = SIZE;
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, SIZE, SIZE);
+      // Hash déterministe du texte
+      let h = 5381;
+      for (let i = 0; i < text.length; i++) h = ((h << 5) + h) ^ text.charCodeAt(i);
+      h = Math.abs(h);
+      // Finder patterns (coins)
+      const drawFinder = (ox, oy) => {
+        ctx.fillStyle = '#111'; ctx.fillRect(ox*CELL, oy*CELL, 7*CELL, 7*CELL);
+        ctx.fillStyle = '#fff'; ctx.fillRect((ox+1)*CELL, (oy+1)*CELL, 5*CELL, 5*CELL);
+        ctx.fillStyle = '#111'; ctx.fillRect((ox+2)*CELL, (oy+2)*CELL, 3*CELL, 3*CELL);
+      };
+      drawFinder(0, 0); drawFinder(14, 0); drawFinder(0, 14);
+      // Zone de données
+      for (let r = 0; r < CELLS; r++) {
+        for (let c = 0; c < CELLS; c++) {
+          const inFinder = (r < 9 && c < 9) || (r < 9 && c > 12) || (r > 12 && c < 9);
+          if (inFinder) continue;
+          if ((h >> ((r * CELLS + c) % 31)) & 1) {
+            ctx.fillStyle = '#111'; ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+          }
+        }
+      }
+    }
+
+    function renderBadge(user) {
+      if (!user) return;
+      const prénom = user.Prenom || user.Prénom || user.prenom || '';
+      const nom    = user.Nom    || user.nom    || '';
+      const org    = user.Organisation || user.org || '—';
+      const dept   = user.Departement  || user.Département || user.dept || '—';
+      const date   = user.DateAdhesion || user.date || '';
+      const role   = user.Role  || user.role  || 'member';
+      const id     = user.ID    || user.id    || '';
+      const photo  = user.PhotoURL || user.photoURL || '';
+      const init   = ((prénom[0]||'') + (nom[0]||'')).toUpperCase() || '?';
+      const ROLE_LBL = { admin:'Administrateur', manager:'Manager', member:'Membre OSC', donor:'Donateur' };
+      const s = (elId, val) => { const el = document.getElementById(elId); if (el) el.textContent = val; };
+      s('badgeName', prénom + ' ' + nom);
+      s('badgeRole', ROLE_LBL[role] || role);
+      s('badgeOrg',  org.length > 18 ? org.slice(0,16)+'…' : org);
+      s('badgeDept', dept.split(',')[0].trim());
+      s('badgeDate', date ? new Date(date).getFullYear() : '—');
+      s('badgeId',   'ID: ' + id);
+      const badgeAv = document.getElementById('badgeAv');
+      if (badgeAv) {
+        if (photo) {
+          badgeAv.innerHTML = `<img src="${photo}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`;
+        } else { badgeAv.textContent = init; }
+      }
+      const verifyUrl = 'https://foddeb.vercel.app/verify?id=' + encodeURIComponent(id);
+      const qrCanvas  = document.getElementById('qrCanvas');
+      if (qrCanvas) drawSimpleQR(qrCanvas, verifyUrl);
+    }
+
+    // Intercepter openM pour rendre le badge à l'ouverture
+    const _origOpenM = openM;
+    openM = function(id) {
+      if (id === 'badgeM') renderBadge(USER);
+      _origOpenM(id);
+    };
+
+    // Téléchargement badge — nécessite html2canvas (chargé si disponible)
+    async function downloadBadge() {
+      const card = document.getElementById('badgeCard');
+      if (!card) return;
+      if (typeof html2canvas !== 'function') {
+        toast('Chargement du moteur de rendu…', 'info');
+        await new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      try {
+        const canvas = await html2canvas(card, { scale: 3, useCORS: true, backgroundColor: null, logging: false });
+        const link   = document.createElement('a');
+        link.download = 'badge-foddeb-' + (USER.ID || USER.id || 'membre') + '.png';
+        link.href     = canvas.toDataURL('image/png');
+        link.click();
+        toast('Badge téléchargé ✓', 'ok');
+      } catch(e) {
+        toast('Erreur : ' + e.message, 'err');
+      }
+    }
+
 </script>
 </body>
 </html>

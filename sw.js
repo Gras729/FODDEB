@@ -88,7 +88,9 @@ self.addEventListener('fetch', event => {
         if (cached) return cached;
         return fetch(request).then(response => {
           if (response.ok) {
-            caches.open(CACHE_NAME).then(c => c.put(request, response.clone()));
+            // Cloner avant tout usage — le body ne peut être lu qu'une fois
+            const toCache = response.clone();
+            caches.open(CACHE_NAME).then(c => c.put(request, toCache));
           }
           return response;
         });

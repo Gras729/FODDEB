@@ -98,8 +98,9 @@ var FODDEB_API = window.FODDEB_API || (() => {
      * contextId : ID temporaire du projet (ex: 'proj_1717123456789')
      * Retourne  : { success, url, fileName }
      */
-    uploadProfilePhoto: (base64, mimeType, membreId) =>
-      request('upload_profile_photo', { base64, mimeType, membreId }),
+    // sessionToken requis côté GAS pour vérifier que le membre modifie bien sa propre photo
+    uploadProfilePhoto: (base64, mimeType, membreId, sessionToken = null) =>
+      request('upload_profile_photo', { base64, mimeType, membreId, sessionToken }),
 
     uploadProjectFile: (base64, fileName, mimeType, context, contextId) =>
                          request('upload_file', { base64, fileName, mimeType, context, contextId }, 30_000),

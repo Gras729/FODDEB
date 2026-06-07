@@ -77,9 +77,16 @@ FODDEB.generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString(
 
 /* -------- Session -------- */
 FODDEB.session = {
-  set(user) { sessionStorage.setItem('foddeb_user', JSON.stringify(user)); },
-  get()     { try { return JSON.parse(sessionStorage.getItem('foddeb_user')); } catch { return null; } },
-  clear()   { sessionStorage.removeItem('foddeb_user'); },
+  set(user)    { sessionStorage.setItem('foddeb_user', JSON.stringify(user)); },
+  get()        { try { return JSON.parse(sessionStorage.getItem('foddeb_user')); } catch { return null; } },
+  // Gestion du token de session — requis pour les actions sécurisées (ex : upload photo)
+  setToken(t)  { if (t) sessionStorage.setItem('foddeb_token', t); },
+  getToken()   { return sessionStorage.getItem('foddeb_token') || null; },
+  clearToken() { sessionStorage.removeItem('foddeb_token'); },
+  clear() {
+    sessionStorage.removeItem('foddeb_user');
+    sessionStorage.removeItem('foddeb_token');
+  },
   isLogged(){ return !!this.get(); },
   hasRole(role) {
     const u = this.get();

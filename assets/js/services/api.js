@@ -102,6 +102,10 @@ var FODDEB_API = window.FODDEB_API || (() => {
     uploadProfilePhoto: (base64, mimeType, membreId, sessionToken = null) =>
       request('upload_profile_photo', { base64, mimeType, membreId, sessionToken }),
 
+    // Récupère une photo Drive en data URI base64 — utilisé par downloadBadge()
+    // pour contourner la restriction "tainted canvas" de html2canvas.
+    getPhotoBase64: (fileId) => request('get_photo_base64', { fileId }),
+
     uploadProjectFile: (base64, fileName, mimeType, context, contextId) =>
                          request('upload_file', { base64, fileName, mimeType, context, contextId }, 30_000),
 

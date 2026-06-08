@@ -1009,15 +1009,30 @@ async function processImageFile(file) {
 
   try {
     // Charger l'image dans un canvas
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    // Attendre le chargement complet avant de lire les dimensions
+    await new Promise((res, rej) => {
+      img.onload = () => {
+        if (img.naturalWidth > 0 && img.naturalHeight > 0) res();
+        else rej(new Error('Image chargee mais dimensions nulles. Fichier corrompu ?'));
+      };
+      img.onerror = () => rej(new Error('Impossible de charger l\'image. Format non supporte ou fichier corrompu.'));
+      img.src = url;
+    });
+
     const canvas = document.createElement('canvas');
-    const img    = new Image();
-    const url    = URL.createObjectURL(file);
-    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
-    canvas.width  = img.naturalWidth  || img.width;
-    canvas.height = img.naturalHeight || img.height;
+    canvas.width  = img.naturalWidth;
+    canvas.height = img.naturalHeight;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     URL.revokeObjectURL(url);
+
+    // Guard : verifier que le canvas est bien rempli
+    if (canvas.width === 0 || canvas.height === 0) {
+      throw new Error('Canvas vide apres drawImage : ' + canvas.width + 'x' + canvas.height);
+    }
 
     let id = null;
 

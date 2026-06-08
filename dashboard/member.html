@@ -1687,11 +1687,33 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
           document.head.appendChild(s);
         });
       }
+      // ── Pré-charger la photo en data URI pour éviter le canvas tainted ──
+      const img       = card.querySelector('#badgeAv img');
+      let originalSrc = null;
+      if (img && img.src && !img.src.startsWith('data:')) {
+        try {
+          // Extraire le fileId depuis l'URL thumbnail Drive (?id=XXXX)
+          const mId = img.src.match(/[?&]id=([^&]+)/);
+          if (mId) {
+            toast('Préparation du badge…', 'info');
+            const res = await FODDEB_API.members.getPhotoBase64(mId[1]);
+            if (res && res.dataUri) {
+              originalSrc = img.src;
+              img.src     = res.dataUri;
+              // Attendre que l'image data URI soit rendue
+              await new Promise(r => setTimeout(r, 120));
+            }
+          }
+        } catch(e) {
+          console.warn('[badge] Préchargement base64 échoué :', e.message);
+        }
+      }
+
       try {
         const canvas = await html2canvas(card, {
           scale: 3,
-          useCORS: false,     // Drive ne supporte pas CORS sur la redirection thumbnail
-          allowTaint: true,   // Permet le rendu de l'image cross-origin sans crasher
+          useCORS: false,
+          allowTaint: false,  // data URI → pas de taint
           backgroundColor: null,
           logging: false
         });
@@ -1701,7 +1723,10 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
         link.click();
         toast('Badge téléchargé ✓', 'ok');
       } catch(e) {
-        toast('Erreur : ' + e.message, 'err');
+        toast('Erreur téléchargement : ' + e.message, 'err');
+        console.error('[badge download]', e);
+      } finally {
+        if (img && originalSrc) img.src = originalSrc; // Restaurer l'URL d'origine
       }
     }
 

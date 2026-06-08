@@ -789,6 +789,16 @@
 <script>
 'use strict';
 
+// Convertit toute URL Drive en URL affichable (lh3.googleusercontent.com, CORS OK)
+function driveImgUrl(url) {
+  if (!url) return '';
+  if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
+  const m = url.match(/\/file\/d\/([^/?]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w400';
+  const m2 = url.match(/[?&]id=([^&]+)/);
+  return m2 ? 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w400' : url;
+}
+
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 // ── Gestion des onglets ──────────────────────────────────────
@@ -843,14 +853,17 @@ async function verifyBadge(rawId) {
     // Compatibilité double clé membre/member
     const m = res.membre || res.member;
 
-    if (res.success && m && (m.Statut === 'active' || m.statut === 'active')) {
+    // Normalisation : le Sheet stocke 'actif' (FR), certains anciens enregistrements 'active' (EN)
+    const statut = (m.Statut || m.statut || '').toLowerCase().trim();
+    if (res.success && m && (statut === 'actif' || statut === 'active')) {
       const prénom = m.Prenom || m.Prénom || m.prenom || '';
       const nom    = m.Nom   || m.nom   || '';
       const init   = ((prénom[0]||'') + (nom[0]||'')).toUpperCase() || '?';
       const photo  = m.PhotoURL || m.photoURL || '';
       const org    = m.Organisation || '—';
       const dept   = m.Departement || m.Département || '—';
-      const date   = m.DateAdhesion || m.date || '';
+      // Sheet stocke 'MembreDepuis' (pas 'DateAdhesion')
+      const date   = m.MembreDepuis || m.DateAdhesion || m.date || '';
       const role   = m.Role || m.role || 'member';
       // ShortID pour affichage (retourné par le serveur ou dérivé localement)
       const shortId = m.ShortID || ('FOD-' + id.replace(/-/g,'').slice(0,6).toUpperCase());
@@ -867,8 +880,9 @@ async function verifyBadge(rawId) {
 
       const av = document.getElementById('memberAvatar');
       if (av) {
+        // driveImgUrl() → thumbnail lh3 (CORS OK, pas de page de prévisualisation Drive)
         av.innerHTML = photo
-          ? `<img src="${photo}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`
+          ? `<img src="${driveImgUrl(photo)}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`
           : init;
       }
       document.getElementById('resultValid').style.display = 'block';

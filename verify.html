@@ -1046,32 +1046,44 @@ async function processImageFile(file) {
     }
 
     // ── Tentative 2 : jsQR (universel — Firefox, Safari, navigateurs sans BarcodeDetector)
+    // Stratégie : tester plusieurs zones de l'image + image complète réduite.
+    // Sur un badge FODDEB le QR est toujours en bas à droite (~28% largeur, ~20% hauteur).
     if (!id && typeof jsQR === 'function') {
-      // jsQR peut planter sur des images trop grandes ou QR trop petits.
-      // On normalise d'abord l'image à 800px max pour garantir la stabilite.
-      const MAX = 800;
-      let scanCanvas = canvas;
-      if (canvas.width > MAX || canvas.height > MAX) {
-        const ratio = Math.min(MAX / canvas.width, MAX / canvas.height);
-        scanCanvas = document.createElement('canvas');
-        scanCanvas.width  = Math.round(canvas.width  * ratio);
-        scanCanvas.height = Math.round(canvas.height * ratio);
-        scanCanvas.getContext('2d').drawImage(canvas, 0, 0, scanCanvas.width, scanCanvas.height);
+
+      // Construire les zones candidates à scanner
+      function makeZoneCanvas(srcCanvas, x, y, w, h, scale) {
+        const zc = document.createElement('canvas');
+        zc.width  = Math.round(w * scale);
+        zc.height = Math.round(h * scale);
+        zc.getContext('2d').drawImage(srcCanvas, x, y, w, h, 0, 0, zc.width, zc.height);
+        return zc;
       }
 
+      const cw = canvas.width, ch = canvas.height;
+      const zones = [
+        // Zone bas-droite (position réelle du QR sur le badge FODDEB) — agrandie x4
+        makeZoneCanvas(canvas, Math.round(cw*0.72), Math.round(ch*0.78), Math.round(cw*0.28), Math.round(ch*0.22), 4),
+        // Zone bas-droite légèrement plus large — agrandie x3
+        makeZoneCanvas(canvas, Math.round(cw*0.65), Math.round(ch*0.75), Math.round(cw*0.35), Math.round(ch*0.25), 3),
+        // Image complète réduite à 800px max — fallback générique
+        makeZoneCanvas(canvas, 0, 0, cw, ch, Math.min(1, 800 / Math.max(cw, ch))),
+      ];
+
       const modes = ['dontInvert', 'onlyInvert', 'attemptBoth'];
-      for (const mode of modes) {
+      for (const zoneCanvas of zones) {
         if (id) break;
-        try {
-          const imageData = scanCanvas.getContext('2d').getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-          // Guard minimal avant appel jsQR
-          if (!imageData || imageData.width === 0 || imageData.height === 0) continue;
-          const result = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: mode
-          });
-          if (result && result.data) id = extractIdFromQR(result.data);
-        } catch(jsqrErr) {
-          console.warn('[FODDEB verify] jsQR mode', mode, 'erreur:', jsqrErr.message);
+        for (const mode of modes) {
+          if (id) break;
+          try {
+            const imageData = zoneCanvas.getContext('2d').getImageData(0, 0, zoneCanvas.width, zoneCanvas.height);
+            if (!imageData || imageData.width === 0 || imageData.height === 0) continue;
+            const result = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: mode
+            });
+            if (result && result.data) id = extractIdFromQR(result.data);
+          } catch(jsqrErr) {
+            console.warn('[FODDEB verify] jsQR zone/mode', mode, 'erreur:', jsqrErr.message);
+          }
         }
       }
     }

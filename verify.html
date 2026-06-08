@@ -1063,10 +1063,20 @@ async function processImageFile(file) {
     }
 
   } catch(err) {
+    // Log explicite en console pour diagnostic
+    console.error('[FODDEB verify] processImageFile error:', err);
     status.style.display = 'block';
-    status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--red-600)"></iconify-icon>'
-      + ' Erreur lors de la lecture du fichier. Veuillez réessayer.';
-    setTimeout(() => { status.style.display = 'none'; }, 4000);
+
+    // Détecter si jsQR n'est pas chargé du tout
+    if (typeof jsQR !== 'function') {
+      status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--red-600)"></iconify-icon>'
+        + ' Moteur de lecture QR non chargé (jsQR.min.js introuvable). Vérifiez que le fichier est présent dans <code>/assets/js/</code>.';
+    } else {
+      status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--red-600)"></iconify-icon>'
+        + ' Erreur lors de la lecture du fichier : ' + (err && err.message ? err.message : 'erreur inconnue')
+        + '. Vérifiez la console (F12) pour plus de détails.';
+    }
+    setTimeout(() => { status.style.display = 'none'; }, 6000);
   }
 }
 </script>

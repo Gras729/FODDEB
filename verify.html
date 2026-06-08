@@ -1047,18 +1047,32 @@ async function processImageFile(file) {
 
     // ── Tentative 2 : jsQR (universel — Firefox, Safari, navigateurs sans BarcodeDetector)
     if (!id && typeof jsQR === 'function') {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const result    = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: 'dontInvert'
-      });
-      if (result && result.data) id = extractIdFromQR(result.data);
+      // jsQR peut planter sur des images trop grandes ou QR trop petits.
+      // On normalise d'abord l'image à 800px max pour garantir la stabilite.
+      const MAX = 800;
+      let scanCanvas = canvas;
+      if (canvas.width > MAX || canvas.height > MAX) {
+        const ratio = Math.min(MAX / canvas.width, MAX / canvas.height);
+        scanCanvas = document.createElement('canvas');
+        scanCanvas.width  = Math.round(canvas.width  * ratio);
+        scanCanvas.height = Math.round(canvas.height * ratio);
+        scanCanvas.getContext('2d').drawImage(canvas, 0, 0, scanCanvas.width, scanCanvas.height);
+      }
 
-      // Si jsQR échoue en mode normal, retenter avec inversion (badges sombres sur fond clair)
-      if (!id) {
-        const result2 = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: 'onlyInvert'
-        });
-        if (result2 && result2.data) id = extractIdFromQR(result2.data);
+      const modes = ['dontInvert', 'onlyInvert', 'attemptBoth'];
+      for (const mode of modes) {
+        if (id) break;
+        try {
+          const imageData = scanCanvas.getContext('2d').getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+          // Guard minimal avant appel jsQR
+          if (!imageData || imageData.width === 0 || imageData.height === 0) continue;
+          const result = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: mode
+          });
+          if (result && result.data) id = extractIdFromQR(result.data);
+        } catch(jsqrErr) {
+          console.warn('[FODDEB verify] jsQR mode', mode, 'erreur:', jsqrErr.message);
+        }
       }
     }
 

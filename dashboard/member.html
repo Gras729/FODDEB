@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
+  <!-- qrcode.js : génère de vrais QR codes lisibles par scanner -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     :root{
@@ -224,11 +226,28 @@
     .badge-info-item { background:rgba(255,255,255,.06); border-radius:8px; padding:8px 10px; }
     .badge-info-item .bi-label { font-size:9px; font-weight:600; opacity:.5; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
     .badge-info-item .bi-val { font-size:12px; font-weight:600; }
-    .badge-footer { display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,.1); }
+    .badge-footer { display:flex; align-items:flex-end; justify-content:space-between; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,.1); gap:8px; }
     .badge-id { font-size:11px; font-weight:700; font-family:monospace; color:rgba(249,168,37,.8); letter-spacing:.05em; }
-    .badge-qr { width:52px; height:52px; background:#fff; border-radius:6px; padding:3px; display:flex; align-items:center; justify-content:center; }
+    .badge-qr { width:52px; height:52px; background:#fff; border-radius:6px; padding:3px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .badge-valid { font-size:9px; opacity:.6; display:flex; align-items:center; gap:4px; }
     .badge-valid-dot { width:6px; height:6px; border-radius:50%; background:#4CAF50; display:inline-block; }
+    /* Zone signature + cachet Président */
+    .badge-sign {
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+      border-left:1px solid rgba(255,255,255,.12); padding-left:8px;
+    }
+    .badge-sign-img {
+      width:70px; height:36px; object-fit:contain; filter:brightness(0) invert(1);
+      opacity:.85;
+    }
+    /* Placeholder SVG signature si l'image réelle n'est pas encore disponible */
+    .badge-sign-placeholder {
+      width:70px; height:36px; display:flex; align-items:center; justify-content:center;
+    }
+    .badge-sign-label {
+      font-size:8px; opacity:.5; text-transform:uppercase; letter-spacing:.5px;
+      text-align:center; line-height:1.2;
+    }
     .badge-actions { display:flex; gap:8px; justify-content:center; margin-top:16px; }
 
         .upload-zone{border:2px dashed var(--brd);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-100);position:relative;overflow:hidden;}
@@ -518,10 +537,9 @@
       <!-- Le badge rendu -->
       <div class="badge-wrap" id="badgeCard">
         <div class="badge-header">
-          <svg class="badge-logo" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="11" stroke="rgba(249,168,37,.6)" stroke-width="1.5"/>
-            <path d="M8 12l3 3 5-5" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <!-- Logo officiel FODDEB -->
+          <img class="badge-logo" src="/assets/icons/logo-small.png" alt="Logo FODDEB"
+               onerror="this.style.display='none'"/>
           FODDEB — Carte de membre
         </div>
         <div class="badge-center">
@@ -556,9 +574,29 @@
             </div>
             <div class="badge-id" id="badgeId">—</div>
           </div>
-          <!-- QR code généré par canvas -->
+          <!-- Signature + cachet du Président
+               Remplacer badge-sign-placeholder par une balise <img> pointant vers
+               /assets/img/signature-president.png (PNG fond transparent) dès que l'asset est prêt.
+          -->
+          <div class="badge-sign">
+            <div class="badge-sign-placeholder" id="signatureZone">
+              <!-- Signature placeholder SVG — remplacer par la vraie image -->
+              <svg viewBox="0 0 70 36" xmlns="http://www.w3.org/2000/svg" width="70" height="36">
+                <path d="M6 28 C10 14 18 8 28 18 C35 25 38 12 46 10 C52 8 58 16 64 22"
+                      stroke="rgba(249,168,37,0.75)" stroke-width="2" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <ellipse cx="35" cy="22" rx="28" ry="12"
+                         stroke="rgba(249,168,37,0.25)" stroke-width="1.5" fill="none"
+                         stroke-dasharray="3 2"/>
+                <text x="35" y="26" text-anchor="middle" font-size="5"
+                      fill="rgba(249,168,37,0.5)" font-family="serif" letter-spacing="0.5">FODDEB</text>
+              </svg>
+            </div>
+            <div class="badge-sign-label">Signature · Président</div>
+          </div>
+          <!-- QR code réel généré par qrcode.js -->
           <div class="badge-qr" id="badgeQR">
-            <canvas id="qrCanvas" width="46" height="46"></canvas>
+            <div id="qrCanvas"></div>
           </div>
         </div>
       </div>
@@ -1588,33 +1626,23 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
     // BADGE MEMBRE SÉCURISÉ
     // ══════════════════════════════════════════════════════════════
 
-    // QR code minimaliste — sans librairie externe
-    // Encode l'URL de vérification future du badge
-    function drawSimpleQR(canvas, text) {
-      const SIZE = 46, CELLS = 21, CELL = Math.floor(SIZE / CELLS);
-      const ctx = canvas.getContext('2d');
-      canvas.width = SIZE; canvas.height = SIZE;
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, SIZE, SIZE);
-      // Hash déterministe du texte
-      let h = 5381;
-      for (let i = 0; i < text.length; i++) h = ((h << 5) + h) ^ text.charCodeAt(i);
-      h = Math.abs(h);
-      // Finder patterns (coins)
-      const drawFinder = (ox, oy) => {
-        ctx.fillStyle = '#111'; ctx.fillRect(ox*CELL, oy*CELL, 7*CELL, 7*CELL);
-        ctx.fillStyle = '#fff'; ctx.fillRect((ox+1)*CELL, (oy+1)*CELL, 5*CELL, 5*CELL);
-        ctx.fillStyle = '#111'; ctx.fillRect((ox+2)*CELL, (oy+2)*CELL, 3*CELL, 3*CELL);
-      };
-      drawFinder(0, 0); drawFinder(14, 0); drawFinder(0, 14);
-      // Zone de données
-      for (let r = 0; r < CELLS; r++) {
-        for (let c = 0; c < CELLS; c++) {
-          const inFinder = (r < 9 && c < 9) || (r < 9 && c > 12) || (r > 12 && c < 9);
-          if (inFinder) continue;
-          if ((h >> ((r * CELLS + c) % 31)) & 1) {
-            ctx.fillStyle = '#111'; ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
-          }
-        }
+    // QR code réel via qrcode.js — lisible par n'importe quel scanner
+    function drawRealQR(containerId, text) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = ''; // vider le conteneur avant régénération
+      try {
+        new QRCode(container, {
+          text: text,
+          width: 46,
+          height: 46,
+          colorDark: '#111111',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch(e) {
+        // Fallback texte si la lib ne charge pas
+        container.innerHTML = '<span style="font-size:7px;color:#666">QR indisponible</span>';
       }
     }
 
@@ -1649,8 +1677,8 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
         } else { badgeAv.textContent = init; }
       }
       const verifyUrl = 'https://foddeb.vercel.app/verify?id=' + encodeURIComponent(id); // UUID complet pour la vérification
-      const qrCanvas  = document.getElementById('qrCanvas');
-      if (qrCanvas) drawSimpleQR(qrCanvas, verifyUrl);
+      // Génère un vrai QR code lisible par scanner
+      drawRealQR('qrCanvas', verifyUrl);
     }
 
     // Intercepter openM pour rendre le badge à l'ouverture

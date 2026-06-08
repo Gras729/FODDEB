@@ -1642,8 +1642,10 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       const badgeAv = document.getElementById('badgeAv');
       if (badgeAv) {
         if (photo) {
-          // driveImgUrl() → thumbnail lh3 (CORS OK) — crossorigin conservé pour html2canvas
-          badgeAv.innerHTML = `<img src="${driveImgUrl(photo)}" alt="Photo" crossorigin="anonymous" onerror="this.parentElement.textContent='${init}'"/>`;
+          // driveImgUrl() → thumbnail lh3. crossorigin retiré : Drive ne renvoie pas
+          // les headers CORS sur la redirection → l'image échoue avec crossorigin.
+          // La photo s'affiche sur le badge. Le download html2canvas utilise allowTaint.
+          badgeAv.innerHTML = `<img src="${driveImgUrl(photo)}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`;
         } else { badgeAv.textContent = init; }
       }
       const verifyUrl = 'https://foddeb.vercel.app/verify?id=' + encodeURIComponent(id); // UUID complet pour la vérification
@@ -1686,7 +1688,13 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
         });
       }
       try {
-        const canvas = await html2canvas(card, { scale: 3, useCORS: true, backgroundColor: null, logging: false });
+        const canvas = await html2canvas(card, {
+          scale: 3,
+          useCORS: false,     // Drive ne supporte pas CORS sur la redirection thumbnail
+          allowTaint: true,   // Permet le rendu de l'image cross-origin sans crasher
+          backgroundColor: null,
+          logging: false
+        });
         const link   = document.createElement('a');
         link.download = 'badge-foddeb-' + (USER.ID || USER.id || 'membre') + '.png';
         link.href     = canvas.toDataURL('image/png');

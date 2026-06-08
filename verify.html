@@ -11,6 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
+  <!-- jsQR : décodage QR universel (tous navigateurs) — fallback si BarcodeDetector absent -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="/assets/js/config.js"></script>
 
   <style>
@@ -1003,41 +1005,68 @@ function handleBadgeFile(input) {
 async function processImageFile(file) {
   const status = document.getElementById('uploadStatus');
   status.style.display = 'block';
+  status.innerHTML = '<iconify-icon icon="mdi:loading" class="spin" width="16"></iconify-icon> Analyse de l\'image en cours…';
 
   try {
+    // Charger l'image dans un canvas
     const canvas = document.createElement('canvas');
     const img    = new Image();
     const url    = URL.createObjectURL(file);
     await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
-    canvas.width  = img.width;
-    canvas.height = img.height;
-    canvas.getContext('2d').drawImage(img, 0, 0);
+    canvas.width  = img.naturalWidth  || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
     URL.revokeObjectURL(url);
 
     let id = null;
 
-    // Essayer BarcodeDetector
+    // ── Tentative 1 : BarcodeDetector natif (Chrome, Edge, Android WebView)
     if ('BarcodeDetector' in window) {
-      const detector = new BarcodeDetector({ formats: ['qr_code'] });
-      const codes    = await detector.detect(canvas);
-      if (codes.length > 0) id = extractIdFromQR(codes[0].rawValue);
+      try {
+        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+        const codes    = await detector.detect(canvas);
+        if (codes.length > 0) id = extractIdFromQR(codes[0].rawValue);
+      } catch(e) { /* non supporté sur ce navigateur */ }
+    }
+
+    // ── Tentative 2 : jsQR (universel — Firefox, Safari, navigateurs sans BarcodeDetector)
+    if (!id && typeof jsQR === 'function') {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const result    = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert'
+      });
+      if (result && result.data) id = extractIdFromQR(result.data);
+
+      // Si jsQR échoue en mode normal, retenter avec inversion (badges sombres sur fond clair)
+      if (!id) {
+        const result2 = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'onlyInvert'
+        });
+        if (result2 && result2.data) id = extractIdFromQR(result2.data);
+      }
     }
 
     status.style.display = 'none';
 
     if (id) {
+      // QR détecté — remplir l'onglet manuel et lancer la vérification
       document.getElementById('memberId').value = id;
       switchTab('manual');
       verifyBadge(id);
     } else {
-      // BarcodeDetector non disponible ou QR non détecté
-      // Afficher message et laisser l'utilisateur saisir manuellement
+      // Aucune méthode n'a pu lire le QR
       status.style.display = 'block';
-      status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--gold-600)"></iconify-icon> QR code non détecté automatiquement. Veuillez saisir l&#x27;ID manuellement (onglet &ldquo;Saisie manuelle&rdquo;).';
-      setTimeout(() => { status.style.display = 'none'; switchTab('manual'); }, 4000);
+      status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--gold-600)"></iconify-icon>'
+        + ' QR code non détecté. Assurez-vous que le badge est bien visible et net, ou saisissez l\'ID manuellement.';
+      setTimeout(() => { status.style.display = 'none'; switchTab('manual'); }, 5000);
     }
+
   } catch(err) {
-    status.style.display = 'none';
+    status.style.display = 'block';
+    status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--red-600)"></iconify-icon>'
+      + ' Erreur lors de la lecture du fichier. Veuillez réessayer.';
+    setTimeout(() => { status.style.display = 'none'; }, 4000);
   }
 }
 </script>

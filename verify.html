@@ -1033,7 +1033,7 @@ async function processImageFile(file) {
       // BarcodeDetector non disponible ou QR non détecté
       // Afficher message et laisser l'utilisateur saisir manuellement
       status.style.display = 'block';
-      status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--gold-600)"></iconify-icon> QR code non détecté automatiquement. Veuillez saisir l'ID manuellement (onglet "Saisie manuelle").';
+      status.innerHTML = '<iconify-icon icon="mdi:alert-circle-outline" width="16" style="color:var(--gold-600)"></iconify-icon> QR code non détecté automatiquement. Veuillez saisir l&#x27;ID manuellement (onglet &ldquo;Saisie manuelle&rdquo;).';
       setTimeout(() => { status.style.display = 'none'; switchTab('manual'); }, 4000);
     }
   } catch(err) {

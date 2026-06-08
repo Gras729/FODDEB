@@ -876,8 +876,8 @@ function renderUserInfo(user) {
   const profAv = document.getElementById('profAv');
   if (profAv) {
     if (photoURL) {
-      // driveImgUrl() convertit les URLs /view en uc?export=view — crossorigin requis pour html2canvas
-      profAv.innerHTML = `<img src="${driveImgUrl(photoURL)}" alt="Photo" crossorigin="anonymous" onerror="this.parentElement.textContent='${init}'"/>`;
+      // driveImgUrl() → thumbnail lh3 (CORS OK) — crossorigin non requis pour l'affichage seul
+      profAv.innerHTML = `<img src="${driveImgUrl(photoURL)}" alt="Photo" onerror="this.parentElement.textContent='${init}'"/>`;
     } else {
       profAv.textContent = init;
     }
@@ -992,14 +992,20 @@ function driveEmbedUrl(url) {
     return url;
   } catch { return url; }
 }
-// Convertit toute URL Drive /view en URL directement affichable dans <img>.
-// Les URLs déjà en uc?export=view sont retournées sans modification.
-// Les anciennes entrées /view stockées dans le Sheet sont corrigées à la volée.
+// Convertit toute URL Drive en URL affichable — passe par lh3.googleusercontent.com
+// qui renvoie les headers CORS nécessaires (Access-Control-Allow-Origin: *).
+// Compatible affichage + html2canvas avec crossorigin="anonymous".
 function driveImgUrl(url) {
   if (!url) return '';
-  if (url.includes('uc?export=view')) return url;
+  // Déjà au bon format
+  if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
+  // Format /file/d/ID/view ou /file/d/ID
   const m = url.match(/\/file\/d\/([^/?]+)/);
-  return m ? 'https://drive.google.com/uc?export=view&id=' + m[1] : url;
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
+  // Format ?id=ID (open?id=, uc?id=...)
+  const m2 = url.match(/[?&]id=([^&]+)/);
+  if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w800';
+  return url;
 }
   
 /* ═══ PROJETS ═══ */
@@ -1138,7 +1144,8 @@ function openProjetDetail(projet) {
   // Image de couverture dans le détail
   const imgWrap = document.getElementById('pdImgWrap');
   if (imgURL) {
-    imgWrap.innerHTML = `<img src="${imgURL}" class="pd-cover" alt="${titre}" onerror="this.style.display='none'"/>`;
+    // driveImgUrl() converti l'URL Drive pour l'affichage direct
+    imgWrap.innerHTML = `<img src="${driveImgUrl(imgURL)}" class="pd-cover" alt="${titre}" onerror="this.style.display='none'"/>`;
   } else {
     const dom = p.Domaine || p.domaine || '';
     const cfg = Object.entries(DOM_ICONS).find(([k]) => dom.includes(k))?.[1] || DOM_ICONS.default;
@@ -1567,8 +1574,8 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
         // Mettre à jour le badge avatar
         const badgeAv = document.getElementById('badgeAv');
         if (badgeAv && res.url) {
-          // driveImgUrl() convertit /view → uc?export=view — crossorigin requis pour html2canvas
-          badgeAv.innerHTML = `<img src="${driveImgUrl(res.url)}" alt="Photo" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+          // driveImgUrl() → thumbnail lh3 — crossorigin retiré (post-upload direct)
+          badgeAv.innerHTML = `<img src="${driveImgUrl(res.url)}" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
         }
       } catch(e) {
         toast('Erreur upload photo : ' + e.message, 'err');
@@ -1635,7 +1642,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       const badgeAv = document.getElementById('badgeAv');
       if (badgeAv) {
         if (photo) {
-          // driveImgUrl() convertit /view → uc?export=view — crossorigin requis pour html2canvas
+          // driveImgUrl() → thumbnail lh3 (CORS OK) — crossorigin conservé pour html2canvas
           badgeAv.innerHTML = `<img src="${driveImgUrl(photo)}" alt="Photo" crossorigin="anonymous" onerror="this.parentElement.textContent='${init}'"/>`;
         } else { badgeAv.textContent = init; }
       }

@@ -236,7 +236,56 @@ var FODDEB_API = window.FODDEB_API || (() => {
                        request('fedapay_status', { transactionId }),
   };
 
-  return { auth, members, dons, projets, news, newsletter, contact, dashboard, fedapay };
+  /* ============================================================
+     RESSOURCES & ÉVÉNEMENTS — publics, page d'accueil
+  ============================================================ */
+  const ressources = {
+    list: () => request('ressources_list'),
+  };
+
+  const evenements = {
+    list: () => request('evenements_list'),
+  };
+
+  /* ============================================================
+     ADMIN — actions réservées au backoffice
+     Préfixe 'admin_' côté GAS pour distinguer des routes membres.
+     Appeler uniquement depuis les pages /admin/*.html.
+  ============================================================ */
+  const admin = {
+
+    // Membres
+    members: {
+      list:     (statut = '', limit = 50) => request('admin_members_list',     { statut, limit }),
+      validate: (id)                      => request('admin_members_validate', { id }),
+      update:   (id, data)                => request('admin_members_update',   { id, ...data }),
+      exportCSV: ()                       => request('members_export_csv'),
+    },
+
+    // Dons
+    dons: {
+      list:    (limit = 50) => request('admin_dons_list',    { limit }),
+      confirm: (id)         => request('admin_dons_confirm', { id }),
+    },
+
+    // Newsletter
+    newsletter: {
+      list:        (limit = 100)       => request('admin_newsletter_list',        { limit }),
+      subscribe:   (email, nom = '')   => request('admin_newsletter_subscribe',   { email, nom }),
+      unsubscribe: (email)             => request('admin_newsletter_unsubscribe', { email }),
+    },
+
+    // Actualités
+    news: {
+      list:    (limit = 100)  => request('admin_news_list',    { limit }),
+      create:  (data)         => request('admin_news_create',  data),
+      update:  (id, data)     => request('admin_news_update',  { id, ...data }),
+      publish: (id)           => request('admin_news_publish', { id }),
+      delete:  (id)           => request('admin_news_delete',  { id }),
+    },
+  };
+
+  return { auth, members, dons, projets, news, newsletter, contact, dashboard, fedapay, ressources, evenements, admin };
 
 })();
 

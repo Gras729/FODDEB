@@ -2648,22 +2648,42 @@
       'Autonomisation':   { bg: '#6B4C9A', icon: 'mdi:flower-outline' },
     };
 
+    /* ── Utilitaire : URL Drive → thumbnail lh3 (CORS OK) ──────── */
+    function driveImgUrl(url) {
+      if (!url) return '';
+      if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
+      const m = url.match(/\/file\/d\/([^/?]+)/);
+      if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
+      const m2 = url.match(/[?&]id=([^&]+)/);
+      return m2 ? 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w800' : url;
+    }
+
+    /* ── Utilitaire : formate une date ISO → date lisible ───────── */
+    function fmtDate(iso) {
+      if (!iso) return '';
+      try {
+        return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return iso; }
+    }
+
     /* ── Render : carte projet ──────────────────────────────────── */
     function renderProjetCard(p) {
-      const st     = (p.Statut || '').toLowerCase();
+      const st      = (p.Statut || '').toLowerCase();
       const isActif = st === 'en_cours' || st === 'actif';
       const style   = DOMAINE_STYLE[p.Domaine] || { bg: 'var(--green-800)', icon: 'mdi:clipboard-list-outline' };
+      const imgSrc  = p.ImageURL ? driveImgUrl(p.ImageURL) : '';
       const dateStr = p.DateDebut && p.DateFin
-        ? `${p.DateDebut} – ${p.DateFin}`
-        : (p.DateDebut || '');
+        ? `${fmtDate(p.DateDebut)} – ${fmtDate(p.DateFin)}`
+        : fmtDate(p.DateDebut || p.DateFin || '');
       const partenaire = p.Partenaires || p.Responsable || '';
       const dept       = p.Departement || 'National';
 
       return `
         <div class="project-card">
-          <div class="project-img" style="background:${style.bg}">
+          <div class="project-img" style="background:${style.bg};position:relative;overflow:hidden">
+            ${imgSrc ? `<img src="${imgSrc}" alt="${p.Titre || ''}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" onerror="this.remove()">` : ''}
             <iconify-icon icon="${style.icon}" width="48" style="color:rgba(255,255,255,.4);position:relative;z-index:1"></iconify-icon>
-            <span class="project-status ${isActif ? 'status-active' : 'status-done'}">${isActif ? 'En cours' : 'Réalisé'}</span>
+            <span class="project-status ${isActif ? 'status-active' : 'status-done'}" style="position:relative;z-index:2">${isActif ? 'En cours' : 'Réalisé'}</span>
           </div>
           <div class="project-body">
             <div class="project-tag">${p.Domaine || 'Projet'}</div>

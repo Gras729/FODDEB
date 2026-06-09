@@ -775,7 +775,7 @@ function openDetail(id) {
         ${(STATUS_TRANSITIONS[p.Statut] || Object.keys(STATUS_CFG)).map(s => {
           const cfg = STATUS_CFG[s] || { label:s, icon:'mdi:circle-outline' };
           const isCurrent = s === p.Statut;
-          return '<button class="sm-item' + (isCurrent ? ' current' : '') + '" onclick="setStatut('' + p.ID + '','' + s + '')" style="border:1px solid var(--brd);border-radius:8px;padding:6px 12px;flex-shrink:0' + (isCurrent ? ';background:var(--g0);color:var(--g8)' : '') + '">'
+          return '<button class="sm-item' + (isCurrent ? ' current' : '') + '" onclick="setStatut(\'' + p.ID + '\',\'' + s + '\')" style="border:1px solid var(--brd);border-radius:8px;padding:6px 12px;flex-shrink:0' + (isCurrent ? ';background:var(--g0);color:var(--g8)' : '') + '">'
             + '<iconify-icon icon="' + cfg.icon + '" style="font-size:15px;color:' + cfg.color + '"></iconify-icon>'
             + cfg.label
             + (isCurrent ? ' <span style="font-size:10px;opacity:.6">(actuel)</span>' : '')

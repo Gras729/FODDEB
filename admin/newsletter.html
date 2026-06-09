@@ -297,6 +297,36 @@
                 <span>Conseil : gardez entre 200–400 mots pour un bon taux d'ouverture</span>
               </div>
             </div>
+
+            <!-- Bannière image -->
+            <div class="fg" style="margin-top:12px">
+              <label class="fl">Bannière email <span style="color:var(--gr4);font-weight:400;font-size:12px">(JPG/PNG, max 5 Mo — insérée en haut de l'email)</span></label>
+              <div id="nlImgDrop" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;background:var(--gr1);transition:.2s" onclick="document.getElementById('nlImageFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleNlFileDrop(event,'image')">
+                <iconify-icon icon="mdi:image-plus-outline" width="24" style="color:var(--gr4)"></iconify-icon>
+                <div id="nlImgLabel" style="font-size:12px;color:var(--gr4);margin-top:4px">Bannière email (JPG/PNG)</div>
+              </div>
+              <input type="file" id="nlImageFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleNlFileSelect(this,'image')"/>
+              <div id="nlImgPreviewWrap" style="display:none;margin-top:8px">
+                <img id="nlImgPreview" style="max-width:100%;max-height:120px;border-radius:6px;object-fit:cover;border:1px solid var(--brd)"/>
+                <button type="button" onclick="clearNlFile('image')" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;margin-top:4px;display:block">Supprimer</button>
+              </div>
+            </div>
+
+            <!-- Pièce jointe PDF -->
+            <div class="fg" style="margin-top:8px">
+              <label class="fl">Pièce jointe <span style="color:var(--gr4);font-weight:400;font-size:12px">(PDF, max 5 Mo — lien de téléchargement dans l'email)</span></label>
+              <div id="nlFileDrop" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;background:var(--gr1);transition:.2s" onclick="document.getElementById('nlPieceJointe').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleNlFileDrop(event,'fichier')">
+                <iconify-icon icon="mdi:file-pdf-box" width="24" style="color:var(--gr4)"></iconify-icon>
+                <div id="nlFileLabel" style="font-size:12px;color:var(--gr4);margin-top:4px">Cliquer ou glisser un PDF ici</div>
+              </div>
+              <input type="file" id="nlPieceJointe" accept="application/pdf" style="display:none" onchange="handleNlFileSelect(this,'fichier')"/>
+              <div id="nlFileInfoWrap" style="display:none;margin-top:8px;padding:8px 12px;background:var(--gr1);border-radius:6px;font-size:13px;align-items:center;gap:8px">
+                <iconify-icon icon="mdi:file-pdf-box" style="color:var(--red)" width="20"></iconify-icon>
+                <span id="nlFileName" style="flex:1;color:var(--gr8)"></span>
+                <button type="button" onclick="clearNlFile('fichier')" style="color:var(--red);background:none;border:none;cursor:pointer"><iconify-icon icon="mdi:close-circle-outline" width="18"></iconify-icon></button>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -440,43 +470,15 @@
 const fmtD=d=>{try{return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});}catch{return d;}};
 
 /* SUBSCRIBERS DATA */
-// SUBS : chargé dynamiquement depuis GAS
-let SUBS = [];
-
-function normalizeSub(s) {
-  return {
-    email:  s.Email  || s.email  || '',
-    nom:    s.Nom    || s.nom    || '',
-    source: s.Source || s.source || '—',
-    statut: (s.Statut || s.statut || 'active').toLowerCase(),
-    date:   s.DateInscription || s.date || '',
-  };
-}
-
-async function loadSubsFromGAS() {
-  const tbody = document.getElementById('subsTable');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gr4)"><iconify-icon icon="mdi:loading" width="20" style="animation:spin .8s linear infinite"></iconify-icon>&nbsp; Chargement…</td></tr>';
-  try {
-    const res = await FODDEB_API.admin.newsletter.list(500);
-    if (res.success && res.data) {
-      SUBS = res.data.map(normalizeSub);
-      // Mettre à jour les compteurs dans l'onglet abonnés
-      const actifs = SUBS.filter(s => s.statut === 'active').length;
-      const total  = SUBS.length;
-      const elActifs = document.getElementById('countActifs');
-      const elTotal  = document.getElementById('countTotal');
-      if (elActifs) elActifs.textContent = actifs;
-      if (elTotal)  elTotal.textContent  = total;
-    } else {
-      SUBS = [];
-      toast('Impossible de charger les abonnés.', 'err');
-    }
-  } catch (err) {
-    SUBS = [];
-    toast('Erreur serveur : ' + err.message, 'err');
-  }
-  renderSubs();
-}
+let SUBS=[
+  {email:'adjovi.r@asad.org',nom:'Adjovi Rosine',source:'Inscription site',statut:'active',date:'2024-01-15'},
+  {email:'k.mensah@gmail.com',nom:'Kofi Mensah',source:'Don',statut:'active',date:'2024-03-22'},
+  {email:'pnud.benin@undp.org',nom:'PNUD Bénin',source:'Partenariat',statut:'active',date:'2024-04-10'},
+  {email:'f.alassane@gmail.com',nom:'Fatima Alassane',source:'Inscription site',statut:'active',date:'2025-01-05'},
+  {email:'g.nestor@solid.org',nom:'Gnahore Nestor',source:'Membre',statut:'active',date:'2024-06-01'},
+  {email:'b.ibrahim@ajdb.org',nom:'Bello Ibrahim',source:'Membre',statut:'active',date:'2024-02-08'},
+  {email:'ancien@test.com',nom:'Ancien abonné',source:'Inscription site',statut:'unsubscribed',date:'2023-11-01'},
+];
 
 const CAMPAIGNS=[
   {subject:'Rapport d\'activités 2024 — FODDEB',date:'2025-03-28',segment:'Tous',envois:684,ouvertures:465,clics:164,icone:'📊',color:'var(--g7)'},
@@ -485,6 +487,65 @@ const CAMPAIGNS=[
   {subject:'Newsletter mensuelle — Novembre 2024',date:'2024-11-28',segment:'Tous',envois:620,ouvertures:401,clics:132,icone:'📰',color:'var(--g7)'},
 ];
 
+/* ===== UPLOAD FICHIERS ===== */
+const _uploadFiles = { image: null, fichier: null };
+
+function handleNlFileSelect(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Fichier trop volumineux (max 5 Mo).', 'err'); input.value = ''; return; }
+  _uploadFiles[type] = file;
+  if (type === 'image') {
+    const r = new FileReader();
+    r.onload = e => {
+      document.getElementById('nlImgPreview').src = e.target.result;
+      document.getElementById('nlImgPreviewWrap').style.display = 'block';
+      document.getElementById('nlImgLabel').textContent = file.name;
+      document.getElementById('nlImgDrop').style.borderColor = 'var(--g7)';
+    };
+    r.readAsDataURL(file);
+  } else {
+    document.getElementById('nlFileName').textContent = file.name;
+    document.getElementById('nlFileInfoWrap').style.display = 'flex';
+    document.getElementById('nlFileLabel').textContent = file.name;
+    document.getElementById('nlFileDrop').style.borderColor = 'var(--g7)';
+  }
+}
+
+function handleNlFileDrop(event, type) {
+  event.preventDefault();
+  document.getElementById(type === 'image' ? 'nlImgDrop' : 'nlFileDrop').style.borderColor = 'var(--brd)';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  const input = document.getElementById(type === 'image' ? 'nlImageFile' : 'nlPieceJointe');
+  const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+  handleNlFileSelect(input, type);
+}
+
+function clearNlFile(type) {
+  _uploadFiles[type] = null;
+  if (type === 'image') {
+    document.getElementById('nlImageFile').value = '';
+    document.getElementById('nlImgPreviewWrap').style.display = 'none';
+    document.getElementById('nlImgLabel').textContent = 'Bannière email (JPG/PNG)';
+    document.getElementById('nlImgDrop').style.borderColor = 'var(--brd)';
+  } else {
+    document.getElementById('nlPieceJointe').value = '';
+    document.getElementById('nlFileInfoWrap').style.display = 'none';
+    document.getElementById('nlFileLabel').textContent = 'Cliquer ou glisser un PDF ici';
+    document.getElementById('nlFileDrop').style.borderColor = 'var(--brd)';
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Lecture fichier échouée'));
+    r.readAsDataURL(file);
+  });
+}
+
 /* TABS */
 function openTab(name, btn){
   ['compose','abonnes','historique'].forEach(t=>{
@@ -492,7 +553,7 @@ function openTab(name, btn){
   });
   document.querySelectorAll('.tabs .tab').forEach((b,i)=>b.classList.remove('act'));
   if(btn) btn.classList.add('act');
-  if(name==='abonnes') loadSubsFromGAS();
+  if(name==='abonnes') renderSubs();
   if(name==='historique') renderHistory();
 }
 
@@ -514,36 +575,58 @@ function previewNL(){
 }
 
 /* CONFIRM & SEND */
-function openSendConfirm() {
-  const subj = document.getElementById('nlSubject').value.trim();
-  if (!subj) { toast("Veuillez saisir l'objet de l'email.", 'err'); return; }
-  const seg       = document.querySelector('input[name="seg"]:checked')?.value || 'all';
-  const seglabels = { all: 'Tous les abonnés actifs', membres: 'Membres actifs', donors: 'Donateurs', external: 'Abonnés externes' };
-  const nbEnvois  = SUBS.filter(s => s.statut === 'active').length;
-  document.getElementById('sendSummary').innerHTML = [
-    ['Objet',         subj],
-    ['Destinataires', seglabels[seg] || seg],
-    ["Nb. d'envois",  nbEnvois + ' abonné(s) actif(s)'],
-    ['Expéditeur',    'phanoskosmos@gmail.com'],
-  ].map(([l, v]) => '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--brd);font-size:14px"><span style="color:var(--gr6)">' + l + '</span><strong>' + v + '</strong></div>').join('');
+function openSendConfirm(){
+  const subj=document.getElementById('nlSubject').value.trim();
+  if(!subj){toast('Veuillez saisir l\'objet de l\'email.','err');return;}
+  const seg=document.querySelector('input[name="seg"]:checked')?.value;
+  const counts={all:684,membres:142,donors:89,external:453};
+  const seglabels={all:'Tous les abonnés',membres:'Membres actifs',donors:'Donateurs',external:'Abonnés externes'};
+  document.getElementById('sendSummary').innerHTML=[
+    ['Objet',subj],['Destinataires',seglabels[seg]||seg],['Nb. d\'envois',counts[seg]||684],['Expéditeur','phanoskosmos@gmail.com'],
+  ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--brd);font-size:14px"><span style="color:var(--gr6)">${l}</span><strong>${v}</strong></div>`).join('');
   openM('sendM');
 }
 
 async function sendCampaign() {
   const subject = document.getElementById('nlSubject').value.trim();
-  const body    = document.getElementById('editorArea').innerHTML.trim();
+  let   body    = document.getElementById('editorArea').innerHTML.trim();
   if (!subject || !body) { toast('Objet et corps du message requis.', 'err'); return; }
+
+  // Upload bannière image — injectée en haut du corps HTML
+  if (_uploadFiles.image) {
+    try {
+      const b64 = await fileToBase64(_uploadFiles.image);
+      const up  = await FODDEB_API.members.uploadProjectFile(b64, _uploadFiles.image.name, _uploadFiles.image.type, 'newsletter_banner', 'new');
+      if (up.success) {
+        const bannerUrl = up.url || up.fileUrl || '';
+        body = '<div style="text-align:center;margin-bottom:16px"><img src="' + bannerUrl + '" style="max-width:100%;border-radius:8px" alt="Bannière"/></div>' + body;
+      }
+    } catch(e) { toast('Erreur upload bannière : ' + e.message, 'err'); }
+  }
+
+  // Upload pièce jointe — lien de téléchargement ajouté en pied de corps
+  if (_uploadFiles.fichier) {
+    try {
+      const b64 = await fileToBase64(_uploadFiles.fichier);
+      const up  = await FODDEB_API.members.uploadProjectFile(b64, _uploadFiles.fichier.name, 'application/pdf', 'newsletter_doc', 'new');
+      if (up.success) {
+        const docUrl = up.url || up.fileUrl || '';
+        body += '<div style="margin-top:20px;padding:12px 16px;background:#E8F5E9;border-left:4px solid #2E7D32;border-radius:0 8px 8px 0">'
+              + '<a href="' + docUrl + '" style="color:#1B5E20;font-weight:600;text-decoration:none">'
+              + _uploadFiles.fichier.name + ' — Télécharger</a></div>';
+      }
+    } catch(e) { toast('Erreur upload document : ' + e.message, 'err'); }
+  }
 
   closeM('sendM');
   openM('sendingM');
 
-  // Afficher progression pendant l'envoi GAS (peut prendre 10-30s selon le nombre d'abonnés)
   const steps = ['Connexion au serveur…', 'Personnalisation des emails…', 'Envoi en cours…', 'Finalisation…'];
   let stepIdx = 0;
   const ticker = setInterval(() => {
     if (stepIdx < steps.length) {
       document.getElementById('sendingMsg').textContent = steps[stepIdx];
-      const pct = Math.round((stepIdx + 1) / steps.length * 85); // 85% max pendant l'attente
+      const pct = Math.round((stepIdx + 1) / steps.length * 85);
       document.getElementById('sendingProg').style.width = pct + '%';
       document.getElementById('sendingPct').textContent = pct + '%';
       stepIdx++;
@@ -551,10 +634,8 @@ async function sendCampaign() {
   }, 2000);
 
   try {
-    // Appel GAS réel — newsletter_send (Helpers.gs)
     const res = await FODDEB_API.newsletter.send(subject, body, false);
     clearInterval(ticker);
-
     if (res.success) {
       const sent = res.sent || SUBS.filter(s => s.statut === 'active').length;
       document.getElementById('sendingProg').style.width = '100%';
@@ -563,7 +644,7 @@ async function sendCampaign() {
         '<span class="big-icon">✅</span>' +
         '<h3 style="font-family:var(--fh);font-weight:700;color:var(--dark);margin-bottom:8px">Campagne envoyée !</h3>' +
         '<p style="color:var(--gr6);font-size:14px">' + sent + ' email(s) envoyé(s) avec succès.</p>';
-      setTimeout(() => { closeM('sendingM'); toast('Campagne envoyée à ' + sent + ' abonné(s).'); }, 1500);
+      setTimeout(() => { closeM('sendingM'); toast('Campagne envoyée à ' + sent + ' abonné(s).'); clearNlFile('image'); clearNlFile('fichier'); }, 1500);
     } else {
       closeM('sendingM');
       toast('Erreur GAS : ' + (res.error || 'Envoi échoué.'), 'err');
@@ -574,127 +655,3 @@ async function sendCampaign() {
     toast('Erreur serveur : ' + err.message, 'err');
   }
 }
-
-async function sendTest() {
-  const subject = document.getElementById('nlSubject').value.trim() || '(Test sans objet)';
-  const body    = document.getElementById('editorArea').innerHTML.trim() || '<p>(Corps vide)</p>';
-  try {
-    // Utilise newsletter_send avec test=true → envoi uniquement à ADMIN_EMAIL
-    const res = await FODDEB_API.newsletter.send(subject, body, true);
-    if (res.success) toast('Email de test envoyé à phanoskosmos@gmail.com.');
-    else toast(res.error || 'Erreur lors du test.', 'err');
-  } catch (err) {
-    toast('Erreur : ' + err.message, 'err');
-  }
-}
-
-/* SUBSCRIBERS */
-function renderSubs(){
-  const q=(document.getElementById('searchSub')?.value||'').toLowerCase();
-  const filtered=SUBS.filter(s=>!q||s.email.includes(q)||s.nom.toLowerCase().includes(q));
-  document.getElementById('subsTable').innerHTML=filtered.map((s,i)=>`
-    <tr style="animation:fadeUp .2s ease ${i*.04}s both">
-      <td style="font-weight:500">${s.email}</td>
-      <td style="color:var(--gr6)">${s.nom||'—'}</td>
-      <td><span class="badge bg-n">${s.source}</span></td>
-      <td>${s.statut==='active'?'<span class="badge bg-s"><span class="bd"></span>Actif</span>':'<span class="badge bg-d"><span class="bd"></span>Désabonné</span>'}</td>
-      <td style="color:var(--gr4);font-size:12.5px">${fmtD(s.date)}</td>
-      <td><div class="ac">
-        <button class="bi" onclick="toggleSub('${s.email}')" title="${s.statut==='active'?'Désabonner':'Réabonner'}"><iconify-icon icon="${s.statut==='active'?'mdi:account-remove-outline':'mdi:account-plus-outline'}"></iconify-icon></button>
-        <button class="bi" onclick="removeSub('${s.email}')" title="Supprimer" style="color:var(--red)"><iconify-icon icon="mdi:delete-outline"></iconify-icon></button>
-      </div></td>
-    </tr>`).join('');
-}
-
-async function toggleSub(email) {
-  const s = SUBS.find(x => x.email === email);
-  if (!s) return;
-  const newStatut = s.statut === 'active' ? 'unsubscribed' : 'active';
-  try {
-    const res = newStatut === 'unsubscribed'
-      ? await FODDEB_API.admin.newsletter.unsubscribe(email)
-      : await FODDEB_API.admin.newsletter.subscribe(email, s.nom);
-    if (res.success) {
-      s.statut = newStatut;
-      renderSubs();
-      toast(newStatut === 'active' ? 'Abonné réactivé.' : 'Abonné désabonné.');
-    } else {
-      toast(res.error || 'Erreur lors de la mise à jour.', 'err');
-    }
-  } catch (err) {
-    toast('Erreur serveur : ' + err.message, 'err');
-  }
-}
-
-async function removeSub(email) {
-  if (!confirm('Désabonner définitivement ' + email + ' ?')) return;
-  try {
-    const res = await FODDEB_API.admin.newsletter.unsubscribe(email);
-    if (res.success) {
-      // Retirer de la liste locale (pas de suppression physique en GAS — statut unsubscribed)
-      SUBS = SUBS.filter(x => x.email !== email);
-      renderSubs();
-      toast('Abonné désabonné et retiré de la liste.');
-    } else {
-      toast(res.error || 'Erreur lors de la suppression.', 'err');
-    }
-  } catch (err) {
-    toast('Erreur serveur : ' + err.message, 'err');
-  }
-}
-
-function openAddSub() {
-  openM('addSubM');
-  document.getElementById('subEmail').value = '';
-  document.getElementById('subNom').value   = '';
-}
-
-async function addSub() {
-  const email = document.getElementById('subEmail').value.trim();
-  const nom   = document.getElementById('subNom').value.trim();
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Email invalide.', 'err'); return; }
-  if (SUBS.find(s => s.email === email)) { toast('Cet email est déjà dans la liste.', 'err'); return; }
-  try {
-    const res = await FODDEB_API.admin.newsletter.subscribe(email, nom);
-    if (res.success) {
-      SUBS.unshift({ email, nom, source: 'Manuel', statut: 'active', date: new Date().toISOString().split('T')[0] });
-      closeM('addSubM');
-      renderSubs();
-      toast('Abonné ajouté avec succès.');
-    } else {
-      toast(res.error || 'Erreur lors de l'ajout.', 'err');
-    }
-  } catch (err) {
-    toast('Erreur serveur : ' + err.message, 'err');
-  }
-}
-function exportSubs(){ const h=['Email','Nom','Source','Statut','Date']; const rows=SUBS.map(s=>[s.email,s.nom,s.source,s.statut,s.date].map(v=>`"${v}"`).join(',')); const csv=[h.join(','),...rows].join('\n'); const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));a.download='abonnes_foddeb.csv';a.click();toast('Export téléchargé.'); }
-
-/* HISTORY */
-function renderHistory(){
-  document.getElementById('sentList').innerHTML=CAMPAIGNS.map(c=>`
-    <div class="sent-item">
-      <div class="sent-icon" style="background:${c.color}22"><span style="font-size:20px">${c.icone}</span></div>
-      <div class="sent-info"><strong>${c.subject}</strong><span>${c.segment} · ${fmtD(c.date)}</span></div>
-      <div class="sent-stats">
-        <div class="sent-open">${Math.round(c.ouvertures/c.envois*100)}% ouverts · ${c.envois} envois</div>
-        <div class="sent-date">${c.clics} clics</div>
-      </div>
-      <button class="bi" title="Renvoyer"><iconify-icon icon="mdi:refresh"></iconify-icon></button>
-    </div>`).join('');
-}
-
-function openM(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeM(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o&&o.id!=='sendingM'){o.classList.remove('open');document.body.style.overflow='';}}));
-
-function toast(msg,type='ok'){const c=document.getElementById('toast-c');const t=document.createElement('div');t.className='toast';t.innerHTML=`<iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span>${msg}</span>`;if(type==='err')t.style.background='var(--red)';c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);}
-
-let sbC=false,mobO=false;
-function toggleSb(){const mob=window.innerWidth<=768;if(mob){mobO=!mobO;document.getElementById('sb').classList.toggle('mob',mobO);document.getElementById('ov').classList.toggle('v',mobO);}else{sbC=!sbC;document.getElementById('sb').classList.toggle('col',sbC);document.getElementById('mw').classList.toggle('col',sbC);}}
-function closeSb(){mobO=false;document.getElementById('sb').classList.remove('mob');document.getElementById('ov').classList.remove('v');}
-
-if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
-</script>
-</body>
-</html>

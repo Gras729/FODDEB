@@ -795,7 +795,7 @@ function buildStatusMenu(p, compact) {
   const transitions = STATUS_TRANSITIONS[p.Statut] || Object.keys(STATUS_CFG);
   const items = transitions.map(s => {
     const c = STATUS_CFG[s] || { label:s, icon:'mdi:circle-outline', color:'var(--gr4)' };
-    return '<button class="sm-item" onclick="event.stopPropagation();setStatut('' + p.ID + '','' + s + '')">'
+    return '<button class="sm-item" onclick="event.stopPropagation();setStatut(\'' + p.ID + '\',\'' + s + '\')">'
       + '<iconify-icon icon="' + c.icon + '" style="font-size:15px;color:' + c.color + '"></iconify-icon>'
       + c.label + '</button>';
   }).join('');

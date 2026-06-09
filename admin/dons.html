@@ -611,24 +611,55 @@
 <script>
 'use strict';
 
-/* ===== MOCK DATA ===== */
+/* ===== DONNÉES RÉELLES — Google Sheets via GAS ===== */
 const COLORS_DONOR = ['#1B5E20','#1565C0','#6A1B9A','#C62828','#E65100','#00695C','#F57F17'];
 const getDonorColor = (i) => COLORS_DONOR[i % COLORS_DONOR.length];
 
-let ALL_DONS = [
-  { id:1,  ref:'FP-2025-0001', prenom:'Kofi',      nom:'Mensah',    email:'k.mensah@gmail.com',     montant:50000,  type:'unique',  statut:'confirmed', mode:'FedaPay',          date:'2025-04-28', notes:'' },
-  { id:2,  ref:'FP-2025-0002', prenom:'PNUD',       nom:'Bénin',     email:'pnud.benin@undp.org',     montant:500000, type:'unique',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-26', notes:'Financement projet VBG' },
-  { id:3,  ref:'FP-2025-0003', prenom:'Fatima',     nom:'Alassane',  email:'f.alassane@gmail.com',    montant:10000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-25', notes:'' },
-  { id:4,  ref:'FP-2025-0004', prenom:'Sènou',      nom:'Adjagbé',   email:'senou.a@gmail.com',       montant:5000,   type:'unique',  statut:'pending',   mode:'Mobile Money',     date:'2025-04-26', notes:'' },
-  { id:5,  ref:'FP-2025-0005', prenom:'Association',nom:'VIVE',      email:'asso.vive@gmail.com',     montant:25000,  type:'unique',  statut:'confirmed', mode:'FedaPay',          date:'2025-04-25', notes:'' },
-  { id:6,  ref:'FP-2025-0006', prenom:'Gnahore',    nom:'Nestor',    email:'g.nestor@gmail.com',      montant:15000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-24', notes:'' },
-  { id:7,  ref:'FP-2025-0007', prenom:'Plan',        nom:'Bénin',     email:'plan.benin@plan.org',     montant:200000, type:'annuel',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-20', notes:'Partenariat 2025' },
-  { id:8,  ref:'FP-2025-0008', prenom:'Ibrahim',    nom:'Bello',     email:'i.bello@gmail.com',       montant:2000,   type:'unique',  statut:'failed',    mode:'FedaPay',          date:'2025-04-19', notes:'Fonds insuffisants' },
-  { id:9,  ref:'FP-2025-0009', prenom:'Alimatou',   nom:'Garba',     email:'a.garba@gmail.com',       montant:20000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-15', notes:'' },
-  { id:10, ref:'FP-2025-0010', prenom:'GIZ',         nom:'Bénin',     email:'giz.benin@giz.de',        montant:750000, type:'unique',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-10', notes:'Appui institutional' },
-  { id:11, ref:'FP-2025-0011', prenom:'Rodrigue',   nom:'Houessou',  email:'r.hou@gmail.com',         montant:5000,   type:'unique',  statut:'refunded',  mode:'FedaPay',          date:'2025-04-08', notes:'Remboursement sur demande' },
-  { id:12, ref:'FP-2025-0012', prenom:'Adjovi',     nom:'Rosine',    email:'adjovi.r@asad.org',       montant:30000,  type:'annuel',  statut:'confirmed', mode:'Espèces',          date:'2025-04-05', notes:'' },
-];
+// ALL_DONS : chargé dynamiquement depuis GAS via FODDEB_API.admin.dons.list()
+// Normalisé pour conserver la compatibilité avec renderTable(), loadStats(), etc.
+let ALL_DONS = [];
+
+// Normaliser une ligne GAS → format attendu par le frontend
+function normalizeDon(d, i) {
+  return {
+    id:      d.ID      || d.id      || String(i),
+    ref:     d.Ref     || d.ref     || '—',
+    prenom:  d.Prenom  || d.prenom  || '',
+    nom:     d.Nom     || d.nom     || '',
+    email:   d.Email   || d.email   || '',
+    montant: Number(d.Montant || d.montant) || 0,
+    type:    (d.Type   || d.type    || 'unique').toLowerCase(),
+    statut:  (d.Statut || d.statut  || 'pending').toLowerCase(),
+    mode:    d.Mode    || d.mode    || 'FedaPay',
+    date:    d.DateDon || d.date    || '',
+    notes:   d.Notes   || d.notes   || '',
+  };
+}
+
+// Chargement initial depuis GAS
+async function loadDonsFromGAS() {
+  showTableLoading();
+  try {
+    const res = await FODDEB_API.admin.dons.list(200);
+    if (res.success && res.data) {
+      ALL_DONS = (res.data).map((d, i) => normalizeDon(d, i));
+    } else {
+      ALL_DONS = [];
+      toast('Impossible de charger les dons depuis le serveur.', 'error');
+    }
+  } catch (err) {
+    ALL_DONS = [];
+    toast('Erreur de connexion au serveur : ' + err.message, 'error');
+  }
+  loadStats();
+  loadTopDonors();
+  renderTable();
+}
+
+function showTableLoading() {
+  const tbody = document.getElementById('donsTableBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray-400)"><iconify-icon icon="mdi:loading" width="24" style="animation:spin .8s linear infinite"></iconify-icon>&nbsp; Chargement…</td></tr>';
+}
 
 const STATUS_MAP = {
   confirmed: '<span class="badge badge-success"><span class="badge-dot"></span>Confirmé</span>',
@@ -819,14 +850,29 @@ function viewDon(id) {
   openModal('donDetailModal');
 }
 
-function confirmDon(id) {
-  const d=ALL_DONS.find(x=>x.id===id);
-  if(!d) return;
-  d.statut='confirmed';
-  renderTable();
-  toast(`Don de ${fmt(d.montant)} confirmé.`);
+async function confirmDon(id) {
+  const d = ALL_DONS.find(x => x.id === id);
+  if (!d) return;
+  const btn = document.querySelector(`button[onclick="confirmDon(${id})"]`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<iconify-icon icon="mdi:loading" style="animation:spin .8s linear infinite"></iconify-icon>'; }
+  try {
+    const res = await FODDEB_API.admin.dons.confirm(id);
+    if (res.success) {
+      d.statut = 'confirmed';
+      renderTable();
+      loadStats();
+      loadTopDonors();
+      toast('Don de ' + fmt(d.montant) + ' confirmé. Reçu envoyé à ' + d.email + '.');
+    } else {
+      toast(res.error || 'Erreur lors de la confirmation.', 'error');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon icon="mdi:check-circle-outline"></iconify-icon>'; }
+    }
+  } catch (err) {
+    toast('Erreur serveur : ' + err.message, 'error');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon icon="mdi:check-circle-outline"></iconify-icon>'; }
+  }
 }
-function sendReceipt(id) { const d=ALL_DONS.find(x=>x.id===id); if(d) toast(`Reçu envoyé à ${d.email}.`); }
+function sendReceipt(id) { const d=ALL_DONS.find(x=>x.id===id); if(d) toast('Reçu envoyé à ' + d.email + '.'); }
 function sendReceiptEmail() { closeModal('donDetailModal'); toast('Reçu renvoyé avec succès.'); }
 
 function saveDon() {
@@ -846,13 +892,27 @@ function saveDon() {
     date:   document.getElementById('newDate').value,
     notes:  document.getElementById('newNotes').value.trim(),
   };
-  ALL_DONS.unshift(newDon);
-  closeModal('newDonModal');
-  loadStats();
-  loadTopDonors();
-  renderTable();
-  toast(`Don de ${fmt(montant)} enregistré avec succès.`);
-  ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id=>document.getElementById(id).value='');
+  try {
+    const res = await FODDEB_API.dons.create({
+      prenom, nom,
+      email:  document.getElementById('newEmail').value.trim() || '',
+      montant,
+      type:   document.getElementById('newType').value,
+      mode:   document.getElementById('newMode').value,
+      notes:  document.getElementById('newNotes').value.trim(),
+    });
+    if (res.success) {
+      // Recharger depuis GAS pour avoir l'ID réel
+      await loadDonsFromGAS();
+      closeModal('newDonModal');
+      toast('Don de ' + fmt(montant) + ' enregistré avec succès.');
+      ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id=>document.getElementById(id).value='');
+    } else {
+      toast(res.error || 'Erreur lors de l\'enregistrement.', 'error');
+    }
+  } catch (err) {
+    toast('Erreur serveur : ' + err.message, 'error');
+  }
 }
 
 function exportDons() {
@@ -893,11 +953,11 @@ function toggleSidebar() {
 function closeSidebar() { mobileOpen=false; document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); }
 
 /* ===== INIT ===== */
-loadStats();
-loadTopDonors();
-renderTable();
-const waitChart = setInterval(() => { if(window.Chart){ clearInterval(waitChart); initCharts(); } }, 100);
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+// Charger les données réelles depuis GAS, puis initialiser les graphiques
+loadDonsFromGAS().then(() => {
+  const waitChart = setInterval(() => { if (window.Chart) { clearInterval(waitChart); initCharts(); } }, 100);
+});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 </script>
 </body>
 </html>

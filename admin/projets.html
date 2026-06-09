@@ -130,6 +130,14 @@
     .prog-f{height:100%;border-radius:99px;transition:width 1s ease;}
     .kb-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
     .kb-date{font-size:11px;color:var(--gr4);}
+    .sm-wrap{position:relative;display:inline-block}
+    .sm-btn{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;transition:.15s}
+    .sm-btn:hover{background:var(--gr2)}
+    .sm-dd{position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--brd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:170px;z-index:99;padding:4px;display:none;animation:fadeUp .15s ease}
+    .sm-dd.open{display:block}
+    .sm-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--gr8);transition:.1s;border:none;background:none;width:100%;text-align:left}
+    .sm-item:hover{background:var(--gr1)}
+    .sm-item.current{background:var(--g0);color:var(--g8);font-weight:700}
 
     /* TABLE */
     .card{background:var(--surf);border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--sh);overflow:hidden;margin-bottom:20px;}
@@ -437,10 +445,28 @@ const DOM_ICONS = {
   'Environnement et Climat':'mdi:leaf-outline',
 };
 const STATUS_CFG = {
-  en_cours: { label:'En cours',  cls:'bg-s', color:'var(--g7)',  icon:'mdi:play-circle-outline' },
-  planifie: { label:'Planifie',  cls:'bg-w', color:'#92400E',   icon:'mdi:clock-outline' },
-  termine:  { label:'Termine',   cls:'bg-i', color:'var(--blue)',icon:'mdi:check-circle-outline' },
-  suspendu: { label:'Suspendu',  cls:'bg-d', color:'var(--red)', icon:'mdi:pause-circle-outline' },
+  soumis:    { label:'Soumis',       cls:'bg-n', color:'var(--gr4)', icon:'mdi:send-circle-outline' },
+  planifie:  { label:'Planifie',     cls:'bg-w', color:'#92400E',   icon:'mdi:clock-outline' },
+  en_cours:  { label:'En cours',     cls:'bg-s', color:'var(--g7)', icon:'mdi:play-circle-outline' },
+  en_attente:{ label:'En attente',   cls:'bg-w', color:'#D97706',   icon:'mdi:clock-alert-outline' },
+  suspendu:  { label:'Suspendu',     cls:'bg-d', color:'var(--red)',icon:'mdi:pause-circle-outline' },
+  termine:   { label:'Termine',      cls:'bg-i', color:'var(--blue)',icon:'mdi:check-circle-outline' },
+  valide:    { label:'Valide',       cls:'bg-s', color:'var(--g7)', icon:'mdi:check-decagram-outline' },
+  rejete:    { label:'Rejete',       cls:'bg-d', color:'var(--red)',icon:'mdi:close-circle-outline' },
+  a_revoir:  { label:'A revoir',     cls:'bg-w', color:'#D97706',   icon:'mdi:refresh-circle' },
+};
+
+// Transitions autorisées par statut courant — guide l'admin
+const STATUS_TRANSITIONS = {
+  soumis:     ['planifie','en_cours','a_revoir','rejete'],
+  planifie:   ['en_cours','en_attente','suspendu','rejete'],
+  en_cours:   ['en_attente','suspendu','termine','a_revoir'],
+  en_attente: ['en_cours','planifie','suspendu'],
+  suspendu:   ['en_cours','planifie','rejete'],
+  termine:    ['en_cours','valide'],
+  a_revoir:   ['soumis','planifie','rejete'],
+  valide:     ['en_cours'],
+  rejete:     ['planifie'],
 };
 
 const go    = url => window.location.href = url;
@@ -614,7 +640,10 @@ function renderKanban() {
           <div class="prog"><div class="prog-f" style="width:${p.Progression}%;background:${color}"></div></div>
           <div class="kb-footer">
             <span class="kb-date">Fin : ${fmtD(p.DateFin)}</span>
-            <span style="font-size:12px;font-weight:700;color:var(--gr6)">${p.Progression}%</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;font-weight:700;color:var(--gr6)">${p.Progression}%</span>
+              ${buildStatusMenu(p, true)}
+            </div>
           </div>
         </div>`;
       }).join('')}
@@ -658,7 +687,7 @@ function renderTable() {
           <span style="font-size:12px;font-weight:700;color:var(--gr6);min-width:30px">${p.Progression}%</span>
         </div>
       </td>
-      <td><span class="badge ${st.cls}"><span class="bd"></span>${st.label}</span></td>
+      <td>${buildStatusMenu(p)}</td>
       <td style="color:var(--gr4);font-size:12.5px">${fmtD(p.DateFin)}</td>
       <td><div class="ac">
         <button class="bi" onclick="openDetail('${p.ID}')" title="Voir"><iconify-icon icon="mdi:eye-outline"></iconify-icon></button>
@@ -728,17 +757,123 @@ function openDetail(id) {
       <div style="background:var(--g0);border:1px solid var(--g1);border-radius:var(--rs);padding:14px;font-size:13.5px;color:var(--g7);white-space:pre-line;line-height:1.7">${p.Objectifs}</div>
     </div>` : ''}
 
-    <div style="background:var(--goldf);border:1px solid #FDE68A;border-radius:var(--rs);padding:14px">
+    <div style="background:var(--goldf);border:1px solid #FDE68A;border-radius:var(--rs);padding:14px;margin-bottom:16px">
       <div style="font-size:13px;font-weight:600;color:#92400E;margin-bottom:10px">Mettre a jour l'avancement</div>
       <div style="display:flex;gap:10px;align-items:center">
         <input type="range" id="progSlider" min="0" max="100" value="${p.Progression}" style="flex:1;accent-color:var(--g7)" oninput="document.getElementById('progVal').textContent=this.value+'%'"/>
         <span id="progVal" style="font-weight:700;min-width:40px;color:var(--g8)">${p.Progression}%</span>
         <button class="btn btn-p btn-sm" onclick="applyProgress('${p.ID}')"><iconify-icon icon="mdi:check"></iconify-icon>Appliquer</button>
       </div>
+    </div>
+
+    <div style="background:var(--gr1);border:1px solid var(--brd);border-radius:var(--rs);padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--dark);margin-bottom:10px">
+        <iconify-icon icon="mdi:swap-horizontal-circle-outline" style="vertical-align:middle;margin-right:6px;color:var(--g7)"></iconify-icon>
+        Changer le statut
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${(STATUS_TRANSITIONS[p.Statut] || Object.keys(STATUS_CFG)).map(s => {
+          const cfg = STATUS_CFG[s] || { label:s, icon:'mdi:circle-outline' };
+          const isCurrent = s === p.Statut;
+          return '<button class="sm-item' + (isCurrent ? ' current' : '') + '" onclick="setStatut('' + p.ID + '','' + s + '')" style="border:1px solid var(--brd);border-radius:8px;padding:6px 12px;flex-shrink:0' + (isCurrent ? ';background:var(--g0);color:var(--g8)' : '') + '">'
+            + '<iconify-icon icon="' + cfg.icon + '" style="font-size:15px;color:' + cfg.color + '"></iconify-icon>'
+            + cfg.label
+            + (isCurrent ? ' <span style="font-size:10px;opacity:.6">(actuel)</span>' : '')
+            + '</button>';
+        }).join('')}
+      </div>
+      ${p.Statut === 'en_cours' || p.Statut === 'soumis' ? '<div style="margin-top:10px"><textarea id="statutNote" placeholder="Note optionnelle (visible dans le rapport)..." style="width:100%;border:1px solid var(--brd);border-radius:8px;padding:8px 10px;font-size:12.5px;resize:vertical;min-height:52px;box-sizing:border-box;font-family:var(--ff)"></textarea></div>' : ''}
     </div>`;
 
   document.getElementById('dEditBtn').onclick = () => { closeM('detailM'); editProjet(id); };
   openM('detailM');
+}
+
+/* ═══ MENU STATUT RAPIDE ═══ */
+function buildStatusMenu(p, compact) {
+  const st  = STATUS_CFG[p.Statut] || { label: p.Statut, cls:'bg-n', color:'var(--gr4)', icon:'mdi:circle-outline' };
+  const transitions = STATUS_TRANSITIONS[p.Statut] || Object.keys(STATUS_CFG);
+  const items = transitions.map(s => {
+    const c = STATUS_CFG[s] || { label:s, icon:'mdi:circle-outline', color:'var(--gr4)' };
+    return '<button class="sm-item" onclick="event.stopPropagation();setStatut('' + p.ID + '','' + s + '')">'
+      + '<iconify-icon icon="' + c.icon + '" style="font-size:15px;color:' + c.color + '"></iconify-icon>'
+      + c.label + '</button>';
+  }).join('');
+
+  if (compact) {
+    // Version icône seule pour la carte Kanban
+    return '<div class="sm-wrap">'
+      + '<button class="sm-btn" onclick="event.stopPropagation();toggleStatusMenu(this)" title="Changer le statut">'
+      + '<iconify-icon icon="mdi:swap-horizontal" style="font-size:14px;color:var(--gr6)"></iconify-icon>'
+      + '</button>'
+      + '<div class="sm-dd">' + items + '</div></div>';
+  }
+  // Version badge cliquable pour la table
+  return '<div class="sm-wrap">'
+    + '<button class="sm-btn" onclick="toggleStatusMenu(this)">'
+    + '<span class="badge ' + st.cls + '"><span class="bd"></span>' + st.label + '</span>'
+    + '<iconify-icon icon="mdi:chevron-down" style="font-size:14px;color:var(--gr4)"></iconify-icon>'
+    + '</button>'
+    + '<div class="sm-dd">' + items + '</div></div>';
+}
+
+function toggleStatusMenu(btn) {
+  // Fermer tous les autres dropdowns ouverts
+  document.querySelectorAll('.sm-dd.open').forEach(d => {
+    if (d !== btn.nextElementSibling) d.classList.remove('open');
+  });
+  btn.nextElementSibling.classList.toggle('open');
+  // Fermer au clic dehors
+  setTimeout(() => {
+    document.addEventListener('click', function close(e) {
+      if (!e.target.closest('.sm-wrap')) {
+        document.querySelectorAll('.sm-dd.open').forEach(d => d.classList.remove('open'));
+      }
+      document.removeEventListener('click', close);
+    });
+  }, 0);
+}
+
+async function setStatut(id, newStatut) {
+  // Fermer tous les dropdowns
+  document.querySelectorAll('.sm-dd.open').forEach(d => d.classList.remove('open'));
+
+  const p = ALL.find(x => x.ID === id);
+  if (!p) return;
+  if (p.Statut === newStatut) return;
+
+  const u = getUser() || {};
+  const cfg = STATUS_CFG[newStatut] || { label: newStatut };
+
+  // Note optionnelle depuis le modal detail si disponible
+  const noteEl = document.getElementById('statutNote');
+  const note   = noteEl ? noteEl.value.trim() : '';
+
+  try {
+    const res = await FODDEB_API.projets.update(id, {
+      membreId: u.ID || u.id || '',
+      role:     u.role || 'admin',
+      Statut:   newStatut,
+      Notes:    note || undefined,
+    });
+    if (!res.success) throw new Error(res.error || 'Erreur inconnue');
+
+    // Mise a jour locale immediate
+    p.Statut = newStatut;
+    if (newStatut === 'termine') p.Progression = 100;
+
+    updateStats();
+    applyFilters();
+    toast('Statut mis a jour : ' + cfg.label + '.');
+
+    // Si le modal detail est ouvert, le rafraichir
+    if (document.getElementById('detailM').classList.contains('open')) {
+      closeM('detailM');
+      setTimeout(() => openDetail(id), 150);
+    }
+  } catch(e) {
+    toast('Erreur : ' + e.message, 'err');
+  }
 }
 
 /* ═══ MISE A JOUR PROGRESSION ═══ */

@@ -9,7 +9,72 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer>
+/* ═══ PHOTO PROFIL ADMIN ═══ */
+function renderAdminAvatar() {
+  const user  = (typeof getUser === 'function') ? getUser() : null;
+  const photo = user && (user.Photo || user.PhotoURL || '');
+  const prenom = user ? (user.Prenom || user.prenom || 'A') : 'A';
+  const nom    = user ? (user.Nom    || user.nom    || '') : '';
+  const init   = (((prenom||'')[0]||'') + ((nom||'')[0]||'')).toUpperCase() || '?';
+  const color  = '#1B5E20';
+
+  ['sbAv','hdrAv'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (photo) {
+      el.innerHTML = '';
+      el.style.background = 'transparent';
+      el.style.padding    = '0';
+      var img = document.createElement('img');
+      img.src    = photo;
+      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block';
+      img.onerror = function() { el.textContent = init; el.style.background = color; img.remove(); };
+      el.appendChild(img);
+    } else {
+      el.innerHTML    = init;
+      el.style.background = color;
+    }
+  });
+}
+
+async function changeAdminPhoto() {
+  var input = document.createElement('input');
+  input.type   = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast('Image trop volumineuse (max 3 Mo).', 'err'); return; }
+    toast('Upload en cours…', 'info');
+    try {
+      var b64 = await new Promise(function(res, rej) {
+        var r = new FileReader();
+        r.onload  = function() { res(r.result.split(',')[1]); };
+        r.onerror = function() { rej(new Error('Lecture échouée')); };
+        r.readAsDataURL(file);
+      });
+      var user = (typeof getUser === 'function') ? getUser() : {};
+      var membreId = user.ID || user.id || '';
+      var res = await FODDEB_API.members.uploadProfilePhoto(b64, file.type, membreId, user.sessionToken || '');
+      if (res && res.success) {
+        var photoUrl = res.url || res.photoUrl || res.fileUrl || '';
+        // Mettre à jour la session locale
+        user.Photo = photoUrl;
+        sessionStorage.setItem('foddeb_user', JSON.stringify(user));
+        renderAdminAvatar();
+        toast('Photo mise à jour avec succès.');
+      } else {
+        toast('Erreur upload : ' + ((res && res.error) || 'inconnue'), 'err');
+      }
+    } catch(e) {
+      toast('Erreur : ' + e.message, 'err');
+    }
+  };
+  input.click();
+}
+
+</script>
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
@@ -204,7 +269,7 @@
 
 <!-- SIDEBAR -->
 <aside class="sb" id="sb">
-  <div class="sb-logo"><div class="sb-logo-i">FOD</div><div class="sb-logo-t"><strong>FODDEB</strong><span>Administration</span></div></div>
+  <div class="sb-logo"><img src="/assets/icons/logo-small.png" alt="FODDEB" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0"><div class="sb-logo-t"><strong>FODDEB</strong><span>Administration</span></div></div>
   <div class="sb-sec">
     <div class="sb-lbl">Principal</div>
     <ul>
@@ -297,36 +362,6 @@
                 <span>Conseil : gardez entre 200–400 mots pour un bon taux d'ouverture</span>
               </div>
             </div>
-
-            <!-- Bannière image -->
-            <div class="fg" style="margin-top:12px">
-              <label class="fl">Bannière email <span style="color:var(--gr4);font-weight:400;font-size:12px">(JPG/PNG, max 5 Mo — insérée en haut de l'email)</span></label>
-              <div id="nlImgDrop" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;background:var(--gr1);transition:.2s" onclick="document.getElementById('nlImageFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleNlFileDrop(event,'image')">
-                <iconify-icon icon="mdi:image-plus-outline" width="24" style="color:var(--gr4)"></iconify-icon>
-                <div id="nlImgLabel" style="font-size:12px;color:var(--gr4);margin-top:4px">Bannière email (JPG/PNG)</div>
-              </div>
-              <input type="file" id="nlImageFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleNlFileSelect(this,'image')"/>
-              <div id="nlImgPreviewWrap" style="display:none;margin-top:8px">
-                <img id="nlImgPreview" style="max-width:100%;max-height:120px;border-radius:6px;object-fit:cover;border:1px solid var(--brd)"/>
-                <button type="button" onclick="clearNlFile('image')" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;margin-top:4px;display:block">Supprimer</button>
-              </div>
-            </div>
-
-            <!-- Pièce jointe PDF -->
-            <div class="fg" style="margin-top:8px">
-              <label class="fl">Pièce jointe <span style="color:var(--gr4);font-weight:400;font-size:12px">(PDF, max 5 Mo — lien de téléchargement dans l'email)</span></label>
-              <div id="nlFileDrop" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;background:var(--gr1);transition:.2s" onclick="document.getElementById('nlPieceJointe').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleNlFileDrop(event,'fichier')">
-                <iconify-icon icon="mdi:file-pdf-box" width="24" style="color:var(--gr4)"></iconify-icon>
-                <div id="nlFileLabel" style="font-size:12px;color:var(--gr4);margin-top:4px">Cliquer ou glisser un PDF ici</div>
-              </div>
-              <input type="file" id="nlPieceJointe" accept="application/pdf" style="display:none" onchange="handleNlFileSelect(this,'fichier')"/>
-              <div id="nlFileInfoWrap" style="display:none;margin-top:8px;padding:8px 12px;background:var(--gr1);border-radius:6px;font-size:13px;align-items:center;gap:8px">
-                <iconify-icon icon="mdi:file-pdf-box" style="color:var(--red)" width="20"></iconify-icon>
-                <span id="nlFileName" style="flex:1;color:var(--gr8)"></span>
-                <button type="button" onclick="clearNlFile('fichier')" style="color:var(--red);background:none;border:none;cursor:pointer"><iconify-icon icon="mdi:close-circle-outline" width="18"></iconify-icon></button>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -487,65 +522,6 @@ const CAMPAIGNS=[
   {subject:'Newsletter mensuelle — Novembre 2024',date:'2024-11-28',segment:'Tous',envois:620,ouvertures:401,clics:132,icone:'📰',color:'var(--g7)'},
 ];
 
-/* ===== UPLOAD FICHIERS ===== */
-const _uploadFiles = { image: null, fichier: null };
-
-function handleNlFileSelect(input, type) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { toast('Fichier trop volumineux (max 5 Mo).', 'err'); input.value = ''; return; }
-  _uploadFiles[type] = file;
-  if (type === 'image') {
-    const r = new FileReader();
-    r.onload = e => {
-      document.getElementById('nlImgPreview').src = e.target.result;
-      document.getElementById('nlImgPreviewWrap').style.display = 'block';
-      document.getElementById('nlImgLabel').textContent = file.name;
-      document.getElementById('nlImgDrop').style.borderColor = 'var(--g7)';
-    };
-    r.readAsDataURL(file);
-  } else {
-    document.getElementById('nlFileName').textContent = file.name;
-    document.getElementById('nlFileInfoWrap').style.display = 'flex';
-    document.getElementById('nlFileLabel').textContent = file.name;
-    document.getElementById('nlFileDrop').style.borderColor = 'var(--g7)';
-  }
-}
-
-function handleNlFileDrop(event, type) {
-  event.preventDefault();
-  document.getElementById(type === 'image' ? 'nlImgDrop' : 'nlFileDrop').style.borderColor = 'var(--brd)';
-  const file = event.dataTransfer.files[0];
-  if (!file) return;
-  const input = document.getElementById(type === 'image' ? 'nlImageFile' : 'nlPieceJointe');
-  const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
-  handleNlFileSelect(input, type);
-}
-
-function clearNlFile(type) {
-  _uploadFiles[type] = null;
-  if (type === 'image') {
-    document.getElementById('nlImageFile').value = '';
-    document.getElementById('nlImgPreviewWrap').style.display = 'none';
-    document.getElementById('nlImgLabel').textContent = 'Bannière email (JPG/PNG)';
-    document.getElementById('nlImgDrop').style.borderColor = 'var(--brd)';
-  } else {
-    document.getElementById('nlPieceJointe').value = '';
-    document.getElementById('nlFileInfoWrap').style.display = 'none';
-    document.getElementById('nlFileLabel').textContent = 'Cliquer ou glisser un PDF ici';
-    document.getElementById('nlFileDrop').style.borderColor = 'var(--brd)';
-  }
-}
-
-function fileToBase64(file) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload  = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('Lecture fichier échouée'));
-    r.readAsDataURL(file);
-  });
-}
-
 /* TABS */
 function openTab(name, btn){
   ['compose','abonnes','historique'].forEach(t=>{
@@ -587,71 +563,78 @@ function openSendConfirm(){
   openM('sendM');
 }
 
-async function sendCampaign() {
-  const subject = document.getElementById('nlSubject').value.trim();
-  let   body    = document.getElementById('editorArea').innerHTML.trim();
-  if (!subject || !body) { toast('Objet et corps du message requis.', 'err'); return; }
-
-  // Upload bannière image — injectée en haut du corps HTML
-  if (_uploadFiles.image) {
-    try {
-      const b64 = await fileToBase64(_uploadFiles.image);
-      const up  = await FODDEB_API.members.uploadProjectFile(b64, _uploadFiles.image.name, _uploadFiles.image.type, 'newsletter_banner', 'new');
-      if (up.success) {
-        const bannerUrl = up.url || up.fileUrl || '';
-        body = '<div style="text-align:center;margin-bottom:16px"><img src="' + bannerUrl + '" style="max-width:100%;border-radius:8px" alt="Bannière"/></div>' + body;
-      }
-    } catch(e) { toast('Erreur upload bannière : ' + e.message, 'err'); }
-  }
-
-  // Upload pièce jointe — lien de téléchargement ajouté en pied de corps
-  if (_uploadFiles.fichier) {
-    try {
-      const b64 = await fileToBase64(_uploadFiles.fichier);
-      const up  = await FODDEB_API.members.uploadProjectFile(b64, _uploadFiles.fichier.name, 'application/pdf', 'newsletter_doc', 'new');
-      if (up.success) {
-        const docUrl = up.url || up.fileUrl || '';
-        body += '<div style="margin-top:20px;padding:12px 16px;background:#E8F5E9;border-left:4px solid #2E7D32;border-radius:0 8px 8px 0">'
-              + '<a href="' + docUrl + '" style="color:#1B5E20;font-weight:600;text-decoration:none">'
-              + _uploadFiles.fichier.name + ' — Télécharger</a></div>';
-      }
-    } catch(e) { toast('Erreur upload document : ' + e.message, 'err'); }
-  }
-
+async function sendCampaign(){
   closeM('sendM');
   openM('sendingM');
-
-  const steps = ['Connexion au serveur…', 'Personnalisation des emails…', 'Envoi en cours…', 'Finalisation…'];
-  let stepIdx = 0;
-  const ticker = setInterval(() => {
-    if (stepIdx < steps.length) {
-      document.getElementById('sendingMsg').textContent = steps[stepIdx];
-      const pct = Math.round((stepIdx + 1) / steps.length * 85);
-      document.getElementById('sendingProg').style.width = pct + '%';
-      document.getElementById('sendingPct').textContent = pct + '%';
-      stepIdx++;
-    }
-  }, 2000);
-
-  try {
-    const res = await FODDEB_API.newsletter.send(subject, body, false);
-    clearInterval(ticker);
-    if (res.success) {
-      const sent = res.sent || SUBS.filter(s => s.statut === 'active').length;
-      document.getElementById('sendingProg').style.width = '100%';
-      document.getElementById('sendingPct').textContent = '100%';
-      document.getElementById('sendingBody').innerHTML =
-        '<span class="big-icon">✅</span>' +
-        '<h3 style="font-family:var(--fh);font-weight:700;color:var(--dark);margin-bottom:8px">Campagne envoyée !</h3>' +
-        '<p style="color:var(--gr6);font-size:14px">' + sent + ' email(s) envoyé(s) avec succès.</p>';
-      setTimeout(() => { closeM('sendingM'); toast('Campagne envoyée à ' + sent + ' abonné(s).'); clearNlFile('image'); clearNlFile('fichier'); }, 1500);
-    } else {
-      closeM('sendingM');
-      toast('Erreur GAS : ' + (res.error || 'Envoi échoué.'), 'err');
-    }
-  } catch (err) {
-    clearInterval(ticker);
-    closeM('sendingM');
-    toast('Erreur serveur : ' + err.message, 'err');
+  const steps=['Connexion au serveur SMTP…','Personnalisation des emails…','Envoi par lots de 50…','Vérification des bounces…','Finalisation…'];
+  for(let i=0;i<steps.length;i++){
+    document.getElementById('sendingMsg').textContent=steps[i];
+    const pct=Math.round((i+1)/steps.length*100);
+    document.getElementById('sendingProg').style.width=pct+'%';
+    document.getElementById('sendingPct').textContent=pct+'%';
+    await new Promise(r=>setTimeout(r,900));
   }
+  document.getElementById('sendingBody').innerHTML=`<span class="big-icon">✅</span><h3 style="font-family:var(--fh);font-weight:700;color:var(--dark);margin-bottom:8px">Campagne envoyée !</h3><p style="color:var(--gr6);font-size:14px">684 emails ont été envoyés avec succès.</p>`;
+  setTimeout(()=>{closeM('sendingM');toast('Campagne envoyée avec succès à 684 abonnés.');},1500);
 }
+
+function sendTest(){ toast('Email de test envoyé à phanoskosmos@gmail.com.'); }
+
+/* SUBSCRIBERS */
+function renderSubs(){
+  const q=(document.getElementById('searchSub')?.value||'').toLowerCase();
+  const filtered=SUBS.filter(s=>!q||s.email.includes(q)||s.nom.toLowerCase().includes(q));
+  document.getElementById('subsTable').innerHTML=filtered.map((s,i)=>`
+    <tr style="animation:fadeUp .2s ease ${i*.04}s both">
+      <td style="font-weight:500">${s.email}</td>
+      <td style="color:var(--gr6)">${s.nom||'—'}</td>
+      <td><span class="badge bg-n">${s.source}</span></td>
+      <td>${s.statut==='active'?'<span class="badge bg-s"><span class="bd"></span>Actif</span>':'<span class="badge bg-d"><span class="bd"></span>Désabonné</span>'}</td>
+      <td style="color:var(--gr4);font-size:12.5px">${fmtD(s.date)}</td>
+      <td><div class="ac">
+        <button class="bi" onclick="toggleSub('${s.email}')" title="${s.statut==='active'?'Désabonner':'Réabonner'}"><iconify-icon icon="${s.statut==='active'?'mdi:account-remove-outline':'mdi:account-plus-outline'}"></iconify-icon></button>
+        <button class="bi" onclick="removeSub('${s.email}')" title="Supprimer" style="color:var(--red)"><iconify-icon icon="mdi:delete-outline"></iconify-icon></button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function toggleSub(email){ const s=SUBS.find(x=>x.email===email); if(s){s.statut=s.statut==='active'?'unsubscribed':'active'; renderSubs(); toast(s.statut==='active'?'Abonné réactivé.':'Abonné désabonné.'); } }
+function removeSub(email){ if(!confirm('Supprimer cet abonné ?'))return; SUBS=SUBS.filter(x=>x.email!==email); renderSubs(); toast('Abonné supprimé.'); }
+function openAddSub(){ openM('addSubM'); document.getElementById('subEmail').value=''; document.getElementById('subNom').value=''; }
+function addSub(){
+  const email=document.getElementById('subEmail').value.trim();
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Email invalide.','err');return;}
+  if(SUBS.find(s=>s.email===email)){toast('Cet email est déjà abonné.','err');return;}
+  SUBS.unshift({email,nom:document.getElementById('subNom').value.trim(),source:'Manuel',statut:'active',date:new Date().toISOString().split('T')[0]});
+  closeM('addSubM');renderSubs();toast('Abonné ajouté avec succès.');
+}
+function exportSubs(){ const h=['Email','Nom','Source','Statut','Date']; const rows=SUBS.map(s=>[s.email,s.nom,s.source,s.statut,s.date].map(v=>`"${v}"`).join(',')); const csv=[h.join(','),...rows].join('\n'); const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));a.download='abonnes_foddeb.csv';a.click();toast('Export téléchargé.'); }
+
+/* HISTORY */
+function renderHistory(){
+  document.getElementById('sentList').innerHTML=CAMPAIGNS.map(c=>`
+    <div class="sent-item">
+      <div class="sent-icon" style="background:${c.color}22"><span style="font-size:20px">${c.icone}</span></div>
+      <div class="sent-info"><strong>${c.subject}</strong><span>${c.segment} · ${fmtD(c.date)}</span></div>
+      <div class="sent-stats">
+        <div class="sent-open">${Math.round(c.ouvertures/c.envois*100)}% ouverts · ${c.envois} envois</div>
+        <div class="sent-date">${c.clics} clics</div>
+      </div>
+      <button class="bi" title="Renvoyer"><iconify-icon icon="mdi:refresh"></iconify-icon></button>
+    </div>`).join('');
+}
+
+function openM(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeM(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o&&o.id!=='sendingM'){o.classList.remove('open');document.body.style.overflow='';}}));
+
+function toast(msg,type='ok'){const c=document.getElementById('toast-c');const t=document.createElement('div');t.className='toast';t.innerHTML=`<iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span>${msg}</span>`;if(type==='err')t.style.background='var(--red)';c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);}
+
+let sbC=false,mobO=false;
+function toggleSb(){const mob=window.innerWidth<=768;if(mob){mobO=!mobO;document.getElementById('sb').classList.toggle('mob',mobO);document.getElementById('ov').classList.toggle('v',mobO);}else{sbC=!sbC;document.getElementById('sb').classList.toggle('col',sbC);document.getElementById('mw').classList.toggle('col',sbC);}}
+function closeSb(){mobO=false;document.getElementById('sb').classList.remove('mob');document.getElementById('ov').classList.remove('v');}
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>

@@ -801,10 +801,12 @@ function viewMember(id) {
   document.getElementById('viewTitle').textContent = m.Prenom + ' ' + m.Nom;
 
   // Photo : image Drive si disponible, sinon avatar initiales
+  // Pas de guillemets imbriqués dans onerror — on utilise un id unique pour le fallback
+  const photoId   = 'ph_' + id.replace(/-/g,'').slice(0,8);
+  const avatarDiv = '<div style="width:72px;height:72px;border-radius:50%;background:' + color + '22;color:' + color + ';font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center">' + init + '</div>';
   const photoHtml = m.Photo
-    ? '<img src="' + m.Photo + '" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--g3)" onerror="this.outerHTML='<div style=&quot;width:72px;height:72px;border-radius:50%;background:' + color + '22;color:' + color + ';font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center&quot;>' + init + '</div>'">'
-    : '<div style="width:72px;height:72px;border-radius:50%;background:' + color + '22;color:' + color + ';font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center">' + init + '</div>';
-
+    ? '<img id="' + photoId + '" src="' + m.Photo + '" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--g3)">'
+    : avatarDiv;
   // Lien dossier Drive
   const driveHtml = m.FolderDrive
     ? '<a href="' + m.FolderDrive + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:var(--g7);font-size:13px;font-weight:600;margin-top:4px"><iconify-icon icon="mdi:google-drive" width="16"></iconify-icon>Ouvrir le dossier Drive</a>'
@@ -849,6 +851,17 @@ function viewMember(id) {
 
   document.getElementById('viewEditBtn').onclick = function() { closeM('viewM'); changeRole(id); };
   openM('viewM');
+  // Fallback photo après rendu DOM — si image Drive inaccessible, afficher avatar
+  if (m.Photo) {
+    setTimeout(function() {
+      var imgEl = document.getElementById(photoId);
+      if (imgEl) {
+        imgEl.onerror = function() {
+          this.outerHTML = avatarDiv;
+        };
+      }
+    }, 50);
+  }
 }
 
 /* ═══ ACTIONS GROUPEES ═══ */

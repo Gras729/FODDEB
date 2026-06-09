@@ -666,7 +666,7 @@ async function loadProjets() {
       wrap.innerHTML = '<p style="color:var(--gr4);font-size:13px">Aucun projet en cours</p>';
       return;
     }
-    const colors = [var(--g6)','var(--gold)','var(--blue)','var(--pur)'];
+    const colors = ['var(--g6)','var(--gold)','var(--blue)','var(--pur)'];
     wrap.innerHTML = rows.map((p,i) => `
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
@@ -816,6 +816,8 @@ async function validateMember(id, nom) {
     loadRecentMembers();
   } catch(e) { toast('Erreur : ' + e.message, 'err'); }
 }
+
+function go(url) { window.location.href = url; }
 
 function logout() {
   if (!confirm('Se déconnecter ?')) return;

@@ -44,10 +44,15 @@ var FODDEB_API = window.FODDEB_API || (() => {
   /* -------- Lecture session robuste (supporte ID/id, Role/role) -------- */
   const getSession = () => {
     try {
-      const u = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+      // Tentative 1 : FODDEB.session (dashboard membres)
+      let u = (window.FODDEB && FODDEB.session) ? FODDEB.session.get() : null;
+      // Tentative 2 : sessionStorage (pages admin — projets, dons, actualites...)
+      if (!u) {
+        const raw = sessionStorage.getItem('foddeb_user');
+        if (raw) u = JSON.parse(raw);
+      }
       if (!u) return null;
       return {
-        // Normalisation des clés : supporte majuscule et minuscule
         id:   u.ID   || u.id   || '',
         role: u.Role || u.role || 'member',
         raw:  u,

@@ -286,7 +286,7 @@
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
-    <div class="sb-logo-icon">FOD</div>
+    <img src="/assets/icons/logo-small.png" alt="FODDEB" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0">
     <div class="sb-logo-text"><strong>FODDEB</strong><span>Administration</span></div>
   </div>
   <div class="sb-sec">
@@ -358,6 +358,7 @@
       <span id="ddEmail">—</span>
     </div>
     <div class="dd-item" onclick="go('/admin/profil.html')"><iconify-icon icon="mdi:account-outline"></iconify-icon> Mon profil</div>
+    <div class="dd-item" onclick="changeAdminPhoto()"><iconify-icon icon="mdi:camera-outline"></iconify-icon> Changer ma photo</div>
     <div class="dd-item" onclick="go('/admin/parametres.html')"><iconify-icon icon="mdi:cog-outline"></iconify-icon> Paramètres</div>
     <div class="dd-divider"></div>
     <div class="dd-item danger" onclick="logout()"><iconify-icon icon="mdi:logout"></iconify-icon> Se déconnecter</div>
@@ -570,6 +571,8 @@ function loadUserInfo() {
   setEl('sbName',  prenom+' '+nom); setEl('hdrName', prenom+' '+nom);
   setEl('sbRole',  roleLabel);  setEl('hdrRole', roleLabel);
   setEl('ddName',  prenom+' '+nom); setEl('ddEmail', email);
+  // Afficher photo de profil si disponible
+  renderAdminAvatar();
 }
 
 /* ═══════════════════════════════════════════════
@@ -666,7 +669,7 @@ async function loadProjets() {
       wrap.innerHTML = '<p style="color:var(--gr4);font-size:13px">Aucun projet en cours</p>';
       return;
     }
-    const colors = ['var(--g6)','var(--gold)','var(--blue)','var(--pur)'];
+    const colors = [var(--g6)','var(--gold)','var(--blue)','var(--pur)'];
     wrap.innerHTML = rows.map((p,i) => `
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">

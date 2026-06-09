@@ -501,7 +501,18 @@ async function loadProjets() {
       Budget:       parseFloat(p.Budget       || p.budget       || 0),
       Depense:      parseFloat(p.Depense      || p.depense      || 0),
       Progression:  parseInt(p.Progression   || p.progression   || 0),
-      Statut:       p.Statut       || p.statut       || 'planifie',
+      Statut:       (function(s) {
+        // Normaliser : minuscules + sans accents + espaces → underscores
+        // Couvre : 'En cours', 'en_cours', 'planifié', 'planifie', 'validé', 'soumis', 'suspendu', 'terminé', 'termine'
+        if (!s) return 'planifie';
+        var n = s.toString().trim().toLowerCase()
+          .normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/\s+/g, '_');
+        // Alias : 'soumis' et 'valide' → 'planifie' pour l'affichage kanban
+        if (n === 'soumis' || n === 'a_revoir') return 'planifie';
+        if (n === 'valide') return 'en_cours';
+        return n;
+      })(p.Statut || p.statut),
       Responsable:  p.Responsable  || p.responsable  || '—',
       Partenaires:  p.Partenaires  || p.partenaires  || '—',
       DateDebut:    p.DateDebut    || p.dateDebut    || '',

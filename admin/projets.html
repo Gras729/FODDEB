@@ -483,11 +483,16 @@ async function loadProjets() {
   document.getElementById('errorState').style.display   = 'none';
 
   try {
-    const u   = getUser() || {};
+    const u = getUser() || {};
+    // Override explicite : getSession() dans api.js peut retourner null si FODDEB.session
+    // n'est pas initialisé dans les pages admin. On force role + membreId ici.
     const res = await FODDEB_API.projets.list({
       role:     u.role || 'admin',
-      membreId: u.ID   || u.id || '',
+      membreId: u.ID   || u.id   || '',
+      limit:    500,
     });
+    // Log debug temporaire — à retirer après vérification
+    console.log('[FODDEB projets] role:', u.role, '| membreId:', u.ID || u.id, '| res:', res);
     ALL = (res.data || []).map(p => ({
       ID:           p.ID           || p.id           || '',
       Titre:        p.Titre        || p.titre        || '—',
@@ -769,45 +774,49 @@ async function saveProjet() {
   if (budget<1) { toast('Budget requis.', 'err'); return; }
 
   const btn = document.getElementById('saveBtn');
+  const resetBtn = () => {
+    btn.disabled = false;
+    btn.innerHTML = '<iconify-icon icon="mdi:content-save-outline"></iconify-icon>Enregistrer';
+  };
   btn.disabled = true;
   btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle"></span> Envoi...';
 
-  const editId  = document.getElementById('editId').value;
-  const u       = getUser() || {};
+  const editId   = document.getElementById('editId').value;
+  const u        = getUser() || {};
   const membreId = u.ID || u.id || u.membreId || '';
 
-  // Upload image de couverture si sélectionnée
+  // Upload image — try/catch isolé, ne bloque jamais le bouton
   let imageURL = '';
   if (_uploadFiles.image) {
-    toast('Upload image en cours...', 'info');
-    const b64  = await fileToBase64(_uploadFiles.image);
-    const upRes = await FODDEB_API.members.uploadProjectFile(
-      b64,
-      _uploadFiles.image.name,
-      _uploadFiles.image.type,
-      'projet_image',
-      editId || 'new'
-    );
-    if (upRes.success) imageURL = upRes.url || upRes.fileUrl || '';
-    else { toast('Erreur upload image : ' + (upRes.error || ''), 'err'); }
+    try {
+      toast('Upload image en cours…', 'info');
+      const b64   = await fileToBase64(_uploadFiles.image);
+      const upRes = await FODDEB_API.members.uploadProjectFile(
+        b64, _uploadFiles.image.name, _uploadFiles.image.type, 'projet_image', editId || 'new'
+      );
+      if (upRes && upRes.success) imageURL = upRes.url || upRes.fileUrl || '';
+      else toast('Image non uploadée : ' + ((upRes && upRes.error) || 'erreur inconnue'), 'warn');
+    } catch(upErr) {
+      toast('Upload image ignoré (timeout) — le projet sera enregistré sans image.', 'warn');
+    }
   }
 
-  // Upload pièce jointe PDF si sélectionnée
+  // Upload pièce jointe PDF — try/catch isolé
   let fichierURL = '', fichierNom = '';
   if (_uploadFiles.fichier) {
-    toast('Upload document en cours...', 'info');
-    const b64  = await fileToBase64(_uploadFiles.fichier);
-    const upRes = await FODDEB_API.members.uploadProjectFile(
-      b64,
-      _uploadFiles.fichier.name,
-      'application/pdf',
-      'projet_doc',
-      editId || 'new'
-    );
-    if (upRes.success) {
-      fichierURL = upRes.url || upRes.fileUrl || '';
-      fichierNom = _uploadFiles.fichier.name;
-    } else { toast('Erreur upload document : ' + (upRes.error || ''), 'err'); }
+    try {
+      toast('Upload document en cours…', 'info');
+      const b64   = await fileToBase64(_uploadFiles.fichier);
+      const upRes = await FODDEB_API.members.uploadProjectFile(
+        b64, _uploadFiles.fichier.name, 'application/pdf', 'projet_doc', editId || 'new'
+      );
+      if (upRes && upRes.success) {
+        fichierURL = upRes.url || upRes.fileUrl || '';
+        fichierNom = _uploadFiles.fichier.name;
+      } else toast('Document non uploadé : ' + ((upRes && upRes.error) || 'erreur inconnue'), 'warn');
+    } catch(upErr) {
+      toast('Upload document ignoré (timeout) — le projet sera enregistré sans pièce jointe.', 'warn');
+    }
   }
 
   const payload = {
@@ -838,18 +847,17 @@ async function saveProjet() {
     } else {
       res = await FODDEB_API.projets.create(payload);
     }
-    if (!res.success) throw new Error(res.error);
+    if (!res.success) throw new Error(res.error || 'Erreur inconnue');
     closeM('newM');
     document.getElementById('editId').value = '';
     document.getElementById('mTitle').textContent = 'Nouveau projet';
     clearFile('image'); clearFile('fichier');
-    toast(editId ? 'Projet mis a jour.' : 'Projet cree avec succes.');
+    toast(editId ? 'Projet mis à jour.' : 'Projet créé avec succès.');
     await loadProjets();
   } catch(e) {
     toast('Erreur : ' + e.message, 'err');
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<iconify-icon icon="mdi:content-save-outline"></iconify-icon>Enregistrer';
+    resetBtn();
   }
 }
 

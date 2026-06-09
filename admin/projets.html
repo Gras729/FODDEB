@@ -370,6 +370,38 @@
       <div class="fg"><label class="fl">Nombre de beneficiaires</label><input type="number" id="nBenef" class="fi" placeholder="0" min="0"/></div>
       <div class="fg"><label class="fl">Objectifs et indicateurs</label><textarea id="nObj" class="fta" style="min-height:60px" placeholder="Indicateurs cles de resultats..."></textarea></div>
       <div class="fg"><label class="fl">Partenaires financiers</label><input type="text" id="nPartners" class="fi" placeholder="Ex: UNICEF, GIZ, PNUD"/></div>
+
+      <!-- Image de couverture -->
+      <div class="fg">
+        <label class="fl">Image de couverture <span style="color:var(--gr4);font-weight:400;font-size:12px">(JPG/PNG, max 5 Mo)</span></label>
+        <div id="imgDropZone" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:18px;text-align:center;cursor:pointer;transition:.2s;background:var(--gr1)" onclick="document.getElementById('nImageFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleFileDrop(event,'image')">
+          <iconify-icon icon="mdi:image-plus-outline" width="28" style="color:var(--gr4)"></iconify-icon>
+          <div id="imgLabel" style="font-size:13px;color:var(--gr4);margin-top:6px">Cliquer ou glisser une image ici</div>
+        </div>
+        <input type="file" id="nImageFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleFileSelect(this,'image')"/>
+        <div id="imgPreviewWrap" style="display:none;margin-top:8px">
+          <img id="imgPreview" style="max-width:100%;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--brd)"/>
+          <button type="button" onclick="clearFile('image')" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;margin-top:4px;display:block">Supprimer</button>
+        </div>
+      </div>
+
+      <!-- Pièce jointe (document PDF) -->
+      <div class="fg">
+        <label class="fl">Pièce jointe <span style="color:var(--gr4);font-weight:400;font-size:12px">(PDF, max 5 Mo — pour bailleurs et public)</span></label>
+        <div id="fileDropZone" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:18px;text-align:center;cursor:pointer;transition:.2s;background:var(--gr1)" onclick="document.getElementById('nPieceJointe').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleFileDrop(event,'fichier')">
+          <iconify-icon icon="mdi:file-pdf-box" width="28" style="color:var(--gr4)"></iconify-icon>
+          <div id="fileLabel" style="font-size:13px;color:var(--gr4);margin-top:6px">Cliquer ou glisser un PDF ici</div>
+        </div>
+        <input type="file" id="nPieceJointe" accept="application/pdf" style="display:none" onchange="handleFileSelect(this,'fichier')"/>
+        <div id="fileInfoWrap" style="display:none;margin-top:8px;padding:8px 12px;background:var(--gr1);border-radius:6px;font-size:13px;display:none;align-items:center;gap:8px">
+          <iconify-icon icon="mdi:file-pdf-box" style="color:var(--red)" width="20"></iconify-icon>
+          <span id="fileName" style="flex:1;color:var(--gr8)"></span>
+          <button type="button" onclick="clearFile('fichier')" style="color:var(--red);background:none;border:none;cursor:pointer">
+            <iconify-icon icon="mdi:close-circle-outline" width="18"></iconify-icon>
+          </button>
+        </div>
+      </div>
+
     </div>
     <div class="mf">
       <button class="btn btn-o btn-sm" onclick="closeM('newM')">Annuler</button>
@@ -451,7 +483,11 @@ async function loadProjets() {
   document.getElementById('errorState').style.display   = 'none';
 
   try {
-    const res = await FODDEB_API.projets.list({});
+    const u   = getUser() || {};
+    const res = await FODDEB_API.projets.list({
+      role:     u.role || 'admin',
+      membreId: u.ID   || u.id || '',
+    });
     ALL = (res.data || []).map(p => ({
       ID:           p.ID           || p.id           || '',
       Titre:        p.Titre        || p.titre        || '—',
@@ -468,6 +504,10 @@ async function loadProjets() {
       Beneficiaires:parseInt(p.Beneficiaires || p.beneficiaires || 0),
       Description:  p.Description  || p.description  || '',
       Objectifs:    p.Objectifs    || p.objectifs    || '',
+      ImageURL:     p.ImageURL     || p.imageURL     || '',
+      FichierURL:   p.FichierURL   || p.fichierURL   || '',
+      FichierNom:   p.FichierNom   || p.fichierNom   || '',
+      MembreID:     p.MembreID     || p.membreId     || '',
     }));
     updateStats();
     applyFilters();
@@ -732,8 +772,47 @@ async function saveProjet() {
   btn.disabled = true;
   btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle"></span> Envoi...';
 
-  const editId = document.getElementById('editId').value;
+  const editId  = document.getElementById('editId').value;
+  const u       = getUser() || {};
+  const membreId = u.ID || u.id || u.membreId || '';
+
+  // Upload image de couverture si sélectionnée
+  let imageURL = '';
+  if (_uploadFiles.image) {
+    toast('Upload image en cours...', 'info');
+    const b64  = await fileToBase64(_uploadFiles.image);
+    const upRes = await FODDEB_API.members.uploadProjectFile(
+      b64,
+      _uploadFiles.image.name,
+      _uploadFiles.image.type,
+      'projet_image',
+      editId || 'new'
+    );
+    if (upRes.success) imageURL = upRes.url || upRes.fileUrl || '';
+    else { toast('Erreur upload image : ' + (upRes.error || ''), 'err'); }
+  }
+
+  // Upload pièce jointe PDF si sélectionnée
+  let fichierURL = '', fichierNom = '';
+  if (_uploadFiles.fichier) {
+    toast('Upload document en cours...', 'info');
+    const b64  = await fileToBase64(_uploadFiles.fichier);
+    const upRes = await FODDEB_API.members.uploadProjectFile(
+      b64,
+      _uploadFiles.fichier.name,
+      'application/pdf',
+      'projet_doc',
+      editId || 'new'
+    );
+    if (upRes.success) {
+      fichierURL = upRes.url || upRes.fileUrl || '';
+      fichierNom = _uploadFiles.fichier.name;
+    } else { toast('Erreur upload document : ' + (upRes.error || ''), 'err'); }
+  }
+
   const payload = {
+    membreId,
+    role:          u.role || 'admin',
     Titre:         titre,
     Description:   document.getElementById('nDesc').value.trim(),
     Domaine:       document.getElementById('nDomain').value,
@@ -747,6 +826,9 @@ async function saveProjet() {
     Beneficiaires: parseInt(document.getElementById('nBenef').value) || 0,
     Objectifs:     document.getElementById('nObj').value.trim(),
     Partenaires:   document.getElementById('nPartners').value.trim(),
+    ImageURL:      imageURL,
+    FichierURL:    fichierURL,
+    FichierNom:    fichierNom,
   };
 
   try {
@@ -760,6 +842,7 @@ async function saveProjet() {
     closeM('newM');
     document.getElementById('editId').value = '';
     document.getElementById('mTitle').textContent = 'Nouveau projet';
+    clearFile('image'); clearFile('fichier');
     toast(editId ? 'Projet mis a jour.' : 'Projet cree avec succes.');
     await loadProjets();
   } catch(e) {
@@ -793,6 +876,67 @@ function exportCSV() {
   a.download = `projets_foddeb_${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   toast('Export CSV telecharge.');
+}
+
+/* ═══ UPLOAD FICHIERS ═══ */
+// State local des fichiers sélectionnés
+const _uploadFiles = { image: null, fichier: null };
+
+function handleFileSelect(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) { toast('Fichier trop volumineux (max 5 Mo).', 'err'); input.value = ''; return; }
+  _uploadFiles[type] = file;
+  if (type === 'image') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('imgPreview').src = e.target.result;
+      document.getElementById('imgPreviewWrap').style.display = 'block';
+      document.getElementById('imgLabel').textContent = file.name;
+      document.getElementById('imgDropZone').style.borderColor = 'var(--g7)';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileInfoWrap').style.display = 'flex';
+    document.getElementById('fileLabel').textContent = file.name;
+    document.getElementById('fileDropZone').style.borderColor = 'var(--g7)';
+  }
+}
+
+function handleFileDrop(event, type) {
+  event.preventDefault();
+  document.getElementById(type === 'image' ? 'imgDropZone' : 'fileDropZone').style.borderColor = 'var(--brd)';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  const input = document.getElementById(type === 'image' ? 'nImageFile' : 'nPieceJointe');
+  const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+  handleFileSelect(input, type);
+}
+
+function clearFile(type) {
+  _uploadFiles[type] = null;
+  if (type === 'image') {
+    document.getElementById('nImageFile').value = '';
+    document.getElementById('imgPreviewWrap').style.display = 'none';
+    document.getElementById('imgLabel').textContent = 'Cliquer ou glisser une image ici';
+    document.getElementById('imgDropZone').style.borderColor = 'var(--brd)';
+  } else {
+    document.getElementById('nPieceJointe').value = '';
+    document.getElementById('fileInfoWrap').style.display = 'none';
+    document.getElementById('fileLabel').textContent = 'Cliquer ou glisser un PDF ici';
+    document.getElementById('fileDropZone').style.borderColor = 'var(--brd)';
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Lecture fichier échouée'));
+    r.readAsDataURL(file);
+  });
 }
 
 /* ═══ MODAL ═══ */

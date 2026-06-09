@@ -9,7 +9,72 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer>
+/* ═══ PHOTO PROFIL ADMIN ═══ */
+function renderAdminAvatar() {
+  const user  = (typeof getUser === 'function') ? getUser() : null;
+  const photo = user && (user.Photo || user.PhotoURL || '');
+  const prenom = user ? (user.Prenom || user.prenom || 'A') : 'A';
+  const nom    = user ? (user.Nom    || user.nom    || '') : '';
+  const init   = (((prenom||'')[0]||'') + ((nom||'')[0]||'')).toUpperCase() || '?';
+  const color  = '#1B5E20';
+
+  ['sbAv','hdrAv'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (photo) {
+      el.innerHTML = '';
+      el.style.background = 'transparent';
+      el.style.padding    = '0';
+      var img = document.createElement('img');
+      img.src    = photo;
+      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block';
+      img.onerror = function() { el.textContent = init; el.style.background = color; img.remove(); };
+      el.appendChild(img);
+    } else {
+      el.innerHTML    = init;
+      el.style.background = color;
+    }
+  });
+}
+
+async function changeAdminPhoto() {
+  var input = document.createElement('input');
+  input.type   = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast('Image trop volumineuse (max 3 Mo).', 'err'); return; }
+    toast('Upload en cours…', 'info');
+    try {
+      var b64 = await new Promise(function(res, rej) {
+        var r = new FileReader();
+        r.onload  = function() { res(r.result.split(',')[1]); };
+        r.onerror = function() { rej(new Error('Lecture échouée')); };
+        r.readAsDataURL(file);
+      });
+      var user = (typeof getUser === 'function') ? getUser() : {};
+      var membreId = user.ID || user.id || '';
+      var res = await FODDEB_API.members.uploadProfilePhoto(b64, file.type, membreId, user.sessionToken || '');
+      if (res && res.success) {
+        var photoUrl = res.url || res.photoUrl || res.fileUrl || '';
+        // Mettre à jour la session locale
+        user.Photo = photoUrl;
+        sessionStorage.setItem('foddeb_user', JSON.stringify(user));
+        renderAdminAvatar();
+        toast('Photo mise à jour avec succès.');
+      } else {
+        toast('Erreur upload : ' + ((res && res.error) || 'inconnue'), 'err');
+      }
+    } catch(e) {
+      toast('Erreur : ' + e.message, 'err');
+    }
+  };
+  input.click();
+}
+
+</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -268,7 +333,7 @@
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="sidebar-logo-icon">FOD</div>
+    <img src="/assets/icons/logo-small.png" alt="FODDEB" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0">
     <div class="sidebar-logo-text"><strong>FODDEB</strong><span>Administration</span></div>
   </div>
   <div class="sidebar-section">
@@ -611,47 +676,24 @@
 <script>
 'use strict';
 
-/* ===== DONNÉES RÉELLES — Google Sheets via GAS ===== */
+/* ===== MOCK DATA ===== */
 const COLORS_DONOR = ['#1B5E20','#1565C0','#6A1B9A','#C62828','#E65100','#00695C','#F57F17'];
 const getDonorColor = (i) => COLORS_DONOR[i % COLORS_DONOR.length];
 
-let ALL_DONS = [];
-
-function normalizeDon(d, i) {
-  return {
-    id:      d.ID      || d.id      || String(i),
-    ref:     d.Ref     || d.ref     || 'MAN-' + String(i),
-    prenom:  d.Prenom  || d.prenom  || '',
-    nom:     d.Nom     || d.nom     || '',
-    email:   d.Email   || d.email   || '',
-    montant: Number(d.Montant || d.montant) || 0,
-    type:    (d.Type   || d.type    || 'unique').toLowerCase(),
-    statut:  (d.Statut || d.statut  || 'pending').toLowerCase(),
-    mode:    d.Mode    || d.mode    || 'FedaPay',
-    date:    d.DateDon || d.date    || '',
-    notes:   d.Notes   || d.notes   || '',
-  };
-}
-
-async function loadDonsFromGAS() {
-  showTableLoading();
-  try {
-    const res = await FODDEB_API.admin.dons.list(200);
-    ALL_DONS = res.success && res.data ? res.data.map(normalizeDon) : [];
-    if (!res.success) toast('Impossible de charger les dons depuis le serveur.', 'error');
-  } catch (err) {
-    ALL_DONS = [];
-    toast('Erreur serveur : ' + err.message, 'error');
-  }
-  loadStats();
-  loadTopDonors();
-  renderTable();
-}
-
-function showTableLoading() {
-  const tbody = document.getElementById('donsTableBody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray-400)"><iconify-icon icon="mdi:loading" width="24" style="animation:spin .8s linear infinite"></iconify-icon>&nbsp; Chargement…</td></tr>';
-}
+let ALL_DONS = [
+  { id:1,  ref:'FP-2025-0001', prenom:'Kofi',      nom:'Mensah',    email:'k.mensah@gmail.com',     montant:50000,  type:'unique',  statut:'confirmed', mode:'FedaPay',          date:'2025-04-28', notes:'' },
+  { id:2,  ref:'FP-2025-0002', prenom:'PNUD',       nom:'Bénin',     email:'pnud.benin@undp.org',     montant:500000, type:'unique',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-26', notes:'Financement projet VBG' },
+  { id:3,  ref:'FP-2025-0003', prenom:'Fatima',     nom:'Alassane',  email:'f.alassane@gmail.com',    montant:10000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-25', notes:'' },
+  { id:4,  ref:'FP-2025-0004', prenom:'Sènou',      nom:'Adjagbé',   email:'senou.a@gmail.com',       montant:5000,   type:'unique',  statut:'pending',   mode:'Mobile Money',     date:'2025-04-26', notes:'' },
+  { id:5,  ref:'FP-2025-0005', prenom:'Association',nom:'VIVE',      email:'asso.vive@gmail.com',     montant:25000,  type:'unique',  statut:'confirmed', mode:'FedaPay',          date:'2025-04-25', notes:'' },
+  { id:6,  ref:'FP-2025-0006', prenom:'Gnahore',    nom:'Nestor',    email:'g.nestor@gmail.com',      montant:15000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-24', notes:'' },
+  { id:7,  ref:'FP-2025-0007', prenom:'Plan',        nom:'Bénin',     email:'plan.benin@plan.org',     montant:200000, type:'annuel',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-20', notes:'Partenariat 2025' },
+  { id:8,  ref:'FP-2025-0008', prenom:'Ibrahim',    nom:'Bello',     email:'i.bello@gmail.com',       montant:2000,   type:'unique',  statut:'failed',    mode:'FedaPay',          date:'2025-04-19', notes:'Fonds insuffisants' },
+  { id:9,  ref:'FP-2025-0009', prenom:'Alimatou',   nom:'Garba',     email:'a.garba@gmail.com',       montant:20000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-15', notes:'' },
+  { id:10, ref:'FP-2025-0010', prenom:'GIZ',         nom:'Bénin',     email:'giz.benin@giz.de',        montant:750000, type:'unique',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-10', notes:'Appui institutional' },
+  { id:11, ref:'FP-2025-0011', prenom:'Rodrigue',   nom:'Houessou',  email:'r.hou@gmail.com',         montant:5000,   type:'unique',  statut:'refunded',  mode:'FedaPay',          date:'2025-04-08', notes:'Remboursement sur demande' },
+  { id:12, ref:'FP-2025-0012', prenom:'Adjovi',     nom:'Rosine',    email:'adjovi.r@asad.org',       montant:30000,  type:'annuel',  statut:'confirmed', mode:'Espèces',          date:'2025-04-05', notes:'' },
+];
 
 const STATUS_MAP = {
   confirmed: '<span class="badge badge-success"><span class="badge-dot"></span>Confirmé</span>',
@@ -842,53 +884,40 @@ function viewDon(id) {
   openModal('donDetailModal');
 }
 
-async function confirmDon(id) {
-  const d = ALL_DONS.find(x => x.id === id);
-  if (!d) return;
-  try {
-    const res = await FODDEB_API.admin.dons.confirm(id);
-    if (res.success) {
-      d.statut = 'confirmed';
-      renderTable(); loadStats(); loadTopDonors();
-      toast('Don de ' + fmt(d.montant) + ' confirmé. Reçu envoyé à ' + d.email + '.');
-    } else {
-      toast(res.error || 'Erreur lors de la confirmation.', 'error');
-    }
-  } catch (err) {
-    toast('Erreur serveur : ' + err.message, 'error');
-  }
+function confirmDon(id) {
+  const d=ALL_DONS.find(x=>x.id===id);
+  if(!d) return;
+  d.statut='confirmed';
+  renderTable();
+  toast(`Don de ${fmt(d.montant)} confirmé.`);
 }
 function sendReceipt(id) { const d=ALL_DONS.find(x=>x.id===id); if(d) toast(`Reçu envoyé à ${d.email}.`); }
 function sendReceiptEmail() { closeModal('donDetailModal'); toast('Reçu renvoyé avec succès.'); }
 
-async function saveDon() {
+function saveDon() {
   const prenom  = document.getElementById('newPrenom').value.trim();
   const nom     = document.getElementById('newNom').value.trim();
-  const montant = parseInt(document.getElementById('newMontant').value) || 0;
-  if (!prenom || !nom || montant < 500) {
-    toast('Remplissez les champs obligatoires (montant min. 500 FCFA).', 'warning');
-    return;
-  }
-  try {
-    const res = await FODDEB_API.dons.create({
-      prenom, nom,
-      email:  document.getElementById('newEmail').value.trim() || '',
-      montant,
-      type:   document.getElementById('newType').value,
-      mode:   document.getElementById('newMode').value,
-      notes:  document.getElementById('newNotes').value.trim(),
-    });
-    if (res.success) {
-      await loadDonsFromGAS();
-      closeModal('newDonModal');
-      toast('Don de ' + fmt(montant) + ' enregistré avec succès.');
-      ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id => document.getElementById(id).value = '');
-    } else {
-      toast(res.error || 'Erreur lors de l'enregistrement.', 'error');
-    }
-  } catch (err) {
-    toast('Erreur serveur : ' + err.message, 'error');
-  }
+  const montant = parseInt(document.getElementById('newMontant').value)||0;
+  if (!prenom||!nom||montant<500) { toast('Remplissez les champs obligatoires (montant min. 500 FCFA).','warning'); return; }
+  const newDon = {
+    id:     Date.now(),
+    ref:    'MAN-'+Date.now().toString().slice(-6),
+    prenom, nom,
+    email:  document.getElementById('newEmail').value.trim()||'—',
+    montant,
+    type:   document.getElementById('newType').value,
+    statut: 'confirmed',
+    mode:   document.getElementById('newMode').value,
+    date:   document.getElementById('newDate').value,
+    notes:  document.getElementById('newNotes').value.trim(),
+  };
+  ALL_DONS.unshift(newDon);
+  closeModal('newDonModal');
+  loadStats();
+  loadTopDonors();
+  renderTable();
+  toast(`Don de ${fmt(montant)} enregistré avec succès.`);
+  ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id=>document.getElementById(id).value='');
 }
 
 function exportDons() {
@@ -929,10 +958,11 @@ function toggleSidebar() {
 function closeSidebar() { mobileOpen=false; document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); }
 
 /* ===== INIT ===== */
-loadDonsFromGAS().then(() => {
-  const waitChart = setInterval(() => { if (window.Chart) { clearInterval(waitChart); initCharts(); } }, 100);
-});
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+loadStats();
+loadTopDonors();
+renderTable();
+const waitChart = setInterval(() => { if(window.Chart){ clearInterval(waitChart); initCharts(); } }, 100);
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
 </html>

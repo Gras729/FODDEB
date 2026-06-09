@@ -615,15 +615,12 @@
 const COLORS_DONOR = ['#1B5E20','#1565C0','#6A1B9A','#C62828','#E65100','#00695C','#F57F17'];
 const getDonorColor = (i) => COLORS_DONOR[i % COLORS_DONOR.length];
 
-// ALL_DONS : chargé dynamiquement depuis GAS via FODDEB_API.admin.dons.list()
-// Normalisé pour conserver la compatibilité avec renderTable(), loadStats(), etc.
 let ALL_DONS = [];
 
-// Normaliser une ligne GAS → format attendu par le frontend
 function normalizeDon(d, i) {
   return {
     id:      d.ID      || d.id      || String(i),
-    ref:     d.Ref     || d.ref     || '—',
+    ref:     d.Ref     || d.ref     || 'MAN-' + String(i),
     prenom:  d.Prenom  || d.prenom  || '',
     nom:     d.Nom     || d.nom     || '',
     email:   d.Email   || d.email   || '',
@@ -636,20 +633,15 @@ function normalizeDon(d, i) {
   };
 }
 
-// Chargement initial depuis GAS
 async function loadDonsFromGAS() {
   showTableLoading();
   try {
     const res = await FODDEB_API.admin.dons.list(200);
-    if (res.success && res.data) {
-      ALL_DONS = (res.data).map((d, i) => normalizeDon(d, i));
-    } else {
-      ALL_DONS = [];
-      toast('Impossible de charger les dons depuis le serveur.', 'error');
-    }
+    ALL_DONS = res.success && res.data ? res.data.map(normalizeDon) : [];
+    if (!res.success) toast('Impossible de charger les dons depuis le serveur.', 'error');
   } catch (err) {
     ALL_DONS = [];
-    toast('Erreur de connexion au serveur : ' + err.message, 'error');
+    toast('Erreur serveur : ' + err.message, 'error');
   }
   loadStats();
   loadTopDonors();
@@ -853,45 +845,30 @@ function viewDon(id) {
 async function confirmDon(id) {
   const d = ALL_DONS.find(x => x.id === id);
   if (!d) return;
-  const btn = document.querySelector(`button[onclick="confirmDon(${id})"]`);
-  if (btn) { btn.disabled = true; btn.innerHTML = '<iconify-icon icon="mdi:loading" style="animation:spin .8s linear infinite"></iconify-icon>'; }
   try {
     const res = await FODDEB_API.admin.dons.confirm(id);
     if (res.success) {
       d.statut = 'confirmed';
-      renderTable();
-      loadStats();
-      loadTopDonors();
+      renderTable(); loadStats(); loadTopDonors();
       toast('Don de ' + fmt(d.montant) + ' confirmé. Reçu envoyé à ' + d.email + '.');
     } else {
       toast(res.error || 'Erreur lors de la confirmation.', 'error');
-      if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon icon="mdi:check-circle-outline"></iconify-icon>'; }
     }
   } catch (err) {
     toast('Erreur serveur : ' + err.message, 'error');
-    if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon icon="mdi:check-circle-outline"></iconify-icon>'; }
   }
 }
-function sendReceipt(id) { const d=ALL_DONS.find(x=>x.id===id); if(d) toast('Reçu envoyé à ' + d.email + '.'); }
+function sendReceipt(id) { const d=ALL_DONS.find(x=>x.id===id); if(d) toast(`Reçu envoyé à ${d.email}.`); }
 function sendReceiptEmail() { closeModal('donDetailModal'); toast('Reçu renvoyé avec succès.'); }
 
-function saveDon() {
+async function saveDon() {
   const prenom  = document.getElementById('newPrenom').value.trim();
   const nom     = document.getElementById('newNom').value.trim();
-  const montant = parseInt(document.getElementById('newMontant').value)||0;
-  if (!prenom||!nom||montant<500) { toast('Remplissez les champs obligatoires (montant min. 500 FCFA).','warning'); return; }
-  const newDon = {
-    id:     Date.now(),
-    ref:    'MAN-'+Date.now().toString().slice(-6),
-    prenom, nom,
-    email:  document.getElementById('newEmail').value.trim()||'—',
-    montant,
-    type:   document.getElementById('newType').value,
-    statut: 'confirmed',
-    mode:   document.getElementById('newMode').value,
-    date:   document.getElementById('newDate').value,
-    notes:  document.getElementById('newNotes').value.trim(),
-  };
+  const montant = parseInt(document.getElementById('newMontant').value) || 0;
+  if (!prenom || !nom || montant < 500) {
+    toast('Remplissez les champs obligatoires (montant min. 500 FCFA).', 'warning');
+    return;
+  }
   try {
     const res = await FODDEB_API.dons.create({
       prenom, nom,
@@ -902,13 +879,12 @@ function saveDon() {
       notes:  document.getElementById('newNotes').value.trim(),
     });
     if (res.success) {
-      // Recharger depuis GAS pour avoir l'ID réel
       await loadDonsFromGAS();
       closeModal('newDonModal');
       toast('Don de ' + fmt(montant) + ' enregistré avec succès.');
-      ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id=>document.getElementById(id).value='');
+      ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id => document.getElementById(id).value = '');
     } else {
-      toast(res.error || 'Erreur lors de l\'enregistrement.', 'error');
+      toast(res.error || 'Erreur lors de l'enregistrement.', 'error');
     }
   } catch (err) {
     toast('Erreur serveur : ' + err.message, 'error');
@@ -953,7 +929,6 @@ function toggleSidebar() {
 function closeSidebar() { mobileOpen=false; document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); }
 
 /* ===== INIT ===== */
-// Charger les données réelles depuis GAS, puis initialiser les graphiques
 loadDonsFromGAS().then(() => {
   const waitChart = setInterval(() => { if (window.Chart) { clearInterval(waitChart); initCharts(); } }, 100);
 });

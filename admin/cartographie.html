@@ -235,7 +235,7 @@
 
 <!-- SIDEBAR -->
 <aside class="sb" id="sb">
-  <div class="sb-logo"><div class="sb-logo-i">FOD</div><div class="sb-logo-t"><strong>FODDEB</strong><span>Administration</span></div></div>
+  <div class="sb-logo"><img src="/assets/icons/logo-small.png" alt="FODDEB" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0"><div class="sb-logo-t"><strong>FODDEB</strong><span>Administration</span></div></div>
   <div class="sb-sec">
     <div class="sb-lbl">Principal</div>
     <ul>
@@ -254,7 +254,7 @@
       <li class="ni act"><iconify-icon icon="mdi:map-outline"></iconify-icon><span class="nl">Cartographie</span></li>
     </ul>
   </div>
-  <div class="sb-foot"><div class="sb-user"><div class="sb-av">AD</div><div class="sb-ui"><strong>Administrateur</strong><span>Super Admin</span></div></div></div>
+  <div class="sb-foot"><div class="sb-user" onclick="changeAdminPhoto()"><div class="sb-av" id="sbAv">AD</div><div class="sb-ui"><strong id="sbName">Administrateur</strong><span id="sbRole">Super Admin</span></div></div></div>
 </aside>
 
 <!-- MAIN -->
@@ -267,7 +267,7 @@
     <div class="hr">
       <button class="ht" onclick="toggleLeftPanel()" title="Projets" style="display:none" id="mobileListBtn"><iconify-icon icon="mdi:format-list-bulleted"></iconify-icon></button>
       <button class="hbtn"><iconify-icon icon="mdi:bell-outline"></iconify-icon><span class="nd"></span></button>
-      <div class="hu"><div class="hav">AD</div><div class="hui"><strong>Administrateur</strong><span>Super Admin</span></div></div>
+      <div class="hu"><div class="hav" id="hdrAv">AD</div><div class="hui"><strong id="hdrName">Administrateur</strong><span id="hdrRole">Super Admin</span></div></div>
     </div>
   </header>
 
@@ -358,11 +358,16 @@
   </div>
 </div>
 
+<script src="/assets/js/config.js"></script>
+<script src="/assets/js/services/auth.js"></script>
+<script src="/assets/js/services/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+
 <script>
 'use strict';
 
 /* ===== DATA — Projets avec coordonnées GPS (Bénin) ===== */
-const PROJECTS = [
+const DEMO_PROJECTS = [
   {
     id: 1,
     title: 'Lutte contre les VBG',
@@ -497,6 +502,142 @@ const PROJECTS = [
     icon: '🏘️'
   }
 ];
+
+
+/* ═══ CARTOGRAPHIE — DONNÉES RÉELLES GAS ═══ */
+
+// Coordonnées GPS par département du Bénin
+const DEPT_COORDS = {
+  'Alibori':        { lat: 11.50, lng: 3.00, radius: 60000 },
+  'Atacora':        { lat: 10.60, lng: 1.20, radius: 55000 },
+  'Atlantique':     { lat: 6.50,  lng: 2.10, radius: 25000 },
+  'Borgou':         { lat: 9.30,  lng: 2.60, radius: 55000 },
+  'Collines':       { lat: 8.20,  lng: 2.30, radius: 40000 },
+  'Couffo':         { lat: 7.00,  lng: 1.85, radius: 25000 },
+  'Donga':          { lat: 9.70,  lng: 1.70, radius: 40000 },
+  'Littoral':       { lat: 6.37,  lng: 2.43, radius: 10000 },
+  'Cotonou':        { lat: 6.37,  lng: 2.43, radius: 12000 },
+  'Abomey-Calavi':  { lat: 6.45,  lng: 2.35, radius: 15000 },
+  'Mono':           { lat: 6.90,  lng: 1.65, radius: 25000 },
+  'Oueme':          { lat: 6.70,  lng: 2.65, radius: 25000 },
+  'Plateau':        { lat: 7.20,  lng: 2.80, radius: 30000 },
+  'Zou':            { lat: 7.20,  lng: 2.10, radius: 35000 },
+  'default':        { lat: 9.50,  lng: 2.35, radius: 40000 },
+};
+
+const STATUT_COLOR = {
+  en_cours: '#2E7D32', planifie: '#9AA5B1', en_attente: '#F9A825',
+  suspendu: '#C62828', termine: '#F9A825',  valide: '#1565C0',
+  soumis: '#9AA5B1',   rejete: '#C62828',
+};
+
+const DOMAINE_ICON = {
+  'Education':'\uD83D\uDCDA','Sante':'\uD83D\uDC8A','Numerique':'\uD83D\uDCBB',
+  'Environnement':'\uD83C\uDF31','Developpement':'\uD83C\uDFD8',
+  'Protection':'\uD83D\uDEE1','default':'\uD83D\uDCCC',
+};
+
+function getCoords(dept) {
+  if (!dept) return DEPT_COORDS.default;
+  for (const k of Object.keys(DEPT_COORDS)) {
+    if (dept.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(dept.split(',')[0].trim().toLowerCase()))
+      return DEPT_COORDS[k];
+  }
+  return DEPT_COORDS.default;
+}
+
+function normalizeStr(s) {
+  return (s||'').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'_');
+}
+
+function gasProjetToMap(p, idx) {
+  const statut = normalizeStr(p.Statut || p.statut) || 'planifie';
+  const dept1  = (p.Departement || p.dept || '').split(',')[0].trim();
+  const coords = getCoords(dept1);
+  const color  = STATUT_COLOR[statut] || '#9AA5B1';
+  const dom    = normalizeStr(p.Domaine || p.domaine || '');
+  const icon   = DOMAINE_ICON[dom] || DOMAINE_ICON.default;
+  // Jitter léger pour éviter la superposition de marqueurs au même point
+  const jLat = coords.lat + Math.sin(idx * 2.3) * 0.08;
+  const jLng = coords.lng + Math.cos(idx * 1.7) * 0.08;
+  return {
+    id: p.ID || p.id || 'p-' + idx,
+    title: p.Titre || p.titre || '—',
+    domain: p.Domaine || p.domaine || '—',
+    dept: p.Departement || p.dept || '—',
+    status: statut,
+    progress: parseInt(p.Progression || p.progression) || 0,
+    budget: parseFloat(p.Budget || p.budget) || 0,
+    beneficiaires: parseInt(p.Beneficiaires || p.beneficiaires) || 0,
+    partners: p.Partenaires || p.partenaires || '—',
+    resp: p.Responsable || p.responsable || '—',
+    start: p.DateDebut || '',
+    end: p.DateFin || '',
+    lat: jLat, lng: jLng, radius: coords.radius,
+    color, icon,
+    imageURL: p.ImageURL || '', fichierURL: p.FichierURL || '',
+  };
+}
+
+async function loadProjectsFromGAS() {
+  try {
+    const u = (typeof getUser === 'function') ? getUser() : {};
+    const res = await FODDEB_API.projets.list({ role: u.role||'admin', membreId: u.ID||u.id||'', limit: 500 });
+    const rows = res.data || res.projets || [];
+    PROJECTS = rows.map(gasProjetToMap);
+    console.log('[FODDEB carto] ' + PROJECTS.length + ' projets chargés depuis GAS.');
+  } catch(e) {
+    console.warn('[FODDEB carto] Fallback demo :', e.message);
+    PROJECTS = DEMO_PROJECTS.map(gasProjetToMap);
+  }
+}
+
+/* ═══ PHOTO PROFIL ADMIN ═══ */
+function getUser() {
+  try { return JSON.parse(sessionStorage.getItem('foddeb_user')); } catch { return null; }
+}
+function renderAdminAvatar() {
+  const user = getUser();
+  const photo = user && (user.Photo || user.PhotoURL || '');
+  const prenom = user ? (user.Prenom||user.prenom||'A') : 'A';
+  const nom    = user ? (user.Nom||user.nom||'') : '';
+  const init   = (((prenom||'')[0]||'') + ((nom||'')[0]||'')).toUpperCase() || '?';
+  ['sbAv','hdrAv'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (photo) {
+      el.innerHTML = ''; el.style.background = 'transparent';
+      const img = document.createElement('img');
+      img.src = photo;
+      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block';
+      img.onerror = function() { el.textContent = init; el.style.background = '#2E7D32'; };
+      el.appendChild(img);
+    } else { el.textContent = init; el.style.background = '#2E7D32'; }
+  });
+  const sbName = document.getElementById('sbName');
+  const sbRole = document.getElementById('sbRole');
+  if (sbName) sbName.textContent = (prenom+' '+nom).trim() || 'Administrateur';
+  if (sbRole) sbRole.textContent = user ? (user.Role||user.role||'Admin') : 'Admin';
+}
+async function changeAdminPhoto() {
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/jpeg,image/png,image/webp';
+  input.onchange = async function() {
+    const file = input.files[0];
+    if (!file||file.size>3*1024*1024) { toast('Max 3 Mo.'); return; }
+    toast('Upload…');
+    try {
+      const b64 = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
+      const user = getUser()||{};
+      const up = await FODDEB_API.members.uploadProfilePhoto(b64,file.type,user.ID||user.id||'',user.sessionToken||'');
+      if (up&&up.success) { user.Photo=up.url||up.photoUrl||''; sessionStorage.setItem('foddeb_user',JSON.stringify(user)); renderAdminAvatar(); toast('Photo mise à jour.'); }
+      else toast('Erreur upload.');
+    } catch(e) { toast('Erreur : '+e.message); }
+  };
+  input.click();
+}
+
+let PROJECTS = [];
 
 const ST_CFG = {
   en_cours: { label: 'En cours', cls: 'pb-active' },
@@ -781,8 +922,10 @@ window.addEventListener('resize', handleResize);
 handleResize();
 
 /* ===== INIT ===== */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadProjectsFromGAS();
   initMap();
+  renderAdminAvatar();
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

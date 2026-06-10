@@ -197,9 +197,11 @@
 <div id="tc"></div>
 
 <!-- SIDEBAR -->
-<aside class="sb" id="sb">
-  <div class="sb-logo"><img src="/assets/icons/logo-small.png" alt="FODDEB" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0"><div class="sb-logo-t"><strong>FODDEB</strong><span>Administration</span></div></div>
-  <div class="sb-sec">
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <img src="/assets/icons/logo-small.png" alt="FODDEB" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0">
+    <div class="sb-logo-text"><strong>FODDEB</strong><span>Administration</span></div>
+  </div><div class="sb-sec">
     <div class="sb-lbl">Principal</div>
     <ul>
       <li class="ni" onclick="go('/admin/dashboard.html')"><iconify-icon icon="mdi:view-dashboard-outline"></iconify-icon><span class="nl">Tableau de bord</span></li>
@@ -378,6 +380,36 @@
         <div class="fg"><label class="fl">Date de publication</label><input type="date" id="mDate" class="fi"/></div>
       </div>
       <div class="fg"><label class="fl">Tags (separes par des virgules)</label><input type="text" id="mTags" class="fi" placeholder="droits enfant, protection, benin"/></div>
+
+      <!-- Image de couverture -->
+      <div class="fg">
+        <label class="fl">Image de couverture <span style="color:var(--gr4);font-weight:400;font-size:12px">(JPG/PNG, max 5 Mo)</span></label>
+        <div id="aImgDrop" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;background:var(--gr1);transition:.2s" onclick="document.getElementById('aImageFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleFileDrop(event,'image')">
+          <iconify-icon icon="mdi:image-plus-outline" width="26" style="color:var(--gr4)"></iconify-icon>
+          <div id="aImgLabel" style="font-size:12.5px;color:var(--gr4);margin-top:5px">Cliquer ou glisser une image ici</div>
+        </div>
+        <input type="file" id="aImageFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleFileSelect(this,'image')"/>
+        <div id="aImgPreviewWrap" style="display:none;margin-top:8px">
+          <img id="aImgPreview" style="max-width:100%;max-height:130px;border-radius:6px;object-fit:cover;border:1px solid var(--brd)"/>
+          <button type="button" onclick="clearFile('image')" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;margin-top:4px;display:block">Supprimer</button>
+        </div>
+      </div>
+
+      <!-- Pièce jointe PDF -->
+      <div class="fg">
+        <label class="fl">Pièce jointe <span style="color:var(--gr4);font-weight:400;font-size:12px">(PDF, max 5 Mo)</span></label>
+        <div id="aFileDrop" style="border:2px dashed var(--brd);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;background:var(--gr1);transition:.2s" onclick="document.getElementById('aPieceJointe').click()" ondragover="event.preventDefault();this.style.borderColor='var(--g7)'" ondragleave="this.style.borderColor='var(--brd)'" ondrop="handleFileDrop(event,'fichier')">
+          <iconify-icon icon="mdi:file-pdf-box" width="26" style="color:var(--gr4)"></iconify-icon>
+          <div id="aFileLabel" style="font-size:12.5px;color:var(--gr4);margin-top:5px">Cliquer ou glisser un PDF ici</div>
+        </div>
+        <input type="file" id="aPieceJointe" accept="application/pdf" style="display:none" onchange="handleFileSelect(this,'fichier')"/>
+        <div id="aFileInfoWrap" style="display:none;margin-top:8px;padding:8px 12px;background:var(--gr1);border-radius:6px;font-size:13px;align-items:center;gap:8px">
+          <iconify-icon icon="mdi:file-pdf-box" style="color:var(--red)" width="20"></iconify-icon>
+          <span id="aFileName" style="flex:1;color:var(--gr8)"></span>
+          <button type="button" onclick="clearFile('fichier')" style="color:var(--red);background:none;border:none;cursor:pointer"><iconify-icon icon="mdi:close-circle-outline" width="18"></iconify-icon></button>
+        </div>
+      </div>
+
     </div>
     <div class="mf">
       <button class="btn btn-o btn-sm" onclick="closeM('newArtM')">Annuler</button>
@@ -413,6 +445,65 @@ let ALL_ARTS = [];
 let curTab   = 'all';
 
 /* ═══ GUARD SESSION ═══ */
+/* ===== UPLOAD FICHIERS ===== */
+const _uploadFiles = { image: null, fichier: null };
+
+function handleFileSelect(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Fichier trop volumineux (max 5 Mo).', 'err'); input.value = ''; return; }
+  _uploadFiles[type] = file;
+  if (type === 'image') {
+    const r = new FileReader();
+    r.onload = e => {
+      document.getElementById('aImgPreview').src = e.target.result;
+      document.getElementById('aImgPreviewWrap').style.display = 'block';
+      document.getElementById('aImgLabel').textContent = file.name;
+      document.getElementById('aImgDrop').style.borderColor = 'var(--g7)';
+    };
+    r.readAsDataURL(file);
+  } else {
+    document.getElementById('aFileName').textContent = file.name;
+    document.getElementById('aFileInfoWrap').style.display = 'flex';
+    document.getElementById('aFileLabel').textContent = file.name;
+    document.getElementById('aFileDrop').style.borderColor = 'var(--g7)';
+  }
+}
+
+function handleFileDrop(event, type) {
+  event.preventDefault();
+  document.getElementById(type === 'image' ? 'aImgDrop' : 'aFileDrop').style.borderColor = 'var(--brd)';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  const input = document.getElementById(type === 'image' ? 'aImageFile' : 'aPieceJointe');
+  const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+  handleFileSelect(input, type);
+}
+
+function clearFile(type) {
+  _uploadFiles[type] = null;
+  if (type === 'image') {
+    document.getElementById('aImageFile').value = '';
+    document.getElementById('aImgPreviewWrap').style.display = 'none';
+    document.getElementById('aImgLabel').textContent = 'Cliquer ou glisser une image ici';
+    document.getElementById('aImgDrop').style.borderColor = 'var(--brd)';
+  } else {
+    document.getElementById('aPieceJointe').value = '';
+    document.getElementById('aFileInfoWrap').style.display = 'none';
+    document.getElementById('aFileLabel').textContent = 'Cliquer ou glisser un PDF ici';
+    document.getElementById('aFileDrop').style.borderColor = 'var(--brd)';
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Lecture fichier échouée'));
+    r.readAsDataURL(file);
+  });
+}
+
 function getUser() { try { return JSON.parse(sessionStorage.getItem('foddeb_user')); } catch { return null; } }
 function requireAdmin() {
   const u = getUser();
@@ -624,6 +715,22 @@ async function saveArt(status) {
 
 async function saveFullArt(status) {
   const titre = document.getElementById('mTitle').value.trim();
+  /* Upload image + pièce jointe si sélectionnés */
+  let imageURL = '', fichierURL = '', fichierNom = '';
+  if (_uploadFiles.image) {
+    try {
+      const b64 = await fileToBase64(_uploadFiles.image);
+      const up  = await FODDEB_API.members.uploadProjectFile(b64, _uploadFiles.image.name, _uploadFiles.image.type, 'actu_image', 'new');
+      if (up.success) imageURL = up.url || up.fileUrl || '';
+    } catch(e) { toast('Erreur upload image : ' + e.message, 'err'); }
+  }
+  if (_uploadFiles.fichier) {
+    try {
+      const b64 = await fileToBase64(_uploadFiles.fichier);
+      const up  = await FODDEB_API.members.uploadProjectFile(b64, _uploadFiles.fichier.name, 'application/pdf', 'actu_doc', 'new');
+      if (up.success) { fichierURL = up.url || up.fileUrl || ''; fichierNom = _uploadFiles.fichier.name; }
+    } catch(e) { toast('Erreur upload document : ' + e.message, 'err'); }
+  }
   if (!titre) { toast('Titre requis.', 'err'); return; }
 
   const btn = status==='publie' ? document.getElementById('savePublishBtn') : document.getElementById('saveDraftBtn');
@@ -636,6 +743,9 @@ async function saveFullArt(status) {
     Statut:   status,
     Excerpt:  document.getElementById('mExcerpt').value.trim(),
     Contenu:  document.getElementById('mContent').innerHTML,
+    ImageURL:   imageURL,
+    FichierURL: fichierURL,
+    FichierNom: fichierNom,
     Auteur:   document.getElementById('mAuthor').value.trim(),
     DatePublication: document.getElementById('mDate').value || new Date().toISOString().split('T')[0],
     Tags:     document.getElementById('mTags').value.trim(),
@@ -674,7 +784,8 @@ function openM(id) {
   document.body.style.overflow = 'hidden';
   // Reset si nouveau
   if (id==='newArtM' && !document.getElementById('editId').value) {
-    document.getElementById('mTitle').value = '';
+    clearFile('image'); clearFile('fichier');
+  document.getElementById('mTitle').value = '';
     document.getElementById('mExcerpt').value = '';
     document.getElementById('mContent').innerHTML = '';
     document.getElementById('mDate').value = new Date().toISOString().split('T')[0];
@@ -712,70 +823,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadUserInfo();
   await loadArticles();
 });
-
-/* ═══ PHOTO PROFIL ADMIN ═══ */
-function renderAdminAvatar() {
-  const user  = (typeof getUser === 'function') ? getUser() : null;
-  const photo = user && (user.Photo || user.PhotoURL || '');
-  const prenom = user ? (user.Prenom || user.prenom || 'A') : 'A';
-  const nom    = user ? (user.Nom    || user.nom    || '') : '';
-  const init   = (((prenom||'')[0]||'') + ((nom||'')[0]||'')).toUpperCase() || '?';
-  const color  = '#1B5E20';
-
-  ['sbAv','hdrAv'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    if (photo) {
-      el.innerHTML = '';
-      el.style.background = 'transparent';
-      el.style.padding    = '0';
-      var img = document.createElement('img');
-      img.src    = photo;
-      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block';
-      img.onerror = function() { el.textContent = init; el.style.background = color; img.remove(); };
-      el.appendChild(img);
-    } else {
-      el.innerHTML    = init;
-      el.style.background = color;
-    }
-  });
-}
-
-async function changeAdminPhoto() {
-  var input = document.createElement('input');
-  input.type   = 'file';
-  input.accept = 'image/jpeg,image/png,image/webp';
-  input.onchange = async function() {
-    var file = input.files[0];
-    if (!file) return;
-    if (file.size > 3 * 1024 * 1024) { toast('Image trop volumineuse (max 3 Mo).', 'err'); return; }
-    toast('Upload en cours…', 'info');
-    try {
-      var b64 = await new Promise(function(res, rej) {
-        var r = new FileReader();
-        r.onload  = function() { res(r.result.split(',')[1]); };
-        r.onerror = function() { rej(new Error('Lecture échouée')); };
-        r.readAsDataURL(file);
-      });
-      var user = (typeof getUser === 'function') ? getUser() : {};
-      var membreId = user.ID || user.id || '';
-      var res = await FODDEB_API.members.uploadProfilePhoto(b64, file.type, membreId, user.sessionToken || '');
-      if (res && res.success) {
-        var photoUrl = res.url || res.photoUrl || res.fileUrl || '';
-        // Mettre à jour la session locale
-        user.Photo = photoUrl;
-        sessionStorage.setItem('foddeb_user', JSON.stringify(user));
-        renderAdminAvatar();
-        toast('Photo mise à jour avec succès.');
-      } else {
-        toast('Erreur upload : ' + ((res && res.error) || 'inconnue'), 'err');
-      }
-    } catch(e) {
-      toast('Erreur : ' + e.message, 'err');
-    }
-  };
-  input.click();
-}
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>

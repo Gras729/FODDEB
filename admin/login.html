@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
-  <script src="https://www.google.com/recaptcha/api.js?render=6LdU3tksAAAAAOAIdgtC7xsQURksQ9mHAZ3MVLXF" async defer></script>
+  <!-- config.js injecte dynamiquement le script reCAPTCHA via FODDEB_CONFIG.RECAPTCHA_SITE_KEY -->
+  <script src="/assets/js/config.js"></script>
 
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -283,6 +284,7 @@
 
 </main>
 
+<script src="/assets/js/utils.js"></script>
 <script src="/assets/js/services/api.js"></script>
 <script src="/assets/js/services/auth.js"></script>
 <script>
@@ -374,7 +376,7 @@ async function sha256(str) {
 async function getCaptcha(action) {
   if (typeof grecaptcha === 'undefined') return '';
   return new Promise(res => grecaptcha.ready(() =>
-    grecaptcha.execute('6LdU3tksAAAAAOAIdgtC7xsQURksQ9mHAZ3MVLXF', { action }).then(res)
+    grecaptcha.execute(window.FODDEB_CONFIG.RECAPTCHA_SITE_KEY, { action }).then(res)
   ));
 }
 

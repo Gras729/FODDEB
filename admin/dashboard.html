@@ -571,7 +571,6 @@ function loadUserInfo() {
   setEl('sbName',  prenom+' '+nom); setEl('hdrName', prenom+' '+nom);
   setEl('sbRole',  roleLabel);  setEl('hdrRole', roleLabel);
   setEl('ddName',  prenom+' '+nom); setEl('ddEmail', email);
-  // Afficher photo de profil si disponible
   renderAdminAvatar();
 }
 
@@ -669,7 +668,7 @@ async function loadProjets() {
       wrap.innerHTML = '<p style="color:var(--gr4);font-size:13px">Aucun projet en cours</p>';
       return;
     }
-    const colors = [var(--g6)','var(--gold)','var(--blue)','var(--pur)'];
+    const colors = ['var(--g6)','var(--gold)','var(--blue)','var(--pur)'];
     wrap.innerHTML = rows.map((p,i) => `
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
@@ -908,6 +907,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.Chart) { clearInterval(wc); initCharts(); }
   }, 100);
 });
+
+/* ═══ PHOTO PROFIL ADMIN ═══ */
+function renderAdminAvatar() {
+  const user  = (typeof getUser === 'function') ? getUser() : null;
+  const photo = user && (user.Photo || user.PhotoURL || '');
+  const prenom = user ? (user.Prenom || user.prenom || 'A') : 'A';
+  const nom    = user ? (user.Nom    || user.nom    || '') : '';
+  const init   = (((prenom||'')[0]||'') + ((nom||'')[0]||'')).toUpperCase() || '?';
+  ['sbAv','hdrAv'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (photo) {
+      el.innerHTML = '';
+      el.style.background = 'transparent';
+      el.style.padding    = '0';
+      var img = document.createElement('img');
+      img.src = photo;
+      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block';
+      img.onerror = function() { el.textContent = init; el.style.background = '#2E7D32'; img.remove(); };
+      el.appendChild(img);
+    } else {
+      el.innerHTML    = init;
+      el.style.background = '#2E7D32';
+    }
+  });
+}
+
+async function changeAdminPhoto() {
+  var input = document.createElement('input');
+  input.type   = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast('Image trop volumineuse (max 3 Mo).', 'err'); return; }
+    toast('Upload en cours…');
+    try {
+      var b64 = await new Promise(function(res, rej) {
+        var r = new FileReader();
+        r.onload  = function() { res(r.result.split(',')[1]); };
+        r.onerror = function() { rej(new Error('Lecture échouée')); };
+        r.readAsDataURL(file);
+      });
+      var user = (typeof getUser === 'function') ? getUser() : {};
+      var res = await FODDEB_API.members.uploadProfilePhoto(b64, file.type, user.ID || user.id || '', user.sessionToken || '');
+      if (res && res.success) {
+        user.Photo = res.url || res.photoUrl || res.fileUrl || '';
+        sessionStorage.setItem('foddeb_user', JSON.stringify(user));
+        renderAdminAvatar();
+        toast('Photo mise à jour.');
+      } else { toast('Erreur : ' + ((res && res.error) || 'inconnue')); }
+    } catch(e) { toast('Erreur : ' + e.message); }
+  };
+  input.click();
+}
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>

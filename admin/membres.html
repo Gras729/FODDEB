@@ -549,25 +549,43 @@ function loadUserInfo() {
 async function loadMembers() {
   showTableLoading();
   try {
-    const res = await FODDEB_API.members.list({ page: 1, perPage: 500 });
-    ALL = (res.data || []).map(m => ({
+    // CORRECTIF : members.list attend (page, perPage, search) — pas un objet
+    // On charge 500 membres max + tous les statuts pour la vue admin complète
+    const res = await FODDEB_API.members.list(1, 500, '');
+    const rows = res.data || res.membres || [];
+    ALL = rows.map(m => ({
       ID:            m.ID            || m.id            || '',
       Prenom:        m.Prenom        || m.prenom        || '',
       Nom:           m.Nom           || m.nom           || '',
       Email:         m.Email         || m.email         || '',
-      Telephone:     m.Telephone     || m.tel           || '',
+      Telephone:     m.Telephone     || m.Telephone     || m.tel   || '',
       Organisation:  m.Organisation  || m.org           || '—',
       Departement:   m.Departement   || m.dept          || '—',
       Role:          m.Role          || m.role          || 'member',
       Statut:        m.Statut        || m.statut        || 'pending',
       Domaine:       m.Domaine       || m.domaine       || '—',
-      DateAdhesion:  m.DateAdhesion  || m.date          || '',
+      DateAdhesion:  m.DateAdhesion  || m.CreatedAt     || m.date  || '',
       Notes:         m.Notes         || m.notes         || '',
+      // Champs Drive — photo, dossier, documents
+      Photo:         m.Photo         || m.PhotoURL      || '',
+      FolderDrive:   m.FolderDrive   || m.FolderURL     || '',
+      PhotoCNI:      m.PhotoCNI      || '',
+      PhotoCNIVerso: m.PhotoCNIVerso || '',
+      NumCNI:        m.NumCNI        || '',
+      Ville:         m.Ville         || '',
+      Sexe:          m.Sexe          || '',
+      TypeMembre:    m.TypeMembre    || m.type          || '',
+      ShortID:       m.ShortID       || '',
     }));
     updateStats();
     applyFilters();
   } catch(e) {
-    document.getElementById('tbody').innerHTML = `<tr class="loading-row"><td colspan="8"><iconify-icon icon="mdi:alert-circle-outline" style="font-size:20px;color:var(--red);display:block;margin:0 auto 8px"></iconify-icon>Erreur : ${e.message}<br/><button class="btn btn-o btn-sm" style="margin-top:10px" onclick="loadMembers()">Reessayer</button></td></tr>`;
+    document.getElementById('tbody').innerHTML =
+      '<tr class="loading-row"><td colspan="8">' +
+      '<iconify-icon icon="mdi:alert-circle-outline" style="font-size:20px;color:var(--red);display:block;margin:0 auto 8px"></iconify-icon>' +
+      'Erreur : ' + e.message + '<br/>' +
+      '<button class="btn btn-o btn-sm" style="margin-top:10px" onclick="loadMembers()">Réessayer</button>' +
+      '</td></tr>';
     console.error('loadMembers:', e);
   }
 }
@@ -777,31 +795,73 @@ function changeRole(id) {
 function viewMember(id) {
   const m = ALL.find(x => x.ID === id);
   if (!m) return;
+
   const color = gc(ALL.indexOf(m));
   const init  = ini(m.Prenom, m.Nom);
-  document.getElementById('viewTitle').textContent = `${m.Prenom} ${m.Nom}`;
-  document.getElementById('viewBody').innerHTML = `
-    <div class="prof-card">
-      <div class="prof-av-lg" style="background:${color}22;color:${color}">${init}</div>
-      <div class="prof-name">${m.Prenom} ${m.Nom}</div>
-      <div class="prof-org">${m.Organisation}</div>
-      <div style="display:flex;gap:8px;margin-top:6px">${STAT_BADGE[m.Statut]||''} ${ROLE_BADGE[m.Role]||''}</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${[['Email',m.Email,'mdi:email-outline'],['Telephone',m.Telephone,'mdi:phone-outline'],
-         ['Organisation',m.Organisation,'mdi:domain'],['Departement',m.Departement,'mdi:map-marker-outline'],
-         ['Domaine',m.Domaine,'mdi:tag-outline'],['Adhesion',fmtD(m.DateAdhesion),'mdi:calendar-outline']
-        ].map(([l,v,ic])=>`
-      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--gr1);border-radius:8px">
-        <iconify-icon icon="${ic}" style="font-size:18px;color:var(--g7);flex-shrink:0;margin-top:1px"></iconify-icon>
-        <div><div style="font-size:11px;color:var(--gr4);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${l}</div>
-        <div style="font-size:13.5px;font-weight:500;color:var(--gr8)">${v||'—'}</div></div>
-      </div>`).join('')}
-    </div>
-    ${m.Notes ? `<div style="margin-top:14px;background:var(--goldf);border:1px solid #FDE68A;border-radius:8px;padding:12px;font-size:13px;color:#92400E"><strong>Note :</strong> ${m.Notes}</div>` : ''}
-  `;
-  document.getElementById('viewEditBtn').onclick = () => { closeM('viewM'); changeRole(id); };
+  document.getElementById('viewTitle').textContent = m.Prenom + ' ' + m.Nom;
+
+  // Photo : image Drive si disponible, sinon avatar initiales
+  // Pas de guillemets imbriqués dans onerror — on utilise un id unique pour le fallback
+  const photoId   = 'ph_' + id.replace(/-/g,'').slice(0,8);
+  const avatarDiv = '<div style="width:72px;height:72px;border-radius:50%;background:' + color + '22;color:' + color + ';font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center">' + init + '</div>';
+  const photoHtml = m.Photo
+    ? '<img id="' + photoId + '" src="' + m.Photo + '" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--g3)">'
+    : avatarDiv;
+  // Lien dossier Drive
+  const driveHtml = m.FolderDrive
+    ? '<a href="' + m.FolderDrive + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:var(--g7);font-size:13px;font-weight:600;margin-top:4px"><iconify-icon icon="mdi:google-drive" width="16"></iconify-icon>Ouvrir le dossier Drive</a>'
+    : '';
+
+  // ShortID badge (FOD-XXXXXX)
+  const shortIdHtml = m.ShortID
+    ? '<div style="font-size:11px;color:var(--gr4);margin-top:2px;font-family:monospace">' + m.ShortID + '</div>'
+    : '';
+
+  document.getElementById('viewBody').innerHTML =
+    '<div class="prof-card">' +
+      photoHtml +
+      '<div class="prof-name">' + m.Prenom + ' ' + m.Nom + '</div>' +
+      shortIdHtml +
+      '<div class="prof-org">' + m.Organisation + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:6px">' + (STAT_BADGE[m.Statut]||'') + ' ' + (ROLE_BADGE[m.Role]||'') + '</div>' +
+      driveHtml +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+    [
+      ['Email',       m.Email,                    'mdi:email-outline'],
+      ['Téléphone',   m.Telephone,                'mdi:phone-outline'],
+      ['Organisation',m.Organisation,             'mdi:domain'],
+      ['Département', m.Departement,              'mdi:map-marker-outline'],
+      ['Domaine',     m.Domaine,                  'mdi:tag-outline'],
+      ['Adhésion',    fmtD(m.DateAdhesion),       'mdi:calendar-outline'],
+      ['Sexe',        m.Sexe,                     'mdi:gender-male-female'],
+      ['Ville',       m.Ville,                    'mdi:city-outline'],
+      ['Type membre', m.TypeMembre,               'mdi:card-account-details-outline'],
+      ['N° CNI',      m.NumCNI,                   'mdi:card-text-outline'],
+    ].map(function(item) {
+      var l=item[0], v=item[1], ic=item[2];
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--gr1);border-radius:8px">' +
+        '<iconify-icon icon="' + ic + '" style="font-size:18px;color:var(--g7);flex-shrink:0;margin-top:1px"></iconify-icon>' +
+        '<div><div style="font-size:11px;color:var(--gr4);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">' + l + '</div>' +
+        '<div style="font-size:13.5px;font-weight:500;color:var(--gr8)">' + (v||'—') + '</div></div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    (m.Notes ? '<div style="margin-top:14px;background:var(--goldf);border:1px solid #FDE68A;border-radius:8px;padding:12px;font-size:13px;color:#92400E"><strong>Note :</strong> ' + m.Notes + '</div>' : '');
+
+  document.getElementById('viewEditBtn').onclick = function() { closeM('viewM'); changeRole(id); };
   openM('viewM');
+  // Fallback photo après rendu DOM — si image Drive inaccessible, afficher avatar
+  if (m.Photo) {
+    setTimeout(function() {
+      var imgEl = document.getElementById(photoId);
+      if (imgEl) {
+        imgEl.onerror = function() {
+          this.outerHTML = avatarDiv;
+        };
+      }
+    }, 50);
+  }
 }
 
 /* ═══ ACTIONS GROUPEES ═══ */
@@ -905,70 +965,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadUserInfo();
   await loadMembers();
 });
-
-/* ═══ PHOTO PROFIL ADMIN ═══ */
-function renderAdminAvatar() {
-  const user  = (typeof getUser === 'function') ? getUser() : null;
-  const photo = user && (user.Photo || user.PhotoURL || '');
-  const prenom = user ? (user.Prenom || user.prenom || 'A') : 'A';
-  const nom    = user ? (user.Nom    || user.nom    || '') : '';
-  const init   = (((prenom||'')[0]||'') + ((nom||'')[0]||'')).toUpperCase() || '?';
-  const color  = '#1B5E20';
-
-  ['sbAv','hdrAv'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    if (photo) {
-      el.innerHTML = '';
-      el.style.background = 'transparent';
-      el.style.padding    = '0';
-      var img = document.createElement('img');
-      img.src    = photo;
-      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block';
-      img.onerror = function() { el.textContent = init; el.style.background = color; img.remove(); };
-      el.appendChild(img);
-    } else {
-      el.innerHTML    = init;
-      el.style.background = color;
-    }
-  });
-}
-
-async function changeAdminPhoto() {
-  var input = document.createElement('input');
-  input.type   = 'file';
-  input.accept = 'image/jpeg,image/png,image/webp';
-  input.onchange = async function() {
-    var file = input.files[0];
-    if (!file) return;
-    if (file.size > 3 * 1024 * 1024) { toast('Image trop volumineuse (max 3 Mo).', 'err'); return; }
-    toast('Upload en cours…', 'info');
-    try {
-      var b64 = await new Promise(function(res, rej) {
-        var r = new FileReader();
-        r.onload  = function() { res(r.result.split(',')[1]); };
-        r.onerror = function() { rej(new Error('Lecture échouée')); };
-        r.readAsDataURL(file);
-      });
-      var user = (typeof getUser === 'function') ? getUser() : {};
-      var membreId = user.ID || user.id || '';
-      var res = await FODDEB_API.members.uploadProfilePhoto(b64, file.type, membreId, user.sessionToken || '');
-      if (res && res.success) {
-        var photoUrl = res.url || res.photoUrl || res.fileUrl || '';
-        // Mettre à jour la session locale
-        user.Photo = photoUrl;
-        sessionStorage.setItem('foddeb_user', JSON.stringify(user));
-        renderAdminAvatar();
-        toast('Photo mise à jour avec succès.');
-      } else {
-        toast('Erreur upload : ' + ((res && res.error) || 'inconnue'), 'err');
-      }
-    } catch(e) {
-      toast('Erreur : ' + e.message, 'err');
-    }
-  };
-  input.click();
-}
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>

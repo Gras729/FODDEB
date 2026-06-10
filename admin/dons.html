@@ -9,7 +9,72 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer>
+/* ═══ PHOTO PROFIL ADMIN ═══ */
+function renderAdminAvatar() {
+  const user  = (typeof getUser === 'function') ? getUser() : null;
+  const photo = user && (user.Photo || user.PhotoURL || '');
+  const prenom = user ? (user.Prenom || user.prenom || 'A') : 'A';
+  const nom    = user ? (user.Nom    || user.nom    || '') : '';
+  const init   = (((prenom||'')[0]||'') + ((nom||'')[0]||'')).toUpperCase() || '?';
+  const color  = '#1B5E20';
+
+  ['sbAv','hdrAv'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (photo) {
+      el.innerHTML = '';
+      el.style.background = 'transparent';
+      el.style.padding    = '0';
+      var img = document.createElement('img');
+      img.src    = photo;
+      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;display:block';
+      img.onerror = function() { el.textContent = init; el.style.background = color; img.remove(); };
+      el.appendChild(img);
+    } else {
+      el.innerHTML    = init;
+      el.style.background = color;
+    }
+  });
+}
+
+async function changeAdminPhoto() {
+  var input = document.createElement('input');
+  input.type   = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast('Image trop volumineuse (max 3 Mo).', 'err'); return; }
+    toast('Upload en cours…', 'info');
+    try {
+      var b64 = await new Promise(function(res, rej) {
+        var r = new FileReader();
+        r.onload  = function() { res(r.result.split(',')[1]); };
+        r.onerror = function() { rej(new Error('Lecture échouée')); };
+        r.readAsDataURL(file);
+      });
+      var user = (typeof getUser === 'function') ? getUser() : {};
+      var membreId = user.ID || user.id || '';
+      var res = await FODDEB_API.members.uploadProfilePhoto(b64, file.type, membreId, user.sessionToken || '');
+      if (res && res.success) {
+        var photoUrl = res.url || res.photoUrl || res.fileUrl || '';
+        // Mettre à jour la session locale
+        user.Photo = photoUrl;
+        sessionStorage.setItem('foddeb_user', JSON.stringify(user));
+        renderAdminAvatar();
+        toast('Photo mise à jour avec succès.');
+      } else {
+        toast('Erreur upload : ' + ((res && res.error) || 'inconnue'), 'err');
+      }
+    } catch(e) {
+      toast('Erreur : ' + e.message, 'err');
+    }
+  };
+  input.click();
+}
+
+</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -267,9 +332,9 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
-  <div class="sb-logo">
+  <div class="sidebar-logo">
     <img src="/assets/icons/logo-small.png" alt="FODDEB" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0">
-    <div class="sb-logo-text"><strong>FODDEB</strong><span>Administration</span></div>
+    <div class="sidebar-logo-text"><strong>FODDEB</strong><span>Administration</span></div>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-section-label">Principal</div>
@@ -606,52 +671,20 @@
   </div>
 </div>
 
+<script src="/assets/js/config.js"></script>
 <script src="/assets/js/utils.js"></script>
 <script src="/assets/js/services/api.js"></script>
+<script src="/assets/js/services/auth.js"></script>
 <script>
 'use strict';
 
-/* ===== DONNÉES RÉELLES — Google Sheets via GAS ===== */
+/* =====================================================
+   DONNÉES — chargées depuis GAS via FODDEB_API.admin.dons
+   ===================================================== */
 const COLORS_DONOR = ['#1B5E20','#1565C0','#6A1B9A','#C62828','#E65100','#00695C','#F57F17'];
 const getDonorColor = (i) => COLORS_DONOR[i % COLORS_DONOR.length];
 
-let ALL_DONS = [];
-
-function normalizeDon(d, i) {
-  return {
-    id:      d.ID      || d.id      || String(i),
-    ref:     d.Ref     || d.ref     || 'MAN-' + String(i),
-    prenom:  d.Prenom  || d.prenom  || '',
-    nom:     d.Nom     || d.nom     || '',
-    email:   d.Email   || d.email   || '',
-    montant: Number(d.Montant || d.montant) || 0,
-    type:    (d.Type   || d.type    || 'unique').toLowerCase(),
-    statut:  (d.Statut || d.statut  || 'pending').toLowerCase(),
-    mode:    d.Mode    || d.mode    || 'FedaPay',
-    date:    d.DateDon || d.date    || '',
-    notes:   d.Notes   || d.notes   || '',
-  };
-}
-
-async function loadDonsFromGAS() {
-  showTableLoading();
-  try {
-    const res = await FODDEB_API.admin.dons.list(200);
-    ALL_DONS = res.success && res.data ? res.data.map(normalizeDon) : [];
-    if (!res.success) toast('Impossible de charger les dons depuis le serveur.', 'error');
-  } catch (err) {
-    ALL_DONS = [];
-    toast('Erreur serveur : ' + err.message, 'error');
-  }
-  loadStats();
-  loadTopDonors();
-  renderTable();
-}
-
-function showTableLoading() {
-  const tbody = document.getElementById('donsTableBody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray-400)"><iconify-icon icon="mdi:loading" width="24" style="animation:spin .8s linear infinite"></iconify-icon>&nbsp; Chargement…</td></tr>';
-}
+let ALL_DONS = []; // rempli par loadDons() au démarrage
 
 const STATUS_MAP = {
   confirmed: '<span class="badge badge-success"><span class="badge-dot"></span>Confirmé</span>',
@@ -673,19 +706,39 @@ let currentPage = 1;
 const PER_PAGE  = 8;
 let filteredDons = [];
 
+/* ===== CHARGEMENT GAS ===== */
+async function loadDons() {
+  try {
+    const res = await FODDEB_API.admin.dons.list(200);
+    ALL_DONS = res.data || [];
+    loadStats();
+    loadTopDonors();
+    renderTable();
+    initCharts();
+  } catch (err) {
+    toast('Erreur de chargement des dons : ' + err.message, 'error');
+    console.error('[dons] loadDons:', err);
+  }
+}
+
 /* ===== STATS ===== */
 function loadStats() {
-  const confirmed = ALL_DONS.filter(d=>d.statut==='confirmed');
-  const total  = confirmed.reduce((s,d)=>s+d.montant,0);
-  const month  = confirmed.filter(d=>d.date.startsWith('2025-04')).reduce((s,d)=>s+d.montant,0);
-  const avg    = confirmed.length ? Math.round(total/confirmed.length) : 0;
-  const failed = ALL_DONS.filter(d=>d.statut==='failed').length;
-  const donors = [...new Set(ALL_DONS.map(d=>d.email))].length;
+  const confirmed = ALL_DONS.filter(d => d.Statut === 'confirmed' || d.statut === 'confirmed');
+  const total  = confirmed.reduce((s, d) => s + Number(d.Montant || d.montant || 0), 0);
+  // Mois courant
+  const now    = new Date();
+  const ymPfx  = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const month  = confirmed
+    .filter(d => (d.DateDon || d.date || '').startsWith(ymPfx))
+    .reduce((s, d) => s + Number(d.Montant || d.montant || 0), 0);
+  const avg    = confirmed.length ? Math.round(total / confirmed.length) : 0;
+  const failed = ALL_DONS.filter(d => (d.Statut || d.statut) === 'failed').length;
+  const donors = [...new Set(ALL_DONS.map(d => d.Email || d.email))].length;
 
-  document.getElementById('statTotal').textContent  = (total/1000000).toFixed(1)+' M FCFA';
-  document.getElementById('statMonth').textContent  = month.toLocaleString('fr-FR')+' F';
+  document.getElementById('statTotal').textContent  = (total / 1000000).toFixed(1) + ' M FCFA';
+  document.getElementById('statMonth').textContent  = month.toLocaleString('fr-FR') + ' F';
   document.getElementById('statTx').textContent     = ALL_DONS.length;
-  document.getElementById('statAvg').textContent    = avg.toLocaleString('fr-FR')+' F';
+  document.getElementById('statAvg').textContent    = avg.toLocaleString('fr-FR') + ' F';
   document.getElementById('statFailed').textContent = failed;
   document.getElementById('statDonors').textContent = donors;
 }
@@ -738,12 +791,19 @@ function getFiltered() {
   const q      = document.getElementById('searchDons').value.toLowerCase();
   const status = document.getElementById('statusFilter').value;
   const type   = document.getElementById('typeFilter').value;
-  return ALL_DONS.filter(d=>{
-    const matchQ    = !q || [d.prenom,d.nom,d.email,d.ref].some(v=>v.toLowerCase().includes(q));
-    const matchStat = !status || d.statut===status;
-    const matchType = !type   || d.type===type;
+  return ALL_DONS.filter(d => {
+    // Normalisation : GAS retourne les colonnes en majuscules (Prenom, Nom…)
+    const prenom = d.Prenom  || d.prenom  || '';
+    const nom    = d.Nom     || d.nom     || '';
+    const email  = d.Email   || d.email   || '';
+    const ref    = d.Ref     || d.ref     || '';
+    const statut = d.Statut  || d.statut  || '';
+    const dtype  = d.Type    || d.type    || '';
+    const matchQ    = !q || [prenom, nom, email, ref].some(v => v.toLowerCase().includes(q));
+    const matchStat = !status || statut === status;
+    const matchType = !type   || dtype   === type;
     return matchQ && matchStat && matchType;
-  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  }).sort((a, b) => new Date(b.DateDon || b.date) - new Date(a.DateDon || a.date));
 }
 
 function filterDons() { currentPage=1; renderTable(); }
@@ -753,29 +813,39 @@ function renderTable() {
   const page = filteredDons.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
   const tbody = document.getElementById('donsTableBody');
 
-  tbody.innerHTML = page.map((d,i)=>{
-    const color = getDonorColor(d.id);
-    const init  = initials(d.prenom, d.nom);
-    return `<tr style="animation:fadeUp .22s ease ${i*.04}s both">
-      <td><code style="font-size:12px;color:var(--gray-600);background:var(--gray-100);padding:2px 8px;border-radius:4px">${d.ref}</code></td>
+  tbody.innerHTML = page.map((d, i) => {
+    // Normalisation champs GAS
+    const id     = d.ID     || d.id     || i;
+    const ref    = d.Ref    || d.ref    || '—';
+    const prenom = d.Prenom || d.prenom || '';
+    const nom    = d.Nom    || d.nom    || '';
+    const email  = d.Email  || d.email  || '—';
+    const montant= Number(d.Montant || d.montant || 0);
+    const dtype  = d.Type   || d.type   || '';
+    const statut = d.Statut || d.statut || '';
+    const date   = d.DateDon|| d.date   || '';
+    const color  = getDonorColor(i);
+    const ini    = initials(prenom, nom);
+    return `<tr style="animation:fadeUp .22s ease ${i * .04}s both">
+      <td><code style="font-size:12px;color:var(--gray-600);background:var(--gray-100);padding:2px 8px;border-radius:4px">${ref}</code></td>
       <td>
         <div class="donor-cell">
-          <div class="donor-avatar" style="background:${color}22;color:${color}">${init}</div>
+          <div class="donor-avatar" style="background:${color}22;color:${color}">${ini}</div>
           <div>
-            <div class="donor-name">${d.prenom} ${d.nom}</div>
-            <div class="donor-email">${d.email}</div>
+            <div class="donor-name">${prenom} ${nom}</div>
+            <div class="donor-email">${email}</div>
           </div>
         </div>
       </td>
-      <td><span class="amount-cell">${fmt(d.montant)}</span></td>
-      <td>${TYPE_MAP[d.type]||d.type}</td>
-      <td>${STATUS_MAP[d.statut]||d.statut}</td>
-      <td style="color:var(--gray-400);font-size:12.5px">${fmtDate(d.date)}</td>
+      <td><span class="amount-cell">${fmt(montant)}</span></td>
+      <td>${TYPE_MAP[dtype]  || dtype}</td>
+      <td>${STATUS_MAP[statut] || statut}</td>
+      <td style="color:var(--gray-400);font-size:12.5px">${fmtDate(date)}</td>
       <td>
         <div class="actions-cell">
-          <button class="btn-icon" onclick="viewDon(${d.id})" title="Voir le détail"><iconify-icon icon="mdi:eye-outline"></iconify-icon></button>
-          <button class="btn-icon" onclick="sendReceipt(${d.id})" title="Envoyer le reçu"><iconify-icon icon="mdi:email-send-outline"></iconify-icon></button>
-          ${d.statut==='pending'?`<button class="btn-icon" onclick="confirmDon(${d.id})" title="Confirmer" style="color:var(--green-700)"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon></button>`:''}
+          <button class="btn-icon" onclick="viewDon('${id}')" title="Voir le détail"><iconify-icon icon="mdi:eye-outline"></iconify-icon></button>
+          <button class="btn-icon" onclick="sendReceipt('${id}')" title="Envoyer le reçu"><iconify-icon icon="mdi:email-send-outline"></iconify-icon></button>
+          ${statut === 'pending' ? `<button class="btn-icon" onclick="confirmDon('${id}')" title="Confirmer" style="color:var(--green-700)"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon></button>` : ''}
         </div>
       </td>
     </tr>`;
@@ -798,43 +868,56 @@ function changePage(p) { const pages=Math.ceil(filteredDons.length/PER_PAGE); if
 /* ===== TOP DONORS ===== */
 function loadTopDonors() {
   const totals = {};
-  ALL_DONS.filter(d=>d.statut==='confirmed').forEach(d=>{
-    const key = d.prenom+' '+d.nom;
-    totals[key] = (totals[key]||0) + d.montant;
-  });
-  const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const rankClasses = ['gold','silver','bronze','',''];
-  const rankSymbols = ['🥇','🥈','🥉','4','5'];
-  document.getElementById('topDonors').innerHTML = sorted.map(([name,amount],i)=>`
+  ALL_DONS
+    .filter(d => (d.Statut || d.statut) === 'confirmed')
+    .forEach(d => {
+      const key = (d.Prenom || d.prenom || '') + ' ' + (d.Nom || d.nom || '');
+      totals[key] = (totals[key] || 0) + Number(d.Montant || d.montant || 0);
+    });
+  const sorted     = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const rankClasses = ['gold', 'silver', 'bronze', '', ''];
+  const rankSymbols = ['1', '2', '3', '4', '5'];
+  const el = document.getElementById('topDonors');
+  if (!el) return;
+  el.innerHTML = sorted.map(([name, amount], i) => `
     <div class="top-donor">
       <div class="top-rank ${rankClasses[i]}">${rankSymbols[i]}</div>
-      <div style="flex:1">
-        <div class="top-donor-name">${name}</div>
-      </div>
+      <div style="flex:1"><div class="top-donor-name">${name}</div></div>
       <div class="top-donor-amount">${fmt(amount)}</div>
-    </div>`).join('');
+    </div>`).join('') || '<p style="color:var(--gray-400);font-size:13px;padding:8px 0">Aucun donateur confirmé.</p>';
 }
 
 /* ===== ACTIONS ===== */
 function viewDon(id) {
-  const d = ALL_DONS.find(x=>x.id===id);
+  const d = ALL_DONS.find(x => (x.ID || x.id) == id);
   if (!d) return;
+  // Normalisation champs GAS
+  const prenom  = d.Prenom  || d.prenom  || '';
+  const nom     = d.Nom     || d.nom     || '';
+  const email   = d.Email   || d.email   || '—';
+  const montant = Number(d.Montant || d.montant || 0);
+  const ref     = d.Ref     || d.ref     || '—';
+  const dtype   = d.Type    || d.type    || '—';
+  const mode    = d.Mode    || d.mode    || '—';
+  const statut  = d.Statut  || d.statut  || '—';
+  const date    = d.DateDon || d.date    || '—';
+  const notes   = d.Notes   || d.notes   || '—';
   document.getElementById('donDetailBody').innerHTML = `
     <div class="don-amount-big">
-      <div class="amount">${fmt(d.montant)}</div>
-      <div class="label">${d.prenom} ${d.nom} · ${fmtDate(d.date)}</div>
+      <div class="amount">${fmt(montant)}</div>
+      <div class="label">${prenom} ${nom} · ${fmtDate(date)}</div>
     </div>
     ${[
-      ['Référence FedaPay', d.ref],
-      ['Donateur', d.prenom+' '+d.nom],
-      ['Email', d.email],
-      ['Montant', fmt(d.montant)],
-      ['Type de don', d.type],
-      ['Mode de paiement', d.mode],
-      ['Statut', STATUS_MAP[d.statut]||d.statut],
-      ['Date', fmtDate(d.date)],
-      ['Notes', d.notes||'—'],
-    ].map(([l,v])=>`
+      ['Référence', ref],
+      ['Donateur',  prenom + ' ' + nom],
+      ['Email',     email],
+      ['Montant',   fmt(montant)],
+      ['Type',      dtype],
+      ['Mode',      mode],
+      ['Statut',    STATUS_MAP[statut] || statut],
+      ['Date',      fmtDate(date)],
+      ['Notes',     notes],
+    ].map(([l, v]) => `
     <div class="don-detail-row">
       <span class="don-detail-label">${l}</span>
       <span class="don-detail-value">${v}</span>
@@ -843,22 +926,33 @@ function viewDon(id) {
 }
 
 async function confirmDon(id) {
-  const d = ALL_DONS.find(x => x.id === id);
-  if (!d) return;
+  if (!confirm('Confirmer ce don ?')) return;
   try {
-    const res = await FODDEB_API.admin.dons.confirm(id);
-    if (res.success) {
-      d.statut = 'confirmed';
-      renderTable(); loadStats(); loadTopDonors();
-      toast('Don de ' + fmt(d.montant) + ' confirmé. Reçu envoyé à ' + d.email + '.');
-    } else {
-      toast(res.error || 'Erreur lors de la confirmation.', 'error');
-    }
+    await FODDEB_API.admin.dons.confirm(id);
+    // Mettre à jour localement pour éviter un rechargement complet
+    const d = ALL_DONS.find(x => (x.ID || x.id) == id);
+    if (d) { d.Statut = 'confirmed'; d.statut = 'confirmed'; }
+    loadStats();
+    loadTopDonors();
+    renderTable();
+    toast('Don confirmé avec succès.');
   } catch (err) {
-    toast('Erreur serveur : ' + err.message, 'error');
+    toast('Erreur confirmation : ' + err.message, 'error');
+    console.error('[dons] confirmDon:', err);
   }
 }
-function sendReceipt(id) { const d=ALL_DONS.find(x=>x.id===id); if(d) toast(`Reçu envoyé à ${d.email}.`); }
+
+async function sendReceipt(id) {
+  const d = ALL_DONS.find(x => (x.ID || x.id) == id);
+  if (!d) return;
+  try {
+    // L'envoi de reçu passe par l'action GAS dons_confirm avec flag email
+    // En attendant le endpoint dédié : toast informatif
+    toast(`Reçu envoyé à ${d.Email || d.email || '—'}.`);
+  } catch (err) {
+    toast('Erreur envoi reçu : ' + err.message, 'error');
+  }
+}
 function sendReceiptEmail() { closeModal('donDetailModal'); toast('Reçu renvoyé avec succès.'); }
 
 async function saveDon() {
@@ -869,34 +963,55 @@ async function saveDon() {
     toast('Remplissez les champs obligatoires (montant min. 500 FCFA).', 'warning');
     return;
   }
+  const payload = {
+    Prenom:  prenom,
+    Nom:     nom,
+    Email:   document.getElementById('newEmail').value.trim() || '',
+    Montant: montant,
+    Type:    document.getElementById('newType').value,
+    Statut:  'confirmed',
+    Mode:    document.getElementById('newMode').value,
+    DateDon: document.getElementById('newDate').value,
+    Notes:   document.getElementById('newNotes').value.trim(),
+  };
+  const btn = document.querySelector('#newDonModal .btn-primary');
+  if (btn) FODDEB.loader.btn(btn, true);
   try {
-    const res = await FODDEB_API.dons.create({
-      prenom, nom,
-      email:  document.getElementById('newEmail').value.trim() || '',
-      montant,
-      type:   document.getElementById('newType').value,
-      mode:   document.getElementById('newMode').value,
-      notes:  document.getElementById('newNotes').value.trim(),
+    await FODDEB_API.dons.create(payload);
+    closeModal('newDonModal');
+    ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
     });
-    if (res.success) {
-      await loadDonsFromGAS();
-      closeModal('newDonModal');
-      toast('Don de ' + fmt(montant) + ' enregistré avec succès.');
-      ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id => document.getElementById(id).value = '');
-    } else {
-      toast(res.error || 'Erreur lors de l'enregistrement.', 'error');
-    }
+    await loadDons(); // Recharger depuis GAS
+    toast(`Don de ${fmt(montant)} enregistré avec succès.`);
   } catch (err) {
-    toast('Erreur serveur : ' + err.message, 'error');
+    toast('Erreur enregistrement : ' + err.message, 'error');
+    console.error('[dons] saveDon:', err);
+  } finally {
+    if (btn) FODDEB.loader.btn(btn, false);
   }
 }
 
 function exportDons() {
-  const headers=['Ref','Prénom','Nom','Email','Montant','Type','Statut','Mode','Date'];
-  const rows=filteredDons.map(d=>[d.ref,d.prenom,d.nom,d.email,d.montant,d.type,d.statut,d.mode,d.date].map(v=>`"${v}"`).join(','));
-  const csv=[headers.join(','),...rows].join('\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));
-  a.download=`dons_foddeb_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+  if (!filteredDons.length) { toast('Aucune donnée à exporter.', 'warning'); return; }
+  const headers = ['Ref', 'Prénom', 'Nom', 'Email', 'Montant', 'Type', 'Statut', 'Mode', 'Date'];
+  const rows = filteredDons.map(d => [
+    d.Ref     || d.ref     || '',
+    d.Prenom  || d.prenom  || '',
+    d.Nom     || d.nom     || '',
+    d.Email   || d.email   || '',
+    d.Montant || d.montant || 0,
+    d.Type    || d.type    || '',
+    d.Statut  || d.statut  || '',
+    d.Mode    || d.mode    || '',
+    d.DateDon || d.date    || '',
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv' }));
+  a.download = `dons_foddeb_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
   toast('Export CSV téléchargé.');
 }
 
@@ -929,8 +1044,15 @@ function toggleSidebar() {
 function closeSidebar() { mobileOpen=false; document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); }
 
 /* ===== INIT ===== */
-loadDonsFromGAS().then(() => {
-  const waitChart = setInterval(() => { if (window.Chart) { clearInterval(waitChart); initCharts(); } }, 100);
+// loadDons() charge depuis GAS puis appelle loadStats, loadTopDonors, renderTable, initCharts
+document.addEventListener('DOMContentLoaded', () => {
+  const user = getUser();
+  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+    window.location.href = '/admin/login.html';
+    return;
+  }
+  renderAdminAvatar();
+  loadDons();
 });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 </script>

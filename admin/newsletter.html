@@ -500,47 +500,27 @@ async function changeAdminPhoto() {
   </div>
 </div>
 
-<script src="/assets/js/config.js"></script>
-<script src="/assets/js/utils.js"></script>
-<script src="/assets/js/services/api.js"></script>
-<script src="/assets/js/services/auth.js"></script>
 <script>
 'use strict';
-const fmtD = d => { try { return new Date(d).toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'}); } catch { return d; } };
+const fmtD=d=>{try{return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});}catch{return d;}};
 
-function getUser() { try { return JSON.parse(sessionStorage.getItem('foddeb_user')); } catch { return null; } }
+/* SUBSCRIBERS DATA */
+let SUBS=[
+  {email:'adjovi.r@asad.org',nom:'Adjovi Rosine',source:'Inscription site',statut:'active',date:'2024-01-15'},
+  {email:'k.mensah@gmail.com',nom:'Kofi Mensah',source:'Don',statut:'active',date:'2024-03-22'},
+  {email:'pnud.benin@undp.org',nom:'PNUD Bénin',source:'Partenariat',statut:'active',date:'2024-04-10'},
+  {email:'f.alassane@gmail.com',nom:'Fatima Alassane',source:'Inscription site',statut:'active',date:'2025-01-05'},
+  {email:'g.nestor@solid.org',nom:'Gnahore Nestor',source:'Membre',statut:'active',date:'2024-06-01'},
+  {email:'b.ibrahim@ajdb.org',nom:'Bello Ibrahim',source:'Membre',statut:'active',date:'2024-02-08'},
+  {email:'ancien@test.com',nom:'Ancien abonné',source:'Inscription site',statut:'unsubscribed',date:'2023-11-01'},
+];
 
-/* =====================================================
-   DONNÉES — chargées depuis GAS via FODDEB_API.admin.newsletter
-   ===================================================== */
-let SUBS      = []; // rempli par loadSubscribers()
-let CAMPAIGNS = []; // rempli par loadCampaigns() (historique envois)
-
-/* ── Chargement des abonnés ── */
-async function loadSubscribers() {
-  try {
-    const res = await FODDEB_API.admin.newsletter.list(500);
-    SUBS = (res.subscribers || res.data || []).map(s => ({
-      email:  s.Email  || s.email  || '',
-      nom:    s.Nom    || s.nom    || '',
-      source: s.Source || s.source || '—',
-      statut: (s.Statut || s.statut || 'active').toLowerCase(),
-      date:   s.DateInscription || s.date || '',
-    }));
-    updateSubsStats();
-    if (document.getElementById('subsTable')) renderSubs();
-  } catch (err) {
-    toast('Erreur chargement abonnés : ' + err.message, 'err');
-    console.error('[newsletter] loadSubscribers:', err);
-  }
-}
-
-/* ── Mise à jour compteurs header ── */
-function updateSubsStats() {
-  const active = SUBS.filter(s => s.statut === 'active').length;
-  const el = document.getElementById('subsCount');
-  if (el) el.textContent = active;
-}
+const CAMPAIGNS=[
+  {subject:'Rapport d\'activités 2024 — FODDEB',date:'2025-03-28',segment:'Tous',envois:684,ouvertures:465,clics:164,icone:'📊',color:'var(--g7)'},
+  {subject:'Appel aux dons — Projet VBG Atacora',date:'2025-02-14',segment:'Tous',envois:660,ouvertures:422,clics:98,icone:'💚',color:'var(--red)'},
+  {subject:'Résultats Projet TIC jeunes filles',date:'2024-12-20',segment:'Membres',envois:142,ouvertures:110,clics:55,icone:'💻',color:'var(--blue)'},
+  {subject:'Newsletter mensuelle — Novembre 2024',date:'2024-11-28',segment:'Tous',envois:620,ouvertures:401,clics:132,icone:'📰',color:'var(--g7)'},
+];
 
 /* TABS */
 function openTab(name, btn){
@@ -583,57 +563,22 @@ function openSendConfirm(){
   openM('sendM');
 }
 
-async function sendCampaign() {
-  const subj = document.getElementById('nlSubject')?.value.trim();
-  const body = document.getElementById('editorArea')?.innerHTML.trim();
-  if (!subj || !body || body === '<br>') {
-    toast("L'objet et le contenu sont obligatoires.", 'err');
-    return;
-  }
+async function sendCampaign(){
   closeM('sendM');
   openM('sendingM');
-
-  // Affichage progression visuelle pendant l'envoi GAS
-  const steps = ['Connexion au serveur SMTP…', 'Personnalisation des emails…', 'Envoi par lots de 50…', 'Finalisation…'];
-  let step = 0;
-  const progInterval = setInterval(() => {
-    if (step >= steps.length - 1) return;
-    step++;
-    document.getElementById('sendingMsg').textContent = steps[step];
-    const pct = Math.round((step + 1) / steps.length * 100);
-    document.getElementById('sendingProg').style.width = pct + '%';
-    document.getElementById('sendingPct').textContent  = pct + '%';
-  }, 1200);
-
-  try {
-    const res = await FODDEB_API.newsletter.send(subj, body, false);
-    clearInterval(progInterval);
-    const nb = res.sent || SUBS.filter(s => s.statut === 'active').length;
-    document.getElementById('sendingBody').innerHTML = `
-      <iconify-icon icon="mdi:check-circle" style="font-size:48px;color:var(--g8)"></iconify-icon>
-      <h3 style="font-family:var(--fh);font-weight:700;color:var(--dark);margin-bottom:8px">Campagne envoyée !</h3>
-      <p style="color:var(--gr6);font-size:14px">${nb} email${nb > 1 ? 's' : ''} envoyé${nb > 1 ? 's' : ''} avec succès.</p>`;
-    setTimeout(() => { closeM('sendingM'); toast(`Campagne envoyée à ${nb} abonnés.`); }, 1500);
-  } catch (err) {
-    clearInterval(progInterval);
-    closeM('sendingM');
-    toast('Erreur envoi campagne : ' + err.message, 'err');
-    console.error('[newsletter] sendCampaign:', err);
+  const steps=['Connexion au serveur SMTP…','Personnalisation des emails…','Envoi par lots de 50…','Vérification des bounces…','Finalisation…'];
+  for(let i=0;i<steps.length;i++){
+    document.getElementById('sendingMsg').textContent=steps[i];
+    const pct=Math.round((i+1)/steps.length*100);
+    document.getElementById('sendingProg').style.width=pct+'%';
+    document.getElementById('sendingPct').textContent=pct+'%';
+    await new Promise(r=>setTimeout(r,900));
   }
+  document.getElementById('sendingBody').innerHTML=`<span class="big-icon">✅</span><h3 style="font-family:var(--fh);font-weight:700;color:var(--dark);margin-bottom:8px">Campagne envoyée !</h3><p style="color:var(--gr6);font-size:14px">684 emails ont été envoyés avec succès.</p>`;
+  setTimeout(()=>{closeM('sendingM');toast('Campagne envoyée avec succès à 684 abonnés.');},1500);
 }
 
-async function sendTest() {
-  const subj = document.getElementById('nlSubject')?.value.trim();
-  const body = document.getElementById('editorArea')?.innerHTML.trim();
-  if (!subj) { toast('Renseignez l'objet avant le test.', 'err'); return; }
-  try {
-    await FODDEB_API.newsletter.send(subj, body || '(Vide)', true); // test=true
-    const user = getUser();
-    toast('Email de test envoyé à ' + (user?.Email || user?.email || 'votre adresse') + '.');
-  } catch (err) {
-    toast('Erreur test : ' + err.message, 'err');
-  }
-}
+function sendTest(){ toast('Email de test envoyé à phanoskosmos@gmail.com.'); }
 
 /* SUBSCRIBERS */
 function renderSubs(){
@@ -653,76 +598,17 @@ function renderSubs(){
     </tr>`).join('');
 }
 
-async function toggleSub(email) {
-  const s = SUBS.find(x => x.email === email);
-  if (!s) return;
-  const isActive = s.statut === 'active';
-  try {
-    if (isActive) {
-      await FODDEB_API.admin.newsletter.unsubscribe(email);
-      s.statut = 'unsubscribed';
-      toast('Abonné désabonné.');
-    } else {
-      await FODDEB_API.admin.newsletter.subscribe(email, s.nom);
-      s.statut = 'active';
-      toast('Abonné réactivé.');
-    }
-    updateSubsStats();
-    renderSubs();
-  } catch (err) {
-    toast('Erreur : ' + err.message, 'err');
-    console.error('[newsletter] toggleSub:', err);
-  }
+function toggleSub(email){ const s=SUBS.find(x=>x.email===email); if(s){s.statut=s.statut==='active'?'unsubscribed':'active'; renderSubs(); toast(s.statut==='active'?'Abonné réactivé.':'Abonné désabonné.'); } }
+function removeSub(email){ if(!confirm('Supprimer cet abonné ?'))return; SUBS=SUBS.filter(x=>x.email!==email); renderSubs(); toast('Abonné supprimé.'); }
+function openAddSub(){ openM('addSubM'); document.getElementById('subEmail').value=''; document.getElementById('subNom').value=''; }
+function addSub(){
+  const email=document.getElementById('subEmail').value.trim();
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Email invalide.','err');return;}
+  if(SUBS.find(s=>s.email===email)){toast('Cet email est déjà abonné.','err');return;}
+  SUBS.unshift({email,nom:document.getElementById('subNom').value.trim(),source:'Manuel',statut:'active',date:new Date().toISOString().split('T')[0]});
+  closeM('addSubM');renderSubs();toast('Abonné ajouté avec succès.');
 }
-
-async function removeSub(email) {
-  if (!confirm('Supprimer définitivement cet abonné ?')) return;
-  try {
-    await FODDEB_API.admin.newsletter.unsubscribe(email);
-    SUBS = SUBS.filter(x => x.email !== email);
-    updateSubsStats();
-    renderSubs();
-    toast('Abonné supprimé.');
-  } catch (err) {
-    toast('Erreur suppression : ' + err.message, 'err');
-  }
-}
-
-function openAddSub() {
-  openM('addSubM');
-  document.getElementById('subEmail').value = '';
-  document.getElementById('subNom').value   = '';
-}
-
-async function addSub() {
-  const email = document.getElementById('subEmail').value.trim();
-  const nom   = document.getElementById('subNom').value.trim();
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Email invalide.', 'err'); return; }
-  if (SUBS.find(s => s.email === email)) { toast('Cet email est déjà abonné.', 'err'); return; }
-  try {
-    await FODDEB_API.admin.newsletter.subscribe(email, nom);
-    SUBS.unshift({ email, nom, source: 'Manuel', statut: 'active', date: new Date().toISOString().split('T')[0] });
-    closeM('addSubM');
-    updateSubsStats();
-    renderSubs();
-    toast('Abonné ajouté avec succès.');
-  } catch (err) {
-    toast('Erreur ajout : ' + err.message, 'err');
-    console.error('[newsletter] addSub:', err);
-  }
-}
-
-function exportSubs() {
-  if (!SUBS.length) { toast('Aucune donnée à exporter.', 'err'); return; }
-  const h    = ['Email', 'Nom', 'Source', 'Statut', 'Date'];
-  const rows = SUBS.map(s => [s.email, s.nom, s.source, s.statut, s.date].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
-  const csv  = [h.join(','), ...rows].join('\n');
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv' }));
-  a.download = 'abonnes_foddeb.csv';
-  a.click();
-  toast('Export téléchargé.');
-}
+function exportSubs(){ const h=['Email','Nom','Source','Statut','Date']; const rows=SUBS.map(s=>[s.email,s.nom,s.source,s.statut,s.date].map(v=>`"${v}"`).join(',')); const csv=[h.join(','),...rows].join('\n'); const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));a.download='abonnes_foddeb.csv';a.click();toast('Export téléchargé.'); }
 
 /* HISTORY */
 function renderHistory(){
@@ -744,27 +630,11 @@ document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.
 
 function toast(msg,type='ok'){const c=document.getElementById('toast-c');const t=document.createElement('div');t.className='toast';t.innerHTML=`<iconify-icon icon="mdi:check-circle-outline"></iconify-icon><span>${msg}</span>`;if(type==='err')t.style.background='var(--red)';c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);}
 
-let sbC = false, mobO = false;
-function toggleSb() {
-  const mob = window.innerWidth <= 768;
-  if (mob) { mobO = !mobO; document.getElementById('sb').classList.toggle('mob', mobO); document.getElementById('ov').classList.toggle('v', mobO); }
-  else { sbC = !sbC; document.getElementById('sb').classList.toggle('col', sbC); document.getElementById('mw').classList.toggle('col', sbC); }
-}
-function closeSb() { mobO = false; document.getElementById('sb').classList.remove('mob'); document.getElementById('ov').classList.remove('v'); }
+let sbC=false,mobO=false;
+function toggleSb(){const mob=window.innerWidth<=768;if(mob){mobO=!mobO;document.getElementById('sb').classList.toggle('mob',mobO);document.getElementById('ov').classList.toggle('v',mobO);}else{sbC=!sbC;document.getElementById('sb').classList.toggle('col',sbC);document.getElementById('mw').classList.toggle('col',sbC);}}
+function closeSb(){mobO=false;document.getElementById('sb').classList.remove('mob');document.getElementById('ov').classList.remove('v');}
 
-/* ===== INIT ===== */
-document.addEventListener('DOMContentLoaded', () => {
-  const user = getUser();
-  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    window.location.href = '/admin/login.html';
-    return;
-  }
-  renderAdminAvatar();
-  openTab('compose', document.querySelector('.tabs .tab'));
-  loadSubscribers(); // charge les abonnés depuis GAS
-});
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
 </html>

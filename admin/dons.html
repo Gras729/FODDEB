@@ -671,20 +671,29 @@ async function changeAdminPhoto() {
   </div>
 </div>
 
-<script src="/assets/js/config.js"></script>
 <script src="/assets/js/utils.js"></script>
 <script src="/assets/js/services/api.js"></script>
-<script src="/assets/js/services/auth.js"></script>
 <script>
 'use strict';
 
-/* =====================================================
-   DONNÉES — chargées depuis GAS via FODDEB_API.admin.dons
-   ===================================================== */
+/* ===== MOCK DATA ===== */
 const COLORS_DONOR = ['#1B5E20','#1565C0','#6A1B9A','#C62828','#E65100','#00695C','#F57F17'];
 const getDonorColor = (i) => COLORS_DONOR[i % COLORS_DONOR.length];
 
-let ALL_DONS = []; // rempli par loadDons() au démarrage
+let ALL_DONS = [
+  { id:1,  ref:'FP-2025-0001', prenom:'Kofi',      nom:'Mensah',    email:'k.mensah@gmail.com',     montant:50000,  type:'unique',  statut:'confirmed', mode:'FedaPay',          date:'2025-04-28', notes:'' },
+  { id:2,  ref:'FP-2025-0002', prenom:'PNUD',       nom:'Bénin',     email:'pnud.benin@undp.org',     montant:500000, type:'unique',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-26', notes:'Financement projet VBG' },
+  { id:3,  ref:'FP-2025-0003', prenom:'Fatima',     nom:'Alassane',  email:'f.alassane@gmail.com',    montant:10000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-25', notes:'' },
+  { id:4,  ref:'FP-2025-0004', prenom:'Sènou',      nom:'Adjagbé',   email:'senou.a@gmail.com',       montant:5000,   type:'unique',  statut:'pending',   mode:'Mobile Money',     date:'2025-04-26', notes:'' },
+  { id:5,  ref:'FP-2025-0005', prenom:'Association',nom:'VIVE',      email:'asso.vive@gmail.com',     montant:25000,  type:'unique',  statut:'confirmed', mode:'FedaPay',          date:'2025-04-25', notes:'' },
+  { id:6,  ref:'FP-2025-0006', prenom:'Gnahore',    nom:'Nestor',    email:'g.nestor@gmail.com',      montant:15000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-24', notes:'' },
+  { id:7,  ref:'FP-2025-0007', prenom:'Plan',        nom:'Bénin',     email:'plan.benin@plan.org',     montant:200000, type:'annuel',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-20', notes:'Partenariat 2025' },
+  { id:8,  ref:'FP-2025-0008', prenom:'Ibrahim',    nom:'Bello',     email:'i.bello@gmail.com',       montant:2000,   type:'unique',  statut:'failed',    mode:'FedaPay',          date:'2025-04-19', notes:'Fonds insuffisants' },
+  { id:9,  ref:'FP-2025-0009', prenom:'Alimatou',   nom:'Garba',     email:'a.garba@gmail.com',       montant:20000,  type:'mensuel', statut:'confirmed', mode:'FedaPay',          date:'2025-04-15', notes:'' },
+  { id:10, ref:'FP-2025-0010', prenom:'GIZ',         nom:'Bénin',     email:'giz.benin@giz.de',        montant:750000, type:'unique',  statut:'confirmed', mode:'Virement bancaire',date:'2025-04-10', notes:'Appui institutional' },
+  { id:11, ref:'FP-2025-0011', prenom:'Rodrigue',   nom:'Houessou',  email:'r.hou@gmail.com',         montant:5000,   type:'unique',  statut:'refunded',  mode:'FedaPay',          date:'2025-04-08', notes:'Remboursement sur demande' },
+  { id:12, ref:'FP-2025-0012', prenom:'Adjovi',     nom:'Rosine',    email:'adjovi.r@asad.org',       montant:30000,  type:'annuel',  statut:'confirmed', mode:'Espèces',          date:'2025-04-05', notes:'' },
+];
 
 const STATUS_MAP = {
   confirmed: '<span class="badge badge-success"><span class="badge-dot"></span>Confirmé</span>',
@@ -706,39 +715,19 @@ let currentPage = 1;
 const PER_PAGE  = 8;
 let filteredDons = [];
 
-/* ===== CHARGEMENT GAS ===== */
-async function loadDons() {
-  try {
-    const res = await FODDEB_API.admin.dons.list(200);
-    ALL_DONS = res.dons || res.data || [];
-    loadStats();
-    loadTopDonors();
-    renderTable();
-    initCharts();
-  } catch (err) {
-    toast('Erreur de chargement des dons : ' + err.message, 'error');
-    console.error('[dons] loadDons:', err);
-  }
-}
-
 /* ===== STATS ===== */
 function loadStats() {
-  const confirmed = ALL_DONS.filter(d => d.Statut === 'confirmed' || d.statut === 'confirmed');
-  const total  = confirmed.reduce((s, d) => s + Number(d.Montant || d.montant || 0), 0);
-  // Mois courant
-  const now    = new Date();
-  const ymPfx  = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const month  = confirmed
-    .filter(d => (d.DateDon || d.date || '').startsWith(ymPfx))
-    .reduce((s, d) => s + Number(d.Montant || d.montant || 0), 0);
-  const avg    = confirmed.length ? Math.round(total / confirmed.length) : 0;
-  const failed = ALL_DONS.filter(d => (d.Statut || d.statut) === 'failed').length;
-  const donors = [...new Set(ALL_DONS.map(d => d.Email || d.email))].length;
+  const confirmed = ALL_DONS.filter(d=>d.statut==='confirmed');
+  const total  = confirmed.reduce((s,d)=>s+d.montant,0);
+  const month  = confirmed.filter(d=>d.date.startsWith('2025-04')).reduce((s,d)=>s+d.montant,0);
+  const avg    = confirmed.length ? Math.round(total/confirmed.length) : 0;
+  const failed = ALL_DONS.filter(d=>d.statut==='failed').length;
+  const donors = [...new Set(ALL_DONS.map(d=>d.email))].length;
 
-  document.getElementById('statTotal').textContent  = (total / 1000000).toFixed(1) + ' M FCFA';
-  document.getElementById('statMonth').textContent  = month.toLocaleString('fr-FR') + ' F';
+  document.getElementById('statTotal').textContent  = (total/1000000).toFixed(1)+' M FCFA';
+  document.getElementById('statMonth').textContent  = month.toLocaleString('fr-FR')+' F';
   document.getElementById('statTx').textContent     = ALL_DONS.length;
-  document.getElementById('statAvg').textContent    = avg.toLocaleString('fr-FR') + ' F';
+  document.getElementById('statAvg').textContent    = avg.toLocaleString('fr-FR')+' F';
   document.getElementById('statFailed').textContent = failed;
   document.getElementById('statDonors').textContent = donors;
 }
@@ -791,19 +780,12 @@ function getFiltered() {
   const q      = document.getElementById('searchDons').value.toLowerCase();
   const status = document.getElementById('statusFilter').value;
   const type   = document.getElementById('typeFilter').value;
-  return ALL_DONS.filter(d => {
-    // Normalisation : GAS retourne les colonnes en majuscules (Prenom, Nom…)
-    const prenom = d.Prenom  || d.prenom  || '';
-    const nom    = d.Nom     || d.nom     || '';
-    const email  = d.Email   || d.email   || '';
-    const ref    = d.Ref     || d.ref     || '';
-    const statut = d.Statut  || d.statut  || '';
-    const dtype  = d.Type    || d.type    || '';
-    const matchQ    = !q || [prenom, nom, email, ref].some(v => v.toLowerCase().includes(q));
-    const matchStat = !status || statut === status;
-    const matchType = !type   || dtype   === type;
+  return ALL_DONS.filter(d=>{
+    const matchQ    = !q || [d.prenom,d.nom,d.email,d.ref].some(v=>v.toLowerCase().includes(q));
+    const matchStat = !status || d.statut===status;
+    const matchType = !type   || d.type===type;
     return matchQ && matchStat && matchType;
-  }).sort((a, b) => new Date(b.DateDon || b.date) - new Date(a.DateDon || a.date));
+  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
 }
 
 function filterDons() { currentPage=1; renderTable(); }
@@ -813,39 +795,29 @@ function renderTable() {
   const page = filteredDons.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
   const tbody = document.getElementById('donsTableBody');
 
-  tbody.innerHTML = page.map((d, i) => {
-    // Normalisation champs GAS
-    const id     = d.ID     || d.id     || i;
-    const ref    = d.Ref    || d.ref    || '—';
-    const prenom = d.Prenom || d.prenom || '';
-    const nom    = d.Nom    || d.nom    || '';
-    const email  = d.Email  || d.email  || '—';
-    const montant= Number(d.Montant || d.montant || 0);
-    const dtype  = d.Type   || d.type   || '';
-    const statut = d.Statut || d.statut || '';
-    const date   = d.DateDon|| d.date   || '';
-    const color  = getDonorColor(i);
-    const ini    = initials(prenom, nom);
-    return `<tr style="animation:fadeUp .22s ease ${i * .04}s both">
-      <td><code style="font-size:12px;color:var(--gray-600);background:var(--gray-100);padding:2px 8px;border-radius:4px">${ref}</code></td>
+  tbody.innerHTML = page.map((d,i)=>{
+    const color = getDonorColor(d.id);
+    const init  = initials(d.prenom, d.nom);
+    return `<tr style="animation:fadeUp .22s ease ${i*.04}s both">
+      <td><code style="font-size:12px;color:var(--gray-600);background:var(--gray-100);padding:2px 8px;border-radius:4px">${d.ref}</code></td>
       <td>
         <div class="donor-cell">
-          <div class="donor-avatar" style="background:${color}22;color:${color}">${ini}</div>
+          <div class="donor-avatar" style="background:${color}22;color:${color}">${init}</div>
           <div>
-            <div class="donor-name">${prenom} ${nom}</div>
-            <div class="donor-email">${email}</div>
+            <div class="donor-name">${d.prenom} ${d.nom}</div>
+            <div class="donor-email">${d.email}</div>
           </div>
         </div>
       </td>
-      <td><span class="amount-cell">${fmt(montant)}</span></td>
-      <td>${TYPE_MAP[dtype]  || dtype}</td>
-      <td>${STATUS_MAP[statut] || statut}</td>
-      <td style="color:var(--gray-400);font-size:12.5px">${fmtDate(date)}</td>
+      <td><span class="amount-cell">${fmt(d.montant)}</span></td>
+      <td>${TYPE_MAP[d.type]||d.type}</td>
+      <td>${STATUS_MAP[d.statut]||d.statut}</td>
+      <td style="color:var(--gray-400);font-size:12.5px">${fmtDate(d.date)}</td>
       <td>
         <div class="actions-cell">
-          <button class="btn-icon" onclick="viewDon('${id}')" title="Voir le détail"><iconify-icon icon="mdi:eye-outline"></iconify-icon></button>
-          <button class="btn-icon" onclick="sendReceipt('${id}')" title="Envoyer le reçu"><iconify-icon icon="mdi:email-send-outline"></iconify-icon></button>
-          ${statut === 'pending' ? `<button class="btn-icon" onclick="confirmDon('${id}')" title="Confirmer" style="color:var(--green-700)"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon></button>` : ''}
+          <button class="btn-icon" onclick="viewDon(${d.id})" title="Voir le détail"><iconify-icon icon="mdi:eye-outline"></iconify-icon></button>
+          <button class="btn-icon" onclick="sendReceipt(${d.id})" title="Envoyer le reçu"><iconify-icon icon="mdi:email-send-outline"></iconify-icon></button>
+          ${d.statut==='pending'?`<button class="btn-icon" onclick="confirmDon(${d.id})" title="Confirmer" style="color:var(--green-700)"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon></button>`:''}
         </div>
       </td>
     </tr>`;
@@ -868,56 +840,43 @@ function changePage(p) { const pages=Math.ceil(filteredDons.length/PER_PAGE); if
 /* ===== TOP DONORS ===== */
 function loadTopDonors() {
   const totals = {};
-  ALL_DONS
-    .filter(d => (d.Statut || d.statut) === 'confirmed')
-    .forEach(d => {
-      const key = (d.Prenom || d.prenom || '') + ' ' + (d.Nom || d.nom || '');
-      totals[key] = (totals[key] || 0) + Number(d.Montant || d.montant || 0);
-    });
-  const sorted     = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  const rankClasses = ['gold', 'silver', 'bronze', '', ''];
-  const rankSymbols = ['1', '2', '3', '4', '5'];
-  const el = document.getElementById('topDonors');
-  if (!el) return;
-  el.innerHTML = sorted.map(([name, amount], i) => `
+  ALL_DONS.filter(d=>d.statut==='confirmed').forEach(d=>{
+    const key = d.prenom+' '+d.nom;
+    totals[key] = (totals[key]||0) + d.montant;
+  });
+  const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const rankClasses = ['gold','silver','bronze','',''];
+  const rankSymbols = ['🥇','🥈','🥉','4','5'];
+  document.getElementById('topDonors').innerHTML = sorted.map(([name,amount],i)=>`
     <div class="top-donor">
       <div class="top-rank ${rankClasses[i]}">${rankSymbols[i]}</div>
-      <div style="flex:1"><div class="top-donor-name">${name}</div></div>
+      <div style="flex:1">
+        <div class="top-donor-name">${name}</div>
+      </div>
       <div class="top-donor-amount">${fmt(amount)}</div>
-    </div>`).join('') || '<p style="color:var(--gray-400);font-size:13px;padding:8px 0">Aucun donateur confirmé.</p>';
+    </div>`).join('');
 }
 
 /* ===== ACTIONS ===== */
 function viewDon(id) {
-  const d = ALL_DONS.find(x => (x.ID || x.id) == id);
+  const d = ALL_DONS.find(x=>x.id===id);
   if (!d) return;
-  // Normalisation champs GAS
-  const prenom  = d.Prenom  || d.prenom  || '';
-  const nom     = d.Nom     || d.nom     || '';
-  const email   = d.Email   || d.email   || '—';
-  const montant = Number(d.Montant || d.montant || 0);
-  const ref     = d.Ref     || d.ref     || '—';
-  const dtype   = d.Type    || d.type    || '—';
-  const mode    = d.Mode    || d.mode    || '—';
-  const statut  = d.Statut  || d.statut  || '—';
-  const date    = d.DateDon || d.date    || '—';
-  const notes   = d.Notes   || d.notes   || '—';
   document.getElementById('donDetailBody').innerHTML = `
     <div class="don-amount-big">
-      <div class="amount">${fmt(montant)}</div>
-      <div class="label">${prenom} ${nom} · ${fmtDate(date)}</div>
+      <div class="amount">${fmt(d.montant)}</div>
+      <div class="label">${d.prenom} ${d.nom} · ${fmtDate(d.date)}</div>
     </div>
     ${[
-      ['Référence', ref],
-      ['Donateur',  prenom + ' ' + nom],
-      ['Email',     email],
-      ['Montant',   fmt(montant)],
-      ['Type',      dtype],
-      ['Mode',      mode],
-      ['Statut',    STATUS_MAP[statut] || statut],
-      ['Date',      fmtDate(date)],
-      ['Notes',     notes],
-    ].map(([l, v]) => `
+      ['Référence FedaPay', d.ref],
+      ['Donateur', d.prenom+' '+d.nom],
+      ['Email', d.email],
+      ['Montant', fmt(d.montant)],
+      ['Type de don', d.type],
+      ['Mode de paiement', d.mode],
+      ['Statut', STATUS_MAP[d.statut]||d.statut],
+      ['Date', fmtDate(d.date)],
+      ['Notes', d.notes||'—'],
+    ].map(([l,v])=>`
     <div class="don-detail-row">
       <span class="don-detail-label">${l}</span>
       <span class="don-detail-value">${v}</span>
@@ -925,93 +884,48 @@ function viewDon(id) {
   openModal('donDetailModal');
 }
 
-async function confirmDon(id) {
-  if (!confirm('Confirmer ce don ?')) return;
-  try {
-    await FODDEB_API.admin.dons.confirm(id);
-    // Mettre à jour localement pour éviter un rechargement complet
-    const d = ALL_DONS.find(x => (x.ID || x.id) == id);
-    if (d) { d.Statut = 'confirmed'; d.statut = 'confirmed'; }
-    loadStats();
-    loadTopDonors();
-    renderTable();
-    toast('Don confirmé avec succès.');
-  } catch (err) {
-    toast('Erreur confirmation : ' + err.message, 'error');
-    console.error('[dons] confirmDon:', err);
-  }
+function confirmDon(id) {
+  const d=ALL_DONS.find(x=>x.id===id);
+  if(!d) return;
+  d.statut='confirmed';
+  renderTable();
+  toast(`Don de ${fmt(d.montant)} confirmé.`);
 }
-
-async function sendReceipt(id) {
-  const d = ALL_DONS.find(x => (x.ID || x.id) == id);
-  if (!d) return;
-  try {
-    // L'envoi de reçu passe par l'action GAS dons_confirm avec flag email
-    // En attendant le endpoint dédié : toast informatif
-    toast(`Reçu envoyé à ${d.Email || d.email || '—'}.`);
-  } catch (err) {
-    toast('Erreur envoi reçu : ' + err.message, 'error');
-  }
-}
+function sendReceipt(id) { const d=ALL_DONS.find(x=>x.id===id); if(d) toast(`Reçu envoyé à ${d.email}.`); }
 function sendReceiptEmail() { closeModal('donDetailModal'); toast('Reçu renvoyé avec succès.'); }
 
-async function saveDon() {
+function saveDon() {
   const prenom  = document.getElementById('newPrenom').value.trim();
   const nom     = document.getElementById('newNom').value.trim();
-  const montant = parseInt(document.getElementById('newMontant').value) || 0;
-  if (!prenom || !nom || montant < 500) {
-    toast('Remplissez les champs obligatoires (montant min. 500 FCFA).', 'warning');
-    return;
-  }
-  const payload = {
-    Prenom:  prenom,
-    Nom:     nom,
-    Email:   document.getElementById('newEmail').value.trim() || '',
-    Montant: montant,
-    Type:    document.getElementById('newType').value,
-    Statut:  'confirmed',
-    Mode:    document.getElementById('newMode').value,
-    DateDon: document.getElementById('newDate').value,
-    Notes:   document.getElementById('newNotes').value.trim(),
+  const montant = parseInt(document.getElementById('newMontant').value)||0;
+  if (!prenom||!nom||montant<500) { toast('Remplissez les champs obligatoires (montant min. 500 FCFA).','warning'); return; }
+  const newDon = {
+    id:     Date.now(),
+    ref:    'MAN-'+Date.now().toString().slice(-6),
+    prenom, nom,
+    email:  document.getElementById('newEmail').value.trim()||'—',
+    montant,
+    type:   document.getElementById('newType').value,
+    statut: 'confirmed',
+    mode:   document.getElementById('newMode').value,
+    date:   document.getElementById('newDate').value,
+    notes:  document.getElementById('newNotes').value.trim(),
   };
-  const btn = document.querySelector('#newDonModal .btn-primary');
-  if (btn) FODDEB.loader.btn(btn, true);
-  try {
-    await FODDEB_API.dons.create(payload);
-    closeModal('newDonModal');
-    ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    await loadDons(); // Recharger depuis GAS
-    toast(`Don de ${fmt(montant)} enregistré avec succès.`);
-  } catch (err) {
-    toast('Erreur enregistrement : ' + err.message, 'error');
-    console.error('[dons] saveDon:', err);
-  } finally {
-    if (btn) FODDEB.loader.btn(btn, false);
-  }
+  ALL_DONS.unshift(newDon);
+  closeModal('newDonModal');
+  loadStats();
+  loadTopDonors();
+  renderTable();
+  toast(`Don de ${fmt(montant)} enregistré avec succès.`);
+  ['newPrenom','newNom','newEmail','newMontant','newNotes'].forEach(id=>document.getElementById(id).value='');
 }
 
 function exportDons() {
-  if (!filteredDons.length) { toast('Aucune donnée à exporter.', 'warning'); return; }
-  const headers = ['Ref', 'Prénom', 'Nom', 'Email', 'Montant', 'Type', 'Statut', 'Mode', 'Date'];
-  const rows = filteredDons.map(d => [
-    d.Ref     || d.ref     || '',
-    d.Prenom  || d.prenom  || '',
-    d.Nom     || d.nom     || '',
-    d.Email   || d.email   || '',
-    d.Montant || d.montant || 0,
-    d.Type    || d.type    || '',
-    d.Statut  || d.statut  || '',
-    d.Mode    || d.mode    || '',
-    d.DateDon || d.date    || '',
-  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv' }));
-  a.download = `dons_foddeb_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
+  const headers=['Ref','Prénom','Nom','Email','Montant','Type','Statut','Mode','Date'];
+  const rows=filteredDons.map(d=>[d.ref,d.prenom,d.nom,d.email,d.montant,d.type,d.statut,d.mode,d.date].map(v=>`"${v}"`).join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));
+  a.download=`dons_foddeb_${new Date().toISOString().split('T')[0]}.csv`; a.click();
   toast('Export CSV téléchargé.');
 }
 
@@ -1044,17 +958,11 @@ function toggleSidebar() {
 function closeSidebar() { mobileOpen=false; document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); }
 
 /* ===== INIT ===== */
-// loadDons() charge depuis GAS puis appelle loadStats, loadTopDonors, renderTable, initCharts
-document.addEventListener('DOMContentLoaded', () => {
-  const user = getUser();
-  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    window.location.href = '/admin/login.html';
-    return;
-  }
-  renderAdminAvatar();
-  loadDons();
-});
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+loadStats();
+loadTopDonors();
+renderTable();
+const waitChart = setInterval(() => { if(window.Chart){ clearInterval(waitChart); initCharts(); } }, 100);
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
 </html>

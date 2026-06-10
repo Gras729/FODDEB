@@ -207,7 +207,7 @@ var FODDEB_API = window.FODDEB_API || (() => {
     subscribe:   (email, nom = '') => request('newsletter_subscribe', { email, nom }),
     unsubscribe: (email)           => request('newsletter_unsubscribe', { email }),
     list:        ()                => request('newsletter_list'),
-    send:        (subject, body, test = false) => request('newsletter_send', { subject, body, test }),
+    send:        (subject, htmlBody, test = false) => request('newsletter_send', { subject, htmlBody, test }),
     stats:       ()                => request('newsletter_stats'),
   };
 

@@ -440,7 +440,7 @@ function loadUserInfo() {
 async function loadArticles() {
   showState('loading');
   try {
-    const res = await FODDEB_API.news.list({ page:1, perPage:100 });
+    const res = await FODDEB_API.news.list(1, 100);
     ALL_ARTS = (res.data || []).map(a => ({
       ID:      a.ID     || a.id     || '',
       Titre:   a.Titre  || a.titre  || '—',
@@ -642,6 +642,7 @@ async function saveFullArt(status) {
     Auteur:   document.getElementById('mAuthor').value.trim(),
     DatePublication: document.getElementById('mDate').value || new Date().toISOString().split('T')[0],
     Tags:     document.getElementById('mTags').value.trim(),
+    Image:    document.getElementById('mImage')?.value.trim() || '',
   };
 
   try {

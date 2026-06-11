@@ -552,7 +552,7 @@ function loadUserInfo() {
 async function loadMembers() {
   showTableLoading();
   try {
-    const res = await FODDEB_API.members.list({ page: 1, perPage: 500 });
+    const res = await FODDEB_API.members.list(1, 500, '');
     ALL = (res.data || []).map(m => ({
       ID:            m.ID            || m.id            || '',
       Prenom:        m.Prenom        || m.prenom        || '',

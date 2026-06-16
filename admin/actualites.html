@@ -377,7 +377,35 @@
         <div class="fg"><label class="fl">Auteur</label><input type="text" id="mAuthor" class="fi" placeholder="Nom de l'auteur" value="Equipe FODDEB"/></div>
         <div class="fg"><label class="fl">Date de publication</label><input type="date" id="mDate" class="fi"/></div>
       </div>
-      <div class="fg"><label class="fl">Tags (separes par des virgules)</label><input type="text" id="mTags" class="fi" placeholder="droits enfant, protection, benin"/></div>
+      <div class="fg"><label class="fl">Tags (séparés par des virgules)</label><input type="text" id="mTags" class="fi" placeholder="droits enfant, protection, benin"/></div>
+
+      <!-- IMAGE DE COUVERTURE -->
+      <div class="fg">
+        <label class="fl">Image de couverture <span style="font-weight:400;color:var(--gr4)">(JPG/PNG/WebP, max 3 Mo)</span></label>
+        <div id="imgPreviewWrap" style="display:none;margin-bottom:8px">
+          <img id="imgPreview" src="" alt="Aperçu" style="max-height:160px;border-radius:var(--rs);border:1px solid var(--brd);object-fit:cover"/>
+          <button onclick="clearImage()" style="display:block;margin-top:6px;font-size:12px;color:var(--red);cursor:pointer;background:none;border:none">
+            <iconify-icon icon="mdi:close-circle-outline" width="14"></iconify-icon> Supprimer l'image
+          </button>
+        </div>
+        <input type="hidden" id="mImage" value=""/>
+        <button type="button" class="btn btn-o btn-sm" onclick="pickImageCouverture()" id="imgPickBtn">
+          <iconify-icon icon="mdi:image-plus-outline"></iconify-icon>Choisir une image
+        </button>
+        <div id="imgUploadProgress" style="display:none;font-size:13px;color:var(--gr4);margin-top:6px">
+          <iconify-icon icon="mdi:loading" style="animation:spin 1s linear infinite"></iconify-icon> Upload en cours…
+        </div>
+      </div>
+
+      <!-- PIÈCES JOINTES (facultatives) -->
+      <div class="fg">
+        <label class="fl">Pièces jointes <span style="font-weight:400;color:var(--gr4)">(PDF/Word, max 5 Mo chacune — facultatif)</span></label>
+        <div id="piecesList" style="margin-bottom:8px"></div>
+        <button type="button" class="btn btn-o btn-sm" onclick="pickPiece()">
+          <iconify-icon icon="mdi:paperclip"></iconify-icon>Ajouter une pièce
+        </button>
+        <input type="hidden" id="mPieces" value="[]"/>
+      </div>
     </div>
     <div class="mf">
       <button class="btn btn-o btn-sm" onclick="closeM('newArtM')">Annuler</button>
@@ -643,6 +671,7 @@ async function saveFullArt(status) {
     DatePublication: document.getElementById('mDate').value || new Date().toISOString().split('T')[0],
     Tags:     document.getElementById('mTags').value.trim(),
     Image:    document.getElementById('mImage')?.value.trim() || '',
+    Pieces:   document.getElementById('mPieces')?.value || '[]',
   };
 
   try {
@@ -654,9 +683,16 @@ async function saveFullArt(status) {
     }
     if (!res.success) throw new Error(res.error);
     closeM('newArtM');
-    document.getElementById('editId').value = '';
+    // Créer ou mettre à jour le Google Doc pour ce contenu
+    if (res.id || (res.data && res.data.ID)) {
+      const artId = res.id || res.data.ID;
+      _currentArticleId = artId;
+      const contenuHtml = document.getElementById('mContent')?.innerHTML || '';
+      await ensureDoc(artId, payload.Titre, contenuHtml);
+    }
+    resetArtForm();
     document.getElementById('newArtTitle').textContent = 'Nouvel article';
-    toast(status==='publie' ? 'Article publie sur le site.' : 'Brouillon enregistre.');
+    toast(status==='publie' ? 'Article publié sur le site.' : 'Brouillon enregistré.');
     await loadArticles();
   } catch(e) {
     toast('Erreur : ' + e.message, 'err');
@@ -710,6 +746,78 @@ function toggleSb() {
 function closeSb(){mobO=false;document.getElementById('sb').classList.remove('mob');document.getElementById('ov').classList.remove('v');}
 
 /* ═══ INIT ═══ */
+
+/* ═══ UPLOAD IMAGE DE COUVERTURE ═══ */
+let _currentArticleId = null;
+
+function pickImageCouverture() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp';
+  input.onchange = async function() {
+    const file = input.files[0]; if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast('Image trop volumineuse (max 3 Mo).', 'err'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('imgPreview').src = e.target.result;
+      document.getElementById('imgPreviewWrap').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    document.getElementById('imgUploadProgress').style.display = 'block';
+    document.getElementById('imgPickBtn').disabled = true;
+    try {
+      const b64 = await fileToBase64(file);
+      const ctxId = _currentArticleId || 'draft_' + Date.now();
+      const res = await FODDEB_API.admin.upload(b64, file.name, file.type, 'actualite', ctxId);
+      if (!res.success) throw new Error(res.error || 'Erreur');
+      document.getElementById('mImage').value = res.url;
+      toast('Image de couverture ajoutée.');
+    } catch (err) { toast('Erreur upload : ' + err.message, 'err'); document.getElementById('imgPreviewWrap').style.display = 'none'; }
+    finally { document.getElementById('imgUploadProgress').style.display = 'none'; document.getElementById('imgPickBtn').disabled = false; }
+  };
+  input.click();
+}
+function clearImage() { document.getElementById('mImage').value=''; document.getElementById('imgPreview').src=''; document.getElementById('imgPreviewWrap').style.display='none'; }
+
+/* ═══ UPLOAD PIÈCES JOINTES ═══ */
+let _pieces = [];
+function pickPiece() {
+  const input = document.createElement('input'); input.type = 'file'; input.accept = 'application/pdf,.doc,.docx';
+  input.onchange = async function() {
+    const file = input.files[0]; if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast('Fichier trop volumineux (max 5 Mo).', 'err'); return; }
+    toast('Upload en cours…');
+    try {
+      const b64 = await fileToBase64(file);
+      const ctxId = _currentArticleId || 'draft_' + Date.now();
+      const res = await FODDEB_API.admin.upload(b64, file.name, file.type, 'actualite', ctxId);
+      if (!res.success) throw new Error(res.error || 'Erreur');
+      _pieces.push({ nom: file.name, url: res.url, type: file.type });
+      document.getElementById('mPieces').value = JSON.stringify(_pieces);
+      renderPiecesList(); toast('Pièce ajoutée : ' + file.name);
+    } catch (err) { toast('Erreur upload pièce : ' + err.message, 'err'); }
+  };
+  input.click();
+}
+function renderPiecesList() {
+  const el = document.getElementById('piecesList'); if (!el) return;
+  el.innerHTML = _pieces.map((p,i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--gr1);border-radius:var(--rs);margin-bottom:6px;font-size:13px"><iconify-icon icon="mdi:file-document-outline" style="color:var(--gr4)"></iconify-icon><a href="${p.url}" target="_blank" style="color:var(--g7);flex:1">${p.nom}</a><button onclick="removePiece(${i})" style="color:var(--red);background:none;border:none;cursor:pointer"><iconify-icon icon="mdi:close-circle-outline"></iconify-icon></button></div>`).join('');
+}
+function removePiece(i) { _pieces.splice(i,1); document.getElementById('mPieces').value=JSON.stringify(_pieces); renderPiecesList(); }
+
+function fileToBase64(file) {
+  return new Promise((res,rej) => { const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=()=>rej(new Error('Lecture échouée')); r.readAsDataURL(file); });
+}
+function resetArtForm() {
+  _currentArticleId=null; _pieces=[]; clearImage();
+  const pl=document.getElementById('piecesList'); if(pl) pl.innerHTML='';
+  document.getElementById('mPieces').value='[]';
+  document.getElementById('editId').value='';
+}
+async function ensureDoc(articleId, titre, contenu) {
+  try { const res = await FODDEB_API.newsDocs.create(articleId, titre, contenu); if(res.success && res.docUrl) return res.docUrl; } catch(e) { console.warn('[ensureDoc]', e.message); }
+  return null;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const user = requireAdmin();
   if (!user) return;

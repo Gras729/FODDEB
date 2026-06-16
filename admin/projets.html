@@ -941,7 +941,7 @@ async function saveProjet() {
       toast('Upload image en cours…', 'info');
       const b64   = await fileToBase64(_uploadFiles.image);
       const upRes = await FODDEB_API.members.uploadProjectFile(
-        b64, _uploadFiles.image.name, _uploadFiles.image.type, 'projet_image', editId || 'new'
+        b64, _uploadFiles.image.name, _uploadFiles.image.type, 'projet', editId || 'new'
       );
       if (upRes && upRes.success) imageURL = upRes.url || upRes.fileUrl || '';
       else toast('Image non uploadée : ' + ((upRes && upRes.error) || 'erreur inconnue'), 'warn');
@@ -1001,6 +1001,13 @@ async function saveProjet() {
     document.getElementById('editId').value = '';
     document.getElementById('mTitle').textContent = 'Nouveau projet';
     clearFile('image'); clearFile('fichier');
+    // Créer/mettre à jour le Google Doc de description
+    if (res.id || (res.data && res.data.ID)) {
+      const pId = res.id || res.data.ID;
+      const desc = document.getElementById('nDesc')?.value || '';
+      const titre = document.getElementById('nTitle')?.value || 'Projet';
+      try { await FODDEB_API.projetsDocs.create(pId, titre, desc); } catch(e) { console.warn('[projetDoc]', e.message); }
+    }
     toast(editId ? 'Projet mis à jour.' : 'Projet créé avec succès.');
     await loadProjets();
   } catch(e) {

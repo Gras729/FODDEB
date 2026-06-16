@@ -60,6 +60,20 @@ var FODDEB_API = window.FODDEB_API || (() => {
     } catch { return null; }
   };
 
+  // Docs Google — Actualités
+  const newsDocs = {
+    create: (id, Titre, Contenu) => request('news_doc_create', { id, Titre, Contenu }),
+    read:   (id)                 => request('news_doc_read',   { id }),
+    update: (id, html)           => request('news_doc_update', { id, html }),
+  };
+
+  // Docs Google — Projets
+  const projetsDocs = {
+    create: (id, Titre, Description) => request('projets_doc_create', { id, Titre, Description }),
+    read:   (id)                     => request('projets_doc_read',   { id }),
+    update: (id, html)               => request('projets_doc_update', { id, html }),
+  };
+
   /* ============================================================
      AUTHENTIFICATION
   ============================================================ */
@@ -290,7 +304,21 @@ var FODDEB_API = window.FODDEB_API || (() => {
     },
   };
 
-  return { auth, members, dons, projets, news, newsletter, contact, dashboard, fedapay, ressources, evenements, admin };
+  // Bailleurs
+  const bailleurs = {
+    list:   ()         => request('bailleurs_list'),
+    create: (data)     => request('bailleurs_create', data),
+    update: (id, data) => request('bailleurs_update', { id, ...data }),
+    delete: (id)       => request('bailleurs_delete', { id }),
+  };
+
+  // Paramètres
+  const parametres = {
+    get:    ()     => request('parametres_get'),
+    update: (data) => request('parametres_update', data),
+  };
+
+  return { auth, members, dons, projets, news, newsletter, contact, dashboard, fedapay, ressources, evenements, admin, bailleurs, parametres, newsDocs, projetsDocs };
 
 })();
 

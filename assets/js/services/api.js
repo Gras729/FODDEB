@@ -272,6 +272,8 @@ var FODDEB_API = window.FODDEB_API || (() => {
      Appeler uniquement depuis les pages /admin/*.html.
   ============================================================ */
   const admin = {
+    upload: (base64, fileName, mimeType, context, contextId) =>
+              request('upload_file', { base64, fileName, mimeType, context, contextId }, 30_000),
 
     // Membres
     members: {

@@ -361,7 +361,7 @@
         <li><a href="/pages/projets.html">Projets</a></li><li><a href="/pages/contact.html">Contact</a></li>
       </ul></div>
       <div class="footer-col"><h4>Espace membre</h4><ul>
-        <li><a href="/auth/login.html">Se connecter</a></li><li><a href="/auth/register.html">Adhérer</a></li>
+        <li><a href="/auth/login.html">Se connecter</a></li><li><a href="/auth/register.html">Adherer</a></li>
         <li><a href="/dashboard/member.html">Mon espace</a></li>
       </ul></div>
       <div class="footer-col"><h4>Contact</h4><ul>
@@ -605,7 +605,7 @@ const fichierLink = `
  </button>`
     : ''}`;
     return `
-    <div class="project-card fade-in" style="animation:fadeUp .4s ease ${i*.06}s both">
+    <div class="project-card fade-in" style="animation:fadeUp .4s ease ${i*.06}s both;cursor:pointer" onclick="window.location.href='/pages/projet-detail.html?id=${p.id}'">
       <div class="project-img" style="background:${cfg.color}">
         ${imgHTML}
         <div class="project-status-badge">
@@ -633,6 +633,11 @@ const fichierLink = `
         </div>` : ''}
         <div class="project-footer">
           <span class="proj-budget">${fmtF(p.budget)}</span>
+          <a href="/pages/projet-detail.html?id=${p.id}"
+             class="proj-link"
+             onclick="event.stopPropagation()">
+            En savoir plus <iconify-icon icon="mdi:arrow-right"></iconify-icon>
+          </a>
           ${fichierLink}
         </div>
       </div>

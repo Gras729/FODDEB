@@ -284,8 +284,8 @@
     <div class="nav-links">
       <a href="/" class="nav-link">Accueil</a>
       <a href="/pages/organes.html" class="nav-link">Nos organes</a>
-      <a href="/pages/projets.html" class="nav-link">Projets</a>
-      <a href="/pages/actualites.html" class="nav-link active">Actualités</a>
+      <a href="/pages/projets.html" class="nav-link active">Projets</a>
+      <a href="/pages/actualites.html" class="nav-link">Actualités</a>
       <a href="/pages/contact.html" class="nav-link">Contact</a>
     </div>
     <div class="nav-cta">
@@ -295,6 +295,28 @@
     <button class="hamburger" id="hamburger" aria-label="Ouvrir le menu">
       <span></span><span></span><span></span>
     </button>
+  </div>
+</nav>
+
+<!-- MENU MOBILE -->
+<nav class="mobile-nav" id="mobileNav" aria-hidden="true">
+  <div class="mobile-nav-hdr">
+    <a href="/" class="nav-brand">
+      <div class="nav-logo"><span class="nav-logo-txt">FOD</span></div>
+      <div class="nav-name"><strong>FODDEB</strong></div>
+    </a>
+    <button class="mobile-close" id="mobileClose" aria-label="Fermer">&#x2715;</button>
+  </div>
+  <div class="mobile-links">
+    <a href="/">Accueil</a>
+    <a href="/pages/organes.html">Nos organes</a>
+    <a href="/pages/projets.html">Projets</a>
+    <a href="/pages/actualites.html">Actualités</a>
+    <a href="/pages/contact.html">Contact</a>
+  </div>
+  <div class="mobile-footer">
+    <a href="/#don" class="btn btn-gold">Faire un don</a>
+    <a href="/auth/login.html" class="btn btn-p">Espace membre</a>
   </div>
 </nav>
 
@@ -508,6 +530,7 @@ btt.addEventListener('click', () => { window.scrollTo({top:0,behavior:'smooth'})
 document.getElementById('hamburger');
   const mobileNav  = document.getElementById('mobileNav');
   const mobileClose = document.getElementById('mobileClose');
+  if (hamburger && mobileNav && mobileClose) {
   hamburger.addEventListener('click', () => {
     mobileNav.classList.add('open');
     mobileNav.setAttribute('aria-hidden', 'false');
@@ -520,6 +543,7 @@ document.getElementById('hamburger');
   };
   mobileClose.addEventListener('click', closeMobile);
   mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMobile));
+  } // end hamburger guard
 
   /* ═══════════════════════════════════════════════════════════════
      FADE-IN AU SCROLL

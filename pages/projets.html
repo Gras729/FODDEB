@@ -509,8 +509,23 @@ let curFilter = 'all';
 async function loadProjects() {
   showLoading(true);
   hideError();
+
+  // Afficher immédiatement les données en cache (localStorage) pendant le chargement
+  const CACHE_KEY = 'foddeb_projets_cache';
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (cached && cached.ts && Date.now() - cached.ts < CACHE_TTL && cached.data?.length) {
+      ALL_PROJECTS = cached.data;
+      showLoading(false);
+      renderGrid();
+    }
+  } catch(e) { /* cache invalide — ignorer */ }
+
   try {
     const res = await FODDEB_API.projets.list({});
+    // Mettre en cache pour le prochain chargement
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: [] })); } catch(e) {}
     ALL_PROJECTS = (res.data || []).map(p => ({
       id:            p.ID          || p.id,
       titre:         p.Titre       || p.titre       || 'Projet sans titre',
@@ -541,6 +556,8 @@ async function loadProjects() {
 
     showLoading(false);
     applyFilters();
+    // Mettre à jour le cache avec les données fraîches
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: ALL_PROJECTS })); } catch(e) {}
   } catch(err) {
     showLoading(false);
     showError('Impossible de charger les projets. ' + (err.message || ''));

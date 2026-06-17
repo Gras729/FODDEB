@@ -159,13 +159,13 @@ var FODDEB_API = window.FODDEB_API || (() => {
   const projets = {
     list: (filters = {}) => {
       /* Injection automatique membreId + role depuis session.
-       * getSession() normalise ID/id et Role/role → pas de '' silencieux. */
+       * Timeout 30s : GAS Apps Script peut avoir un cold start de 10-20s. */
       const sess = getSession();
       return request('projets_list', {
         membreId: sess ? sess.id   : '',
         role:     sess ? sess.role : 'member',
         ...filters,
-      });
+      }, 30_000);
     },
 
     get: (id) => request('projets_get', { id }),
@@ -206,7 +206,7 @@ var FODDEB_API = window.FODDEB_API || (() => {
      ACTUALITÉS
   ============================================================ */
   const news = {
-    list:    (page = 1, perPage = 10) => request('news_list', { page, perPage }),
+    list:    (page = 1, perPage = 10) => request('news_list', { page, perPage }, 30_000),
     get:     (id)       => request('news_get', { id }),
     create:  (data)     => request('news_create', data),
     update:  (id, data) => request('news_update', { id, ...data }),

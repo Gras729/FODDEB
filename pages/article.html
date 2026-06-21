@@ -450,6 +450,18 @@ function setEl(id, val) { const el=document.getElementById(id); if(el) el.textCo
 
 /* ── Lire ?id= dans l'URL ── */
 const urlParams = new URLSearchParams(window.location.search);
+/* Convertit une URL Drive (view, file/d/, ?id=) en URL thumbnail affichable dans <img> */
+function driveImgUrl(url) {
+  if (!url) return '';
+  if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
+  const m = url.match(/\/file\/d\/([^/?]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
+  const m2 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w800';
+  const m3 = url.match(/[?&]id=([^&]+)/);
+  return m3 ? 'https://drive.google.com/thumbnail?id=' + m3[1] + '&sz=w800' : url;
+}
+
 const ARTICLE_ID = urlParams.get('id') || '';
 
 /* ── Chargement article ── */
@@ -480,8 +492,10 @@ async function loadArticle() {
 
     // Hero
     if (image) {
-      document.getElementById('heroImg').src = image;
-      document.getElementById('heroImg').alt = titre;
+      const heroImgEl = document.getElementById('heroImg');
+      heroImgEl.src = driveImgUrl(image);
+      heroImgEl.alt = titre;
+      heroImgEl.onerror = () => { document.getElementById('articleHero').style.display = 'none'; document.getElementById('articleTitleFallback').style.display = 'block'; };
       setEl('heroTag',    a.Categorie || 'Actualité');
       setEl('heroTitle',  titre);
       setEl('heroAuteur', a.Auteur || 'FODDEB');

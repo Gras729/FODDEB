@@ -958,19 +958,15 @@
         );
       }
 
-      if (articles.length > 0) {
-        allArticles = articles;
-        console.info(`[FODDEB] ${articles.length} article(s) chargé(s) depuis le GAS.`);
-      } else {
-        /* GAS accessible mais aucun article publié → fallback */
-        allArticles = FALLBACK_ARTICLES;
-        console.warn('[FODDEB] Aucun article publié dans Sheets. Affichage du contenu statique.');
-      }
+      // FUSION : les nouveaux articles publiés (GAS) en premier,
+      // puis le contenu historique fixe. L'un n'efface jamais l'autre.
+      allArticles = [...articles, ...FALLBACK_ARTICLES];
+      console.info(`[FODDEB] ${articles.length} article(s) GAS + ${FALLBACK_ARTICLES.length} historique(s).`);
 
     } catch (err) {
-      /* GAS inaccessible → fallback silencieux */
+      /* GAS inaccessible → on garde au minimum l'historique fixe */
       allArticles = FALLBACK_ARTICLES;
-      console.warn('[FODDEB] news_list indisponible :', err.message, '— Affichage du contenu statique.');
+      console.warn('[FODDEB] news_list indisponible :', err.message, '— Affichage du contenu historique uniquement.');
     }
 
     /* ── Stats hero ─────────────────────────────────────────── */

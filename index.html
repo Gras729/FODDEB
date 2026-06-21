@@ -2924,55 +2924,19 @@
     /* ── Init : chargement asynchrone au DOMContentLoaded ──────── */
     document.addEventListener('DOMContentLoaded', async () => {
 
-      /* ─── Projets ─────────────────────────────────────────────
-         Appelle projets_list depuis GAS.
-         Pour les visiteurs publics, le GAS retourne uniquement
-         les projets avec Statut === 'valide'.
-         Si le GAS ne répond pas, le HTML statique reste intact.
-      ───────────────────────────────────────────────────────── */
-      try {
-        const resP = await FODDEB_API.projets.list({ limit: 6 });
-        if (resP && resP.data && resP.data.length > 0) {
-          const grid = document.getElementById('projects-grid');
-          if (grid) {
-            // Préserver le bouton "Voir tous nos projets"
-            const btnVoir = grid.querySelector('a.btn');
-            grid.innerHTML = resP.data.map(p => renderProjetCard(p)).join('');
-            if (btnVoir) grid.appendChild(btnVoir);
-          }
-        }
-      } catch (e) {
-        /* Fallback silencieux — HTML statique conservé */
-        console.warn('[FODDEB] projets_list indisponible :', e.message);
-      }
+      /* ═══════════════════════════════════════════════════════════
+         DÉCISION PRODUIT : les sections Projets et Actualités de la
+         page d'accueil sont du contenu ÉDITORIAL FIXE (projets phares
+         et actualités historiques choisis manuellement). Elles ne
+         sont plus chargées dynamiquement depuis GAS, pour ne jamais
+         écraser ce contenu de référence.
 
-      /* ─── Actualités ──────────────────────────────────────────
-         Appelle news_list depuis GAS.
-         Filtre côté client : Statut === 'publie' uniquement.
-         Si 0 résultats ou erreur, HTML statique conservé.
-      ───────────────────────────────────────────────────────── */
-      try {
-        const resN = await FODDEB_API.news.list(1, 10);
-        if (resN && resN.data) {
-          const published = resN.data.filter(a =>
-            (a.Statut || '').toLowerCase() === 'publie'
-          ).slice(0, 4);
-          if (published.length > 0) {
-            const newsGrid = document.getElementById('news-grid');
-            if (newsGrid) {
-              const [main, ...rest] = published;
-              newsGrid.innerHTML =
-                renderActuCard(main, true) +
-                (rest.length > 0
-                  ? `<div class="news-sidebar">${rest.map(a => renderActuCard(a, false)).join('')}</div>`
-                  : '');
-            }
-          }
-        }
-      } catch (e) {
-        /* Fallback silencieux — HTML statique conservé */
-        console.warn('[FODDEB] news_list indisponible :', e.message);
-      }
+         L'ensemble du contenu réellement à jour (historique fixe +
+         nouveaux projets validés / articles publiés depuis l'admin)
+         est disponible sur /pages/projets.html et
+         /pages/actualites.html, accessibles via les boutons
+         "Voir tous nos projets" / "Voir toutes les actualités".
+      ═══════════════════════════════════════════════════════════ */
 
     }); /* fin DOMContentLoaded */
   </script>

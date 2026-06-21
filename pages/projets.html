@@ -509,7 +509,66 @@ function driveEmbedUrl(url) {
 let ALL_PROJECTS = [];
 let curFilter = 'all';
 
-/* ── Chargement depuis GAS ── */
+/* ═══════════════════════════════════════════════════════════════
+   CONTENU HISTORIQUE FIXE — projets phares antérieurs à la
+   plateforme GAS. Ils ne sont jamais effacés : les nouveaux
+   projets validés (membres/admin) viennent s'AJOUTER à cette
+   liste, jamais la remplacer. IDs préfixés STATIC- pour éviter
+   tout conflit avec les IDs PR-xxxx générés par GAS.
+═══════════════════════════════════════════════════════════════ */
+const FALLBACK_PROJECTS = [
+  {
+    id: 'STATIC-001', titre: "Tribune Citoyenne pour l'accessibilité des Services de l'état civil pour tous",
+    domaine: 'Citoyenneté', dept: 'National', budget: 0, progression: 40, statut: 'en_cours',
+    beneficiaires: 0, partenaires: 'Populations vulnérables', dateDebut: '', dateFin: '',
+    description: "Renforcement de l'accès aux services d'état civil pour les populations les plus vulnérables, afin de garantir la pleine reconnaissance de leurs droits.",
+    imageURL: '', fichierURL: '', fichierNom: 'Document',
+  },
+  {
+    id: 'STATIC-002', titre: 'Renforcement de la participation citoyenne de qualité dans les Communes',
+    domaine: 'Gouvernance', dept: 'Communes cibles', budget: 0, progression: 35, statut: 'en_cours',
+    beneficiaires: 0, partenaires: 'Citoyens & OSC', dateDebut: '', dateFin: '',
+    description: "Appui à la participation active et éclairée des citoyens dans les processus de gouvernance locale pour un développement communautaire inclusif.",
+    imageURL: '', fichierURL: '', fichierNom: 'Document',
+  },
+  {
+    id: 'STATIC-003', titre: 'Renforcement de la Société Civile pour la Réalisation des Droits de l\u2019Enfant',
+    domaine: 'Protection', dept: 'National', budget: 0, progression: 100, statut: 'termine',
+    beneficiaires: 0, partenaires: 'Plan International Bénin', dateDebut: 'Juil. 2021', dateFin: 'Juin 2024',
+    description: "Projet exécuté de juillet 2021 à juin 2024 en partenariat avec Plan International Bénin. Renforcement des capacités des OSC membres sur les droits de l'enfant.",
+    imageURL: '', fichierURL: '', fichierNom: 'Document',
+  },
+  {
+    id: 'STATIC-004', titre: 'Lutte contre la prostitution et la pornographie impliquant des mineurs',
+    domaine: 'Protection', dept: 'Cotonou, Abomey-Calavi, Sèmè-Podji', budget: 0, progression: 100, statut: 'termine',
+    beneficiaires: 0, partenaires: 'CBDH / Union Européenne', dateDebut: 'Août 2022', dateFin: 'Fév. 2023',
+    description: "Projet mené d'août 2022 à février 2023 dans les villes de Cotonou, Abomey-Calavi et Sèmè-Podji. Partenariat avec la CBDH et l'Union Européenne.",
+    imageURL: '', fichierURL: '', fichierNom: 'Document',
+  },
+  {
+    id: 'STATIC-005', titre: "Renforcement de la Société Civile — Droits de l'Enfant",
+    domaine: "Droits de l'enfant", dept: 'National', budget: 0, progression: 100, statut: 'termine',
+    beneficiaires: 0, partenaires: 'Plan International Bénin', dateDebut: '2018', dateFin: '2022',
+    description: "Deux phases d'exécution : 15 août 2018 – 15 juin 2019, puis 1er janvier 2022 – 30 juin 2022. Partenariat Plan International Bénin.",
+    imageURL: '', fichierURL: '', fichierNom: 'Document',
+  },
+  {
+    id: 'STATIC-006', titre: 'Concours de production de presse — 2ème édition',
+    domaine: 'Média & Plaidoyer', dept: 'National', budget: 0, progression: 100, statut: 'termine',
+    beneficiaires: 0, partenaires: 'Journalistes & Blogueurs', dateDebut: '', dateFin: 'Annuel',
+    description: "Concours annuel valorisant les meilleures productions médiatiques (radio, blog, presse) sur la protection de l'enfant, la DSSR et l'éducation inclusive. Cérémonie de remise de prix avec les lauréats, autorités et médias.",
+    imageURL: '', fichierURL: '', fichierNom: 'Document',
+  },
+  {
+    id: 'STATIC-007', titre: 'Elle Inspire — Autonomisation des filles et jeunes femmes',
+    domaine: 'Autonomisation', dept: 'Donga & autres', budget: 0, progression: 100, statut: 'termine',
+    beneficiaires: 0, partenaires: 'Filles & Jeunes femmes', dateDebut: '', dateFin: '',
+    description: "Initiative de sensibilisation, de mentoring et d'accompagnement des adolescentes et jeunes filles vers l'autonomisation, la leadership et l'agentivité. Mise en place dans les départements cibles avec soutien des autorités.",
+    imageURL: '', fichierURL: '', fichierNom: 'Document',
+  },
+];
+
+/* ── Chargement depuis GAS — FUSION avec l'historique, jamais de remplacement total ── */
 async function loadProjects() {
   showLoading(true);
   hideError();
@@ -528,7 +587,7 @@ async function loadProjects() {
 
   try {
     const res = await FODDEB_API.projets.list({});
-    ALL_PROJECTS = (res.data || []).map(p => ({
+    const gasProjects = (res.data || []).map(p => ({
       id:            p.ID          || p.id,
       titre:         p.Titre       || p.titre       || 'Projet sans titre',
       domaine:       p.Domaine     || p.domaine     || '',
@@ -542,11 +601,13 @@ async function loadProjects() {
       dateFin:       fmtDate(p.DateFin    || p.dateFin    || ''),
       description:   p.Description || p.description || '',
       imageURL:      p.ImageURL    || p.imageURL    || '',
-      // FIX 2 : fichierURL ajouté dans l'objet mappé — était absent
       fichierURL:    p.FichierURL  || p.fichierURL  || '',
       fichierNom:    p.FichierNom  || p.fichierNom  || 'Document',
-      // driveImgUrl() est maintenant une fonction top-level utilisable partout
     }));
+
+    // FUSION : les nouveaux projets validés (GAS) en premier, puis l'historique fixe.
+    // Aucun des deux ensembles n'efface l'autre.
+    ALL_PROJECTS = [...gasProjects, ...FALLBACK_PROJECTS];
 
     // Stats hero
     const total = ALL_PROJECTS.length;
@@ -558,12 +619,14 @@ async function loadProjects() {
 
     showLoading(false);
     applyFilters();
-    // Mettre à jour le cache avec les données fraîches
+    // Mettre à jour le cache avec les données fraîches (fusionnées)
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: ALL_PROJECTS })); } catch(e) {}
   } catch(err) {
+    // GAS inaccessible → on garde au minimum l'historique fixe, jamais une page vide
+    ALL_PROJECTS = FALLBACK_PROJECTS;
     showLoading(false);
-    showError('Impossible de charger les projets. ' + (err.message || ''));
-    console.error('loadProjects:', err);
+    applyFilters();
+    console.warn('[FODDEB] projets_list indisponible :', err.message, '— Affichage du contenu historique uniquement.');
   }
 }
 

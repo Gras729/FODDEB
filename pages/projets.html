@@ -524,8 +524,6 @@ async function loadProjects() {
 
   try {
     const res = await FODDEB_API.projets.list({});
-    // Mettre en cache pour le prochain chargement
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: [] })); } catch(e) {}
     ALL_PROJECTS = (res.data || []).map(p => ({
       id:            p.ID          || p.id,
       titre:         p.Titre       || p.titre       || 'Projet sans titre',

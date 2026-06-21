@@ -471,9 +471,13 @@ const fmtDate = d => {
 //          placée DANS l'objet littéral du .map(), ce qui causait le SyntaxError
 function driveImgUrl(url) {
   if (!url) return '';
-  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (!m) return url;
-  return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w800`;
+  if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
+  const m = url.match(/\/file\/d\/([^/?]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
+  const m2 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w800';
+  const m3 = url.match(/[?&]id=([^&]+)/);
+  return m3 ? 'https://drive.google.com/thumbnail?id=' + m3[1] + '&sz=w800' : url;
 }
 
   function openDocViewer(url, nom) {
@@ -610,11 +614,11 @@ function renderGrid(projects) {
     //          — était flottant APRÈS grid.innerHTML en dehors du scope de `p`
    // Après (les deux coexistent)
 const fichierLink = `
-  <a href="/#don" class="proj-link">
+  <a href="/#don" class="proj-link" onclick="event.stopPropagation()">
     Soutenir <iconify-icon icon="mdi:arrow-right"></iconify-icon>
   </a>
   ${p.fichierURL
-    ? `<button onclick="openDocViewer('${p.fichierURL}','${p.fichierNom}')"
+    ? `<button onclick="event.stopPropagation();openDocViewer('${p.fichierURL}','${p.fichierNom}')"
    class="proj-link" style="background:none;border:none;cursor:pointer;margin-left:8px">
    <iconify-icon icon="mdi:file-document-outline"></iconify-icon>Document
  </button>`

@@ -2893,7 +2893,7 @@
           <div class="news-main">
             <div class="news-main-img" aria-hidden="true" style="background:linear-gradient(135deg,#C62828 0%,#FF6B6B 100%)">
               ${a.Image
-                ? `<img src="${a.Image}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" onerror="this.remove()">`
+                ? `<img src="${driveImgUrl(a.Image)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" onerror="this.remove()">`
                 : `<iconify-icon icon="mdi:newspaper-variant-outline" width="48" style="color:rgba(255,255,255,.4)"></iconify-icon>`}
               <span style="font-size:13px;color:rgba(255,255,255,.6)">${a.Categorie || 'Actualité'}</span>
             </div>
@@ -2925,18 +2925,93 @@
     document.addEventListener('DOMContentLoaded', async () => {
 
       /* ═══════════════════════════════════════════════════════════
-         DÉCISION PRODUIT : les sections Projets et Actualités de la
-         page d'accueil sont du contenu ÉDITORIAL FIXE (projets phares
-         et actualités historiques choisis manuellement). Elles ne
-         sont plus chargées dynamiquement depuis GAS, pour ne jamais
-         écraser ce contenu de référence.
-
-         L'ensemble du contenu réellement à jour (historique fixe +
-         nouveaux projets validés / articles publiés depuis l'admin)
-         est disponible sur /pages/projets.html et
-         /pages/actualites.html, accessibles via les boutons
-         "Voir tous nos projets" / "Voir toutes les actualités".
+         VITRINE ACCUEIL : les nouveaux projets validés / articles
+         publiés (GAS) s'affichent en tête, complétés par un
+         échantillon du contenu historique fixe déjà présent dans
+         le HTML. Aucun des deux n'efface l'autre — on PREPEND les
+         nouveaux résultats, puis on limite le total affiché.
+         La liste complète (historique + nouveautés) reste toujours
+         disponible sur /pages/projets.html et /pages/actualites.html.
       ═══════════════════════════════════════════════════════════ */
+
+      const MAX_PROJETS_ACCUEIL = 6;
+      const MAX_ACTUS_ACCUEIL   = 5; // 1 principale + 4 secondaires
+
+      /* ─── Projets ─────────────────────────────────────────────
+         Appelle projets_list depuis GAS (visiteur public → uniquement
+         Statut === 'valide'). Les nouveaux projets sont insérés
+         AVANT les cartes historiques déjà présentes dans le HTML,
+         puis le total est limité à MAX_PROJETS_ACCUEIL.
+      ───────────────────────────────────────────────────────── */
+      try {
+        const resP = await FODDEB_API.projets.list({ limit: MAX_PROJETS_ACCUEIL });
+        if (resP && resP.data && resP.data.length > 0) {
+          const grid = document.getElementById('projects-grid');
+          if (grid) {
+            const btnVoir = grid.querySelector('a.btn');
+            const newCardsHtml = resP.data.map(p => renderProjetCard(p)).join('');
+
+            // Construire un conteneur temporaire pour insérer les nouvelles cartes en tête
+            const temp = document.createElement('div');
+            temp.innerHTML = newCardsHtml;
+            const newCards = Array.from(temp.children);
+
+            // Insérer chaque nouvelle carte en tête de grille (avant la première carte existante)
+            const firstExisting = grid.querySelector('.project-card');
+            newCards.reverse().forEach(card => {
+              if (firstExisting) grid.insertBefore(card, firstExisting);
+              else grid.insertBefore(card, btnVoir || null);
+            });
+
+            // Limiter le total affiché — retirer les cartes excédentaires en fin de liste
+            const allCards = Array.from(grid.querySelectorAll('.project-card'));
+            allCards.slice(MAX_PROJETS_ACCUEIL).forEach(c => c.remove());
+
+            // S'assurer que le bouton "Voir tous nos projets" reste en dernière position
+            if (btnVoir) grid.appendChild(btnVoir);
+          }
+        }
+      } catch (e) {
+        /* GAS inaccessible → le contenu historique fixe reste affiché tel quel */
+        console.warn('[FODDEB] projets_list indisponible :', e.message, '— Affichage du contenu historique uniquement.');
+      }
+
+      /* ─── Actualités ──────────────────────────────────────────
+         Appelle news_list depuis GAS. Filtre Statut === 'publie'.
+         Les nouveaux articles passent en tête (le plus récent
+         devient l'article "principal"), le reste de l'historique
+         fixe vient compléter en cartes secondaires.
+      ───────────────────────────────────────────────────────── */
+      try {
+        const resN = await FODDEB_API.news.list(1, 10);
+        if (resN && resN.data) {
+          const published = resN.data.filter(a =>
+            (a.Statut || '').toLowerCase() === 'publie'
+          );
+          if (published.length > 0) {
+            const newsGrid = document.getElementById('news-grid');
+            if (newsGrid) {
+              // Conserver les cartes secondaires historiques déjà en place
+              const existingSmallCards = Array.from(newsGrid.querySelectorAll('.news-small'));
+              const [newMain, ...newRest] = published;
+
+              const slotsRestants = Math.max(0, MAX_ACTUS_ACCUEIL - 1 - newRest.length);
+              const keptHistorical = existingSmallCards.slice(0, slotsRestants);
+
+              newsGrid.innerHTML =
+                renderActuCard(newMain, true) +
+                `<div class="news-sidebar">
+                  ${newRest.map(a => renderActuCard(a, false)).join('')}
+                  ${keptHistorical.map(el => el.outerHTML).join('')}
+                </div>`;
+            }
+          }
+          /* Si aucun article publié côté GAS, le contenu historique fixe reste intact */
+        }
+      } catch (e) {
+        /* GAS inaccessible → le contenu historique fixe reste affiché tel quel */
+        console.warn('[FODDEB] news_list indisponible :', e.message, '— Affichage du contenu historique uniquement.');
+      }
 
     }); /* fin DOMContentLoaded */
   </script>

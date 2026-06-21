@@ -547,16 +547,19 @@ function copyLink() {
   });
 }
 
+
 /* ── Back to top ── */
 const btt = document.getElementById('backToTop');
-window.addEventListener('scroll', () => { btt.classList.toggle('visible', window.scrollY > 300); });
-btt.addEventListener('click', () => { window.scrollTo({top:0,behavior:'smooth'}); });
+if (btt) {
+  window.addEventListener('scroll', () => { btt.classList.toggle('visible', window.scrollY > 300); });
+  btt.addEventListener('click', () => { window.scrollTo({top:0,behavior:'smooth'}); });
+}
 
-/* ── Hamburger ── */
-document.getElementById('hamburger');
-  const mobileNav  = document.getElementById('mobileNav');
-  const mobileClose = document.getElementById('mobileClose');
-  if (hamburger && mobileNav && mobileClose) {
+/* ── Menu mobile (hamburger) ── */
+const hamburger   = document.getElementById('hamburger');
+const mobileNav   = document.getElementById('mobileNav');
+const mobileClose = document.getElementById('mobileClose');
+if (hamburger && mobileNav && mobileClose) {
   hamburger.addEventListener('click', () => {
     mobileNav.classList.add('open');
     mobileNav.setAttribute('aria-hidden', 'false');
@@ -569,183 +572,7 @@ document.getElementById('hamburger');
   };
   mobileClose.addEventListener('click', closeMobile);
   mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMobile));
-  } // end hamburger guard
-
-  /* ═══════════════════════════════════════════════════════════════
-     FADE-IN AU SCROLL
-  ═══════════════════════════════════════════════════════════════ */
-  const fadeObserver = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); fadeObserver.unobserve(e.target); } });
-  }, { threshold: 0.08 });
-  document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
-
-  /* ═══════════════════════════════════════════════════════════════
-     FALLBACK STATIQUE
-     Données réelles FODDEB — affichées si le GAS ne répond pas.
-     TODO : ces données viendront uniquement du GAS une fois les
-            feuilles Google Sheets renseignées (Statut = 'publie').
-  ═══════════════════════════════════════════════════════════════ */
-  const FALLBACK_ARTICLES = [
-    {
-      ID: 'ART-STATIC-001',
-      Titre: 'Cérémonie de remise de prix — 2ème édition du Concours de presse',
-      Categorie: 'Plaidoyer',
-      Excerpt: 'Le FODDEB a organisé la cérémonie de remise de prix de sa 2ème édition du concours de la meilleure production de presse liée aux thématiques de la protection de l\'enfant, des droits en matière de santé sexuelle et reproductive (DSSR), et de l\'éducation inclusive.',
-      Contenu: 'Le FODDEB a organisé la cérémonie de remise de prix de sa 2ème édition du concours de la meilleure production de presse liée aux thématiques de la protection de l\'enfant, des droits en matière de santé sexuelle et reproductive (DSSR), et de l\'éducation inclusive. Cette initiative récompense les journalistes et blogueurs engagés pour la promotion des droits des enfants au Bénin.\n\nLa cérémonie a réuni lauréats, autorités et représentants des médias partenaires dans une ambiance festive et engagée pour les droits de l\'enfant.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-12-15',
-      Statut: 'publie',
-      Tags: 'Concours,Presse,Droits de l\'enfant',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-002',
-      Titre: 'Sensibilisation des adolescentes sur les violences en ligne — Abomey-Calavi',
-      Categorie: 'Activité',
-      Excerpt: 'Atelier de sensibilisation à destination des adolescentes sur les risques liés aux violences en ligne et à la cybermaltraitance, organisé à Abomey-Calavi dans le cadre du programme de protection de l\'enfance.',
-      Contenu: 'Atelier de sensibilisation à destination des adolescentes sur les risques liés aux violences en ligne et à la cybermaltraitance, organisé à Abomey-Calavi dans le cadre du programme de protection de l\'enfance.\n\nDes facilitatrices formées par le FODDEB ont animé des sessions interactives abordant l\'utilisation sécurisée des réseaux sociaux, la signalisation des contenus dangereux et les recours disponibles en cas de violence.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-11-20',
-      Statut: 'publie',
-      Tags: 'Sensibilisation,Adolescentes,Violences en ligne',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-003',
-      Titre: 'Elle Inspire — Autonomisation des filles et jeunes femmes, Donga',
-      Categorie: 'Autonomisation',
-      Excerpt: 'Initiative de sensibilisation, de mentoring et d\'accompagnement des adolescentes et jeunes filles vers l\'autonomisation, le leadership et l\'agentivité, mise en place dans le département de la Donga.',
-      Contenu: 'Initiative de sensibilisation, de mentoring et d\'accompagnement des adolescentes et jeunes filles vers l\'autonomisation, le leadership et l\'agentivité, mise en place dans le département de la Donga avec le soutien des autorités locales.\n\nLe programme Elle Inspire vise à renforcer la confiance en soi des jeunes filles, à les outiller en compétences de vie et à leur ouvrir des perspectives d\'avenir à travers des témoignages de femmes inspirantes.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-10-05',
-      Statut: 'publie',
-      Tags: 'Filles,Leadership,Autonomisation',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-004',
-      Titre: 'Rencontre semestrielle — Coordination départementale de l\'Ouémé',
-      Categorie: 'Gouvernance',
-      Excerpt: 'Réunion semestrielle de la coordination départementale de l\'Ouémé regroupant les OSC membres du FODDEB pour faire le bilan des activités et planifier les prochaines interventions.',
-      Contenu: 'Réunion semestrielle de la coordination départementale de l\'Ouémé regroupant les OSC membres du FODDEB pour faire le bilan des activités et planifier les prochaines interventions.\n\nCette rencontre a permis de consolider les liens entre les organisations membres, de partager les bonnes pratiques et de coordonner les actions sur le terrain pour une meilleure protection des enfants dans la région.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-09-12',
-      Statut: 'publie',
-      Tags: 'Coordination,Ouémé,OSC',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-005',
-      Titre: 'Séance d\'entretien — Délégation FODDEB avec le Garde des Sceaux',
-      Categorie: 'Plaidoyer',
-      Excerpt: 'La délégation du FODDEB a été reçue par le Ministre de la Justice pour aborder les questions relatives à la mise en œuvre effective des droits de l\'enfant et au renforcement du cadre juridique de protection.',
-      Contenu: 'La délégation du FODDEB a été reçue par le Ministre de la Justice — Garde des Sceaux à Cotonou, pour aborder les questions relatives à la mise en œuvre effective des droits de l\'enfant et au renforcement du cadre juridique de protection.\n\nLes échanges ont porté sur la révision de certaines dispositions légales, l\'accès à la justice pour les enfants victimes et les mécanismes de coordination entre la société civile et les institutions judiciaires.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-08-28',
-      Statut: 'publie',
-      Tags: 'Plaidoyer,Justice,Institutions',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-006',
-      Titre: 'Atelier de renforcement de partenariat — Plan International Bénin',
-      Categorie: 'Formation',
-      Excerpt: 'Atelier organisé conjointement par le FODDEB et Plan International Bénin pour renforcer le partenariat stratégique et présenter les nouvelles orientations programmatiques en faveur des enfants.',
-      Contenu: 'Atelier organisé conjointement par le FODDEB et Plan International Bénin pour renforcer le partenariat stratégique et présenter les nouvelles orientations programmatiques 2025-2028 en faveur des enfants du Bénin.\n\nLes participants — représentants d\'OSC membres et équipes de Plan International — ont travaillé sur les mécanismes de collaboration, les indicateurs de suivi et les modalités de mise en œuvre des projets communs.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-07-18',
-      Statut: 'publie',
-      Tags: 'Plan International,Partenariat,Formation',
-      Image: '',
-    },
-  ];
-
-  /* ═══════════════════════════════════════════════════════════════
-     CHARGEMENT PRINCIPAL — GAS avec fallback statique
-     ─────────────────────────────────────────────────────────────
-     1. Appel FODDEB_API.news.list() → GAS
-     2. Filtre Statut === 'publie'
-     3. Si 0 résultat ou erreur → FALLBACK_ARTICLES
-     4. Mise à jour stats hero, pills catégories, grille
-  ═══════════════════════════════════════════════════════════════ */
-  async function loadActualites() {
-    const grid = document.getElementById('newsGrid');
-
-    try {
-      /* ── Appel GAS ──────────────────────────────────────────── */
-      const res = await FODDEB_API.news.list(1, 100);
-
-      let articles = [];
-      if (res && res.data && Array.isArray(res.data)) {
-        // Filtrer uniquement les articles publiés
-        articles = res.data.filter(a =>
-          (a.Statut || '').toString().trim().toLowerCase() === 'publie'
-        );
-      }
-
-      if (articles.length > 0) {
-        allArticles = articles;
-        console.info(`[FODDEB] ${articles.length} article(s) chargé(s) depuis le GAS.`);
-      } else {
-        /* GAS accessible mais aucun article publié → fallback */
-        allArticles = FALLBACK_ARTICLES;
-        console.warn('[FODDEB] Aucun article publié dans Sheets. Affichage du contenu statique.');
-      }
-
-    } catch (err) {
-      /* GAS inaccessible → fallback silencieux */
-      allArticles = FALLBACK_ARTICLES;
-      console.warn('[FODDEB] news_list indisponible :', err.message, '— Affichage du contenu statique.');
-    }
-
-    /* ── Stats hero ─────────────────────────────────────────── */
-    const hsArticles = document.getElementById('hsArticles');
-    if (hsArticles) hsArticles.textContent = allArticles.length;
-
-    /* ── Pills catégories ───────────────────────────────────── */
-    buildCatPills(allArticles);
-
-    /* ── Aperçu hero (3 premiers articles) ─────────────────── */
-    const preview = document.getElementById('heroPreview');
-    if (preview && allArticles.length > 0) {
-      preview.innerHTML = allArticles.slice(0, 3).map(a => `
-        <div class="hnp-card">
-          <div class="hnp-icon">
-            <iconify-icon icon="${getIcon(a.Categorie)}" width="18"></iconify-icon>
-          </div>
-          <div>
-            <div class="hnp-cat">${a.Categorie || 'Actualité'}</div>
-            <div class="hnp-title">${a.Titre || ''}</div>
-            <div class="hnp-date">${a.DatePublication
-              ? FODDEB.formatDate(a.DatePublication, { month: 'long', year: 'numeric' })
-              : ''}</div>
-          </div>
-        </div>`).join('');
-    }
-
-    /* ── Filtrer + rendre la grille ─────────────────────────── */
-    filtered = [...allArticles];
-    grid.classList.add('visible');
-    renderGrid();
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     RECHERCHE AVEC DEBOUNCE
-  ═══════════════════════════════════════════════════════════════ */
-  document.getElementById('searchInput').addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(applyFilters, 300);
-  });
-
-  /* ═══════════════════════════════════════════════════════════════
-     INIT
-  ═══════════════════════════════════════════════════════════════ */
-  document.addEventListener('DOMContentLoaded', loadActualites);
-
-  /* PWA Service Worker */
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
-  }
+}
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', loadArticle);

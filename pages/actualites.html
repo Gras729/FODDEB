@@ -687,7 +687,7 @@
       const matchCat = currentCat === 'tous' || (a.Categorie || '').toLowerCase() === currentCat.toLowerCase();
       if (!matchCat) return false;
       if (!query) return true;
-      const hay = [a.Titre, a.Excerpt, a.Contenu, a.Tags].join(' ').toLowerCase();
+      const hay = [a.Titre, a.Excerpt, a.Tags].join(' ').toLowerCase();
       return hay.includes(query);
     });
     currentPage = 1;

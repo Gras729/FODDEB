@@ -318,7 +318,7 @@
             <div class="fg"><label class="fl">Titre <span class="req">*</span></label><input type="text" id="qTitle" class="fi" placeholder="Titre de l'article"/></div>
             <div class="fg"><label class="fl">Catégorie</label>
               <select id="qCat" class="fsel">
-                <option>Actualite</option><option>Projet</option><option>Evenement</option><option>Communique</option><option>Rapport</option>
+                <option>Actualité</option><option>Projet</option><option>Evenement</option><option>Communique</option><option>Rapport</option>
               </select>
             </div>
             <div class="fg"><label class="fl">Résumé</label><textarea id="qExcerpt" class="fta" style="min-height:70px" placeholder="Résumé (2-3 lignes)..."></textarea></div>
@@ -367,7 +367,7 @@
       <div class="mfr">
         <div class="fg"><label class="fl">Catégorie</label>
           <select id="mCat" class="fsel">
-            <option>Actualite</option><option>Projet</option><option>Evenement</option><option>Communique</option><option>Rapport</option>
+            <option>Actualité</option><option>Projet</option><option>Evenement</option><option>Communique</option><option>Rapport</option>
           </select>
         </div>
         <div class="fg"><label class="fl">Statut</label>
@@ -529,7 +529,7 @@ async function loadArticles() {
     ALL_ARTS  = (res.data || []).map(a => ({
       ID:              a.ID              || a.id              || '',
       Titre:           a.Titre           || a.titre           || '—',
-      Categorie:       a.Categorie       || a.categorie       || 'Actualite',
+      Categorie:       a.Categorie       || a.categorie       || 'Actualité',
       Excerpt:         a.Excerpt         || a.excerpt         || '',
       // Contenu n'est PAS chargé en liste — trop lourd ; récupéré depuis le Doc à l'édition
       Auteur:          a.Auteur          || a.auteur          || 'Équipe FODDEB',

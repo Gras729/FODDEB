@@ -435,56 +435,57 @@
 <script src="/assets/js/services/api.js"></script>
 <script src="/assets/js/services/auth.js"></script>
 <script>
+
 'use strict';
 
 /* ═══ CONFIG ═══ */
-const COLORS = ['#1B5E20','#1565C0','#6A1B9A','#C62828','#E65100','#00695C','#F57F17'];
-const DOM_ICONS = {
-  'Protection de l\'enfant':'mdi:shield-account-outline',
-  'Education et Formation':'mdi:school-outline',
-  'Sante':'mdi:heart-plus-outline',
-  'Numerique et TIC':'mdi:laptop-outline',
-  'Developpement local':'mdi:home-group',
-  'Environnement et Climat':'mdi:leaf-outline',
-};
 const STATUS_CFG = {
-  soumis:    { label:'Soumis',       cls:'bg-n', color:'var(--gr4)', icon:'mdi:send-circle-outline' },
-  planifie:  { label:'Planifie',     cls:'bg-w', color:'#92400E',   icon:'mdi:clock-outline' },
-  en_cours:  { label:'En cours',     cls:'bg-s', color:'var(--g7)', icon:'mdi:play-circle-outline' },
-  en_attente:{ label:'En attente',   cls:'bg-w', color:'#D97706',   icon:'mdi:clock-alert-outline' },
-  suspendu:  { label:'Suspendu',     cls:'bg-d', color:'var(--red)',icon:'mdi:pause-circle-outline' },
-  termine:   { label:'Termine',      cls:'bg-i', color:'var(--blue)',icon:'mdi:check-circle-outline' },
-  valide:    { label:'Valide',       cls:'bg-s', color:'var(--g7)', icon:'mdi:check-decagram-outline' },
-  rejete:    { label:'Rejete',       cls:'bg-d', color:'var(--red)',icon:'mdi:close-circle-outline' },
-  a_revoir:  { label:'A revoir',     cls:'bg-w', color:'#D97706',   icon:'mdi:refresh-circle' },
+  planifie:  { label:'Planifié',   cls:'bg-w', color:'#92400E', icon:'mdi:clock-outline' },
+  en_cours:  { label:'En cours',   cls:'bg-s', color:'var(--g7)', icon:'mdi:play-circle-outline' },
+  suspendu:  { label:'Suspendu',   cls:'bg-e', color:'var(--red)', icon:'mdi:pause-circle-outline' },
+  termine:   { label:'Terminé',    cls:'bg-b', color:'var(--blue)', icon:'mdi:check-circle-outline' },
+  soumis:    { label:'Soumis',     cls:'bg-n', color:'var(--gr4)', icon:'mdi:send-outline' },
+  a_revoir:  { label:'À revoir',   cls:'bg-w', color:'#92400E', icon:'mdi:alert-circle-outline' },
 };
-
-// Transitions autorisées par statut courant — guide l'admin
 const STATUS_TRANSITIONS = {
-  soumis:     ['planifie','en_cours','a_revoir','rejete'],
-  planifie:   ['en_cours','en_attente','suspendu','rejete'],
-  en_cours:   ['en_attente','suspendu','termine','a_revoir'],
-  en_attente: ['en_cours','planifie','suspendu'],
-  suspendu:   ['en_cours','planifie','rejete'],
-  termine:    ['en_cours','valide'],
-  a_revoir:   ['soumis','planifie','rejete'],
-  valide:     ['en_cours'],
-  rejete:     ['planifie'],
+  soumis:   ['planifie', 'a_revoir', 'en_cours'],
+  planifie: ['en_cours', 'suspendu', 'a_revoir'],
+  en_cours: ['suspendu', 'termine', 'a_revoir'],
+  suspendu: ['en_cours', 'planifie', 'a_revoir'],
+  termine:  ['en_cours'],
+  a_revoir: ['planifie', 'en_cours', 'soumis'],
 };
+const DOM_ICONS = {
+  'Éducation':'mdi:school-outline', 'Santé':'mdi:hospital-box-outline',
+  'Agriculture':'mdi:sprout-outline', 'Eau':'mdi:water-outline',
+  'Infrastructure':'mdi:road-variant', 'Genre':'mdi:gender-male-female',
+  'Gouvernance':'mdi:gavel', 'Environnement':'mdi:leaf-outline',
+};
+const PALETTE = ['#1B5E20','#1565C0','#F57F17','#6A1B9A','#00695C','#BF360C','#0D47A1','#1A237E'];
+const gc      = i => PALETTE[i % PALETTE.length];
+const fmtD    = d => { try { return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); } catch { return d||'—'; } };
+const fmtM    = v => { const n=parseFloat(v)||0; return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'k':n.toLocaleString('fr-FR'); };
+const fmtF    = v => { const n=parseFloat(v)||0; return n.toLocaleString('fr-FR'); };
 
-const go    = url => window.location.href = url;
-const fmtF  = n => Number(n||0).toLocaleString('fr-FR') + ' FCFA';
-const fmtM  = n => (parseFloat(n||0)/1000000).toFixed(1) + ' M';
-const fmtD  = d => { try { return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); } catch { return d||'—'; } };
-const gc    = i => COLORS[i % COLORS.length];
+/* ═══ ÉTAT ═══ */
+let ALL      = [];
+let FILT     = [];
+let curTab   = 'all';
+let curView  = 'kanban';
 
-/* ═══ ETAT ═══ */
-let ALL    = [];
-let FILT   = [];
-let curTab = 'all';
-let curView= 'kanban';
+// État fichiers uploadés — URLs Drive résolues AVANT la sauvegarde du formulaire
+let _uploadedImageURL   = '';
+let _uploadedFichierURL = '';
+let _uploadedFichierNom = '';
+let _uploadingImage     = false;
+let _uploadingFichier   = false;
 
-/* ═══ GUARD SESSION ═══ */
+// État Doc courant
+let _currentProjetId  = null;
+let _currentDocId     = null;
+let _currentDocUrl    = null;
+
+/* ═══ SESSION ═══ */
 function getUser() { try { return JSON.parse(sessionStorage.getItem('foddeb_user')); } catch { return null; } }
 function requireAdmin() {
   const u = getUser();
@@ -493,18 +494,20 @@ function requireAdmin() {
   return u;
 }
 function loadUserInfo() {
-  const u = getUser() || {};
-  const p = u.Prenom || u.prenom || 'Admin';
-  const n = u.Nom    || u.nom    || '';
-  const r = u.role   || 'admin';
-  const i = ((p[0]||'')+(n[0]||'')).toUpperCase()||'AD';
-  const rl= {admin:'Super Admin',manager:'Gestionnaire',member:'Membre',donor:'Donateur'}[r]||r;
+  const u  = getUser() || {};
+  const p  = u.Prenom || u.prenom || 'Admin';
+  const n  = u.Nom    || u.nom    || '';
+  const r  = u.role   || 'admin';
+  const i  = ((p[0]||'')+(n[0]||'')).toUpperCase()||'AD';
+  const rl = {admin:'Super Admin',manager:'Gestionnaire',member:'Membre',donor:'Donateur'}[r]||r;
   ['sbAv','hdrAv'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=i;});
   ['sbName','hdrName'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p+' '+n;});
   ['sbRole','hdrRole'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=rl;});
 }
 
-/* ═══ CHARGEMENT API GAS ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   CHARGEMENT — mappe DocID + DocURL depuis GAS
+   ═══════════════════════════════════════════════════════════════ */
 async function loadProjets() {
   document.getElementById('loadingState').style.display = 'block';
   document.getElementById('kanbanView').style.display   = 'none';
@@ -512,63 +515,64 @@ async function loadProjets() {
   document.getElementById('errorState').style.display   = 'none';
 
   try {
-    const u = getUser() || {};
-    // Override explicite : getSession() dans api.js peut retourner null si FODDEB.session
-    // n'est pas initialisé dans les pages admin. On force role + membreId ici.
+    const u   = getUser() || {};
     const res = await FODDEB_API.projets.list({
       role:     u.role || 'admin',
       membreId: u.ID   || u.id   || '',
       limit:    500,
     });
-    // Log debug temporaire — à retirer après vérification
-    console.log('[FODDEB projets] role:', u.role, '| membreId:', u.ID || u.id, '| res:', res);
+
     ALL = (res.data || []).map(p => ({
-      ID:           p.ID           || p.id           || '',
-      Titre:        p.Titre        || p.titre        || '—',
-      Domaine:      p.Domaine      || p.domaine      || '—',
-      Departement:  p.Departement  || p.departement  || '—',
-      Budget:       parseFloat(p.Budget       || p.budget       || 0),
-      Depense:      parseFloat(p.Depense      || p.depense      || 0),
-      Progression:  parseInt(p.Progression   || p.progression   || 0),
-      Statut:       (function(s) {
-        // Normaliser : minuscules + sans accents + espaces → underscores
-        // Couvre : 'En cours', 'en_cours', 'planifié', 'planifie', 'validé', 'soumis', 'suspendu', 'terminé', 'termine'
-        if (!s) return 'planifie';
-        var n = s.toString().trim().toLowerCase()
-          .normalize('NFD').replace(/[̀-ͯ]/g, '')
-          .replace(/\s+/g, '_');
-        // Alias : 'soumis' et 'valide' → 'planifie' pour l'affichage kanban
-        if (n === 'soumis' || n === 'a_revoir') return 'planifie';
-        if (n === 'valide') return 'en_cours';
-        return n;
-      })(p.Statut || p.statut),
-      Responsable:  p.Responsable  || p.responsable  || '—',
-      Partenaires:  p.Partenaires  || p.partenaires  || '—',
-      DateDebut:    p.DateDebut    || p.dateDebut    || '',
-      DateFin:      p.DateFin      || p.dateFin      || '',
-      Beneficiaires:parseInt(p.Beneficiaires || p.beneficiaires || 0),
-      Description:  p.Description  || p.description  || '',
-      Objectifs:    p.Objectifs    || p.objectifs    || '',
-      ImageURL:     p.ImageURL     || p.imageURL     || '',
-      FichierURL:   p.FichierURL   || p.fichierURL   || '',
-      FichierNom:   p.FichierNom   || p.fichierNom   || '',
-      MembreID:     p.MembreID     || p.membreId     || '',
+      ID:            p.ID            || p.id            || '',
+      Titre:         p.Titre         || p.titre         || '—',
+      Domaine:       p.Domaine       || p.domaine       || '—',
+      Departement:   p.Departement   || p.departement   || '—',
+      Budget:        parseFloat(p.Budget        || p.budget        || 0),
+      Depense:       parseFloat(p.Depense       || p.depense       || 0),
+      Progression:   parseInt(p.Progression    || p.progression    || 0),
+      Statut:        _normaliseStatut(p.Statut  || p.statut),
+      Responsable:   p.Responsable   || p.responsable   || '—',
+      Partenaires:   p.Partenaires   || p.partenaires   || '—',
+      DateDebut:     p.DateDebut     || p.dateDebut     || '',
+      DateFin:       p.DateFin       || p.dateFin       || '',
+      Beneficiaires: parseInt(p.Beneficiaires || p.beneficiaires || 0),
+      Description:   p.Description   || p.description   || '',
+      Objectifs:     p.Objectifs     || p.objectifs     || '',
+      ImageURL:      p.ImageURL      || p.imageURL      || '',
+      FichierURL:    p.FichierURL    || p.fichierURL    || '',
+      FichierNom:    p.FichierNom    || p.fichierNom    || '',
+      MembreID:      p.MembreID      || p.membreId      || '',
+      // Champs Google Docs
+      DocID:         p.DocID         || '',
+      DocURL:        p.DocURL        || '',
     }));
+
     updateStats();
     applyFilters();
-  } catch(e) {
+  } catch (e) {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('errorState').style.display   = 'block';
     document.getElementById('errorMsg').textContent = e.message || 'Impossible de contacter le serveur.';
-    console.error('loadProjets:', e);
+    console.error('[loadProjets]', e);
   }
+}
+
+function _normaliseStatut(s) {
+  if (!s) return 'planifie';
+  const n = s.toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '_');
+  if (n === 'soumis')   return 'soumis';
+  if (n === 'a_revoir') return 'a_revoir';
+  if (n === 'valide')   return 'en_cours';
+  return n;
 }
 
 /* ═══ STATS ═══ */
 function updateStats() {
   document.getElementById('sAll').textContent  = ALL.length;
   document.getElementById('sAct').textContent  = ALL.filter(p=>p.Statut==='en_cours').length;
-  document.getElementById('sPlan').textContent = ALL.filter(p=>p.Statut==='planifie').length;
+  document.getElementById('sPlan').textContent = ALL.filter(p=>['planifie','soumis'].includes(p.Statut)).length;
   document.getElementById('sDone').textContent = ALL.filter(p=>p.Statut==='termine').length;
   const total = ALL.reduce((s,p)=>s+p.Budget,0);
   document.getElementById('sBudg').textContent = fmtM(total) + ' F';
@@ -609,14 +613,15 @@ function renderKanban() {
   document.getElementById('kanbanView').style.display = 'block';
   document.getElementById('tableView').style.display  = 'none';
   const cols = [
-    { key:'planifie', label:'Planifie',  color:'#92400E' },
+    { key:'soumis',   label:'Soumis',   color:'var(--gr4)' },
+    { key:'planifie', label:'Planifié',  color:'#92400E' },
     { key:'en_cours', label:'En cours',  color:'var(--g7)' },
     { key:'suspendu', label:'Suspendu',  color:'var(--red)' },
-    { key:'termine',  label:'Termine',   color:'var(--blue)' },
+    { key:'termine',  label:'Terminé',   color:'var(--blue)' },
   ];
   document.getElementById('kanbanBoard').innerHTML = cols.map(col => {
-    const items = FILT.filter(p=>p.Statut===col.key);
-    const stCfg = STATUS_CFG[col.key] || {};
+    const items  = FILT.filter(p=>p.Statut===col.key);
+    const stCfg  = STATUS_CFG[col.key] || {};
     return `
     <div class="kb-col">
       <div class="kb-col-hdr">
@@ -627,18 +632,22 @@ function renderKanban() {
         <span class="kb-count">${items.length}</span>
       </div>
       ${items.map(p => {
-        const color = gc(ALL.indexOf(p));
-        const domIcon = DOM_ICONS[p.Domaine] || 'mdi:clipboard-list-outline';
+        const color    = gc(ALL.indexOf(p));
+        const domIcon  = DOM_ICONS[p.Domaine] || 'mdi:clipboard-list-outline';
+        const hasDoc   = !!p.DocID;
+        const hasImg   = !!p.ImageURL;
         return `
         <div class="kb-card" onclick="openDetail('${p.ID}')">
+          ${hasImg ? `<div style="height:80px;border-radius:8px;overflow:hidden;margin-bottom:8px"><img src="${p.ImageURL}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.parentElement.style.display='none'"></div>` : ''}
           <div class="kb-tag" style="color:${color}">
             <iconify-icon icon="${domIcon}" style="font-size:12px;vertical-align:middle"></iconify-icon>
             ${p.Domaine}
+            ${hasDoc ? '<iconify-icon icon="mdi:file-document-outline" style="font-size:11px;color:#1565C0;margin-left:4px" title="Google Doc"></iconify-icon>' : ''}
           </div>
           <div class="kb-title">${p.Titre}</div>
           <div class="kb-meta">
             <span class="kb-dept"><iconify-icon icon="mdi:map-marker-outline"></iconify-icon>${p.Departement}</span>
-            <span class="kb-budget">${fmtM(p.Budget)} M</span>
+            <span class="kb-budget">${fmtM(p.Budget)} F</span>
           </div>
           <div class="prog"><div class="prog-f" style="width:${p.Progression}%;background:${color}"></div></div>
           <div class="kb-footer">
@@ -661,29 +670,33 @@ function renderTable() {
   document.getElementById('tableView').style.display  = 'block';
   const tbody = document.getElementById('tableBody');
   if (!FILT.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gr4)">Aucun projet trouve</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gr4)">Aucun projet trouvé</td></tr>';
     return;
   }
   tbody.innerHTML = FILT.map((p,i) => {
-    const st = STATUS_CFG[p.Statut] || { label:p.Statut, cls:'bg-n' };
-    const color = gc(ALL.indexOf(p));
+    const st      = STATUS_CFG[p.Statut] || { label:p.Statut, cls:'bg-n' };
+    const color   = gc(ALL.indexOf(p));
     const domIcon = DOM_ICONS[p.Domaine] || 'mdi:clipboard-list-outline';
+    const hasDoc  = !!p.DocID;
     return `
     <tr style="animation:fadeUp .2s ease ${i*.04}s both">
       <td>
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:34px;height:34px;border-radius:8px;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <iconify-icon icon="${domIcon}" style="font-size:18px"></iconify-icon>
-          </div>
+          ${p.ImageURL
+            ? `<img src="${p.ImageURL}" style="width:34px;height:34px;border-radius:8px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
+            : `<div style="width:34px;height:34px;border-radius:8px;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0"><iconify-icon icon="${domIcon}" style="font-size:18px"></iconify-icon></div>`}
           <div>
-            <div style="font-weight:600;font-size:13.5px;color:var(--dark)">${p.Titre}</div>
+            <div style="font-weight:600;font-size:13.5px;color:var(--dark)">
+              ${p.Titre}
+              ${hasDoc ? '<iconify-icon icon="mdi:file-document-outline" style="font-size:13px;color:#1565C0;margin-left:4px;vertical-align:middle" title="Google Doc associé"></iconify-icon>' : ''}
+            </div>
             <div style="font-size:11.5px;color:var(--gr4)">${p.Responsable}</div>
           </div>
         </div>
       </td>
       <td style="color:var(--gr6);font-size:13px">${p.Domaine}</td>
       <td><span class="badge bg-n">${p.Departement}</span></td>
-      <td style="font-family:var(--fh);font-weight:700;color:var(--g8);font-size:13.5px">${fmtM(p.Budget)} M</td>
+      <td style="font-family:var(--fh);font-weight:700;color:var(--g8);font-size:13.5px">${fmtM(p.Budget)} F</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px;min-width:120px">
           <div class="prog" style="flex:1"><div class="prog-f" style="width:${p.Progression}%;background:${color}"></div></div>
@@ -694,8 +707,9 @@ function renderTable() {
       <td style="color:var(--gr4);font-size:12.5px">${fmtD(p.DateFin)}</td>
       <td><div class="ac">
         <button class="bi" onclick="openDetail('${p.ID}')" title="Voir"><iconify-icon icon="mdi:eye-outline"></iconify-icon></button>
+        ${hasDoc ? `<button class="bi" onclick="window.open('${p.DocURL}','_blank')" title="Ouvrir le Google Doc" style="color:#1565C0"><iconify-icon icon="mdi:open-in-new"></iconify-icon></button>` : ''}
         <button class="bi" onclick="editProjet('${p.ID}')" title="Modifier"><iconify-icon icon="mdi:pencil-outline"></iconify-icon></button>
-        <button class="bi" onclick="deleteProjet('${p.ID}','${p.Titre.replace(/'/g,"\\'")}')}" title="Supprimer" style="color:var(--red)"><iconify-icon icon="mdi:delete-outline"></iconify-icon></button>
+        <button class="bi" onclick="deleteProjet('${p.ID}','${p.Titre.replace(/'/g,"\\'")}')" title="Supprimer" style="color:var(--red)"><iconify-icon icon="mdi:delete-outline"></iconify-icon></button>
       </div></td>
     </tr>`;
   }).join('');
@@ -705,32 +719,35 @@ function renderTable() {
 function openDetail(id) {
   const p = ALL.find(x=>x.ID===id);
   if (!p) return;
-  const st    = STATUS_CFG[p.Statut] || { label:p.Statut, cls:'bg-n' };
-  const color = gc(ALL.indexOf(p));
-  const pct   = p.Budget > 0 ? Math.round((p.Depense/p.Budget)*100) : 0;
+  const st      = STATUS_CFG[p.Statut] || { label:p.Statut, cls:'bg-n' };
+  const color   = gc(ALL.indexOf(p));
+  const pct     = p.Budget > 0 ? Math.round((p.Depense/p.Budget)*100) : 0;
   const domIcon = DOM_ICONS[p.Domaine] || 'mdi:clipboard-list-outline';
+  const hasDoc  = !!p.DocID;
 
   document.getElementById('dTitle').textContent = p.Titre;
   document.getElementById('dBody').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
       <div>
-        <div style="width:40px;height:40px;border-radius:10px;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;margin-bottom:10px">
-          <iconify-icon icon="${domIcon}" style="font-size:22px"></iconify-icon>
-        </div>
-        <p style="font-size:13.5px;color:var(--gr6);line-height:1.6;margin-bottom:14px">${p.Description || 'Aucune description.'}</p>
+        ${p.ImageURL ? `<img src="${p.ImageURL}" style="width:100%;border-radius:10px;margin-bottom:12px;max-height:180px;object-fit:cover" onerror="this.style.display='none'">` : `<div style="width:40px;height:40px;border-radius:10px;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;margin-bottom:10px"><iconify-icon icon="${domIcon}" style="font-size:22px"></iconify-icon></div>`}
+        <p style="font-size:13.5px;color:var(--gr6);line-height:1.6;margin-bottom:14px">
+          ${p.Description ? p.Description.slice(0,300) + (p.Description.length > 300 ? '…' : '') : 'Aucune description.'}
+          ${hasDoc ? `<br><a href="${p.DocURL}" target="_blank" rel="noopener" style="font-size:12px;color:#1565C0;display:inline-flex;align-items:center;gap:4px;margin-top:6px"><iconify-icon icon="mdi:file-document-outline" width="14"></iconify-icon>Lire la description complète (Google Doc)</a>` : ''}
+        </p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <span class="badge ${st.cls}"><span class="bd"></span>${st.label}</span>
           <span class="badge bg-n">${p.Domaine}</span>
           <span class="badge bg-n">${p.Departement}</span>
         </div>
+        ${p.FichierURL ? `<a href="${p.FichierURL}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;color:var(--g7);background:var(--g0);border:1px solid var(--g1);border-radius:6px;padding:5px 10px;text-decoration:none"><iconify-icon icon="mdi:file-pdf-box" style="font-size:15px"></iconify-icon>${p.FichierNom || 'Pièce jointe'}</a>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
         ${[
-          ['Responsable', p.Responsable, 'mdi:account-outline'],
-          ['Partenaires',  p.Partenaires, 'mdi:handshake-outline'],
-          ['Beneficiaires', p.Beneficiaires.toLocaleString('fr-FR') + ' personnes', 'mdi:account-group-outline'],
-          ['Debut',  fmtD(p.DateDebut), 'mdi:calendar-start'],
-          ['Fin prevue', fmtD(p.DateFin), 'mdi:calendar-end'],
+          ['Responsable',   p.Responsable, 'mdi:account-outline'],
+          ['Partenaires',   p.Partenaires, 'mdi:handshake-outline'],
+          ['Bénéficiaires', p.Beneficiaires.toLocaleString('fr-FR') + ' personnes', 'mdi:account-group-outline'],
+          ['Début',         fmtD(p.DateDebut), 'mdi:calendar-start'],
+          ['Fin prévue',    fmtD(p.DateFin),   'mdi:calendar-end'],
         ].map(([l,v,ic]) => `
         <div style="display:flex;align-items:flex-start;gap:10px">
           <iconify-icon icon="${ic}" style="font-size:16px;color:var(--g7);margin-top:2px;flex-shrink:0"></iconify-icon>
@@ -745,11 +762,11 @@ function openDetail(id) {
     <div style="background:var(--gr1);border-radius:var(--rs);padding:16px;margin-bottom:16px">
       <div style="font-weight:700;font-size:14px;margin-bottom:12px;color:var(--dark)">Avancement</div>
       <div class="pb-wrap">
-        <div class="pb-head"><span style="font-size:13px;color:var(--gr6)">Realisation globale</span><span style="font-weight:700;color:var(--g8)">${p.Progression}%</span></div>
+        <div class="pb-head"><span style="font-size:13px;color:var(--gr6)">Réalisation globale</span><span style="font-weight:700;color:var(--g8)">${p.Progression}%</span></div>
         <div class="pb-bar"><div class="pb-fill" style="width:${p.Progression}%;background:${color}"></div></div>
       </div>
       <div class="pb-wrap" style="margin-top:10px">
-        <div class="pb-head"><span style="font-size:13px;color:var(--gr6)">Budget consomme</span><span style="font-weight:700;color:var(--g8)">${pct}% — ${fmtF(p.Depense)} / ${fmtF(p.Budget)}</span></div>
+        <div class="pb-head"><span style="font-size:13px;color:var(--gr6)">Budget consommé</span><span style="font-weight:700;color:var(--g8)">${pct}% — ${fmtF(p.Depense)} / ${fmtF(p.Budget)} FCFA</span></div>
         <div class="pb-bar"><div class="pb-fill" style="width:${Math.min(pct,100)}%;background:${pct>90?'var(--red)':'var(--gold)'}"></div></div>
       </div>
     </div>
@@ -761,7 +778,7 @@ function openDetail(id) {
     </div>` : ''}
 
     <div style="background:var(--goldf);border:1px solid #FDE68A;border-radius:var(--rs);padding:14px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:600;color:#92400E;margin-bottom:10px">Mettre a jour l'avancement</div>
+      <div style="font-size:13px;font-weight:600;color:#92400E;margin-bottom:10px">Mettre à jour l'avancement</div>
       <div style="display:flex;gap:10px;align-items:center">
         <input type="range" id="progSlider" min="0" max="100" value="${p.Progression}" style="flex:1;accent-color:var(--g7)" oninput="document.getElementById('progVal').textContent=this.value+'%'"/>
         <span id="progVal" style="font-weight:700;min-width:40px;color:var(--g8)">${p.Progression}%</span>
@@ -778,14 +795,15 @@ function openDetail(id) {
         ${(STATUS_TRANSITIONS[p.Statut] || Object.keys(STATUS_CFG)).map(s => {
           const cfg = STATUS_CFG[s] || { label:s, icon:'mdi:circle-outline' };
           const isCurrent = s === p.Statut;
-          return '<button class="sm-item' + (isCurrent ? ' current' : '') + '" onclick="setStatut(\'' + p.ID + '\',\'' + s + '\')" style="border:1px solid var(--brd);border-radius:8px;padding:6px 12px;flex-shrink:0' + (isCurrent ? ';background:var(--g0);color:var(--g8)' : '') + '">'
-            + '<iconify-icon icon="' + cfg.icon + '" style="font-size:15px;color:' + cfg.color + '"></iconify-icon>'
-            + cfg.label
-            + (isCurrent ? ' <span style="font-size:10px;opacity:.6">(actuel)</span>' : '')
-            + '</button>';
+          return `<button class="sm-item${isCurrent?' current':''}" onclick="setStatut('${p.ID}','${s}')" style="border:1px solid var(--brd);border-radius:8px;padding:6px 12px;flex-shrink:0${isCurrent?';background:var(--g0);color:var(--g8)':''}">
+            <iconify-icon icon="${cfg.icon}" style="font-size:15px;color:${cfg.color}"></iconify-icon>
+            ${cfg.label}${isCurrent?' <span style="font-size:10px;opacity:.6">(actuel)</span>':''}
+          </button>`;
         }).join('')}
       </div>
-      ${p.Statut === 'en_cours' || p.Statut === 'soumis' ? '<div style="margin-top:10px"><textarea id="statutNote" placeholder="Note optionnelle (visible dans le rapport)..." style="width:100%;border:1px solid var(--brd);border-radius:8px;padding:8px 10px;font-size:12.5px;resize:vertical;min-height:52px;box-sizing:border-box;font-family:var(--ff)"></textarea></div>' : ''}
+      ${p.Statut === 'en_cours' || p.Statut === 'soumis'
+        ? '<div style="margin-top:10px"><textarea id="statutNote" placeholder="Note optionnelle (visible dans le rapport)..." style="width:100%;border:1px solid var(--brd);border-radius:8px;padding:8px 10px;font-size:12.5px;resize:vertical;min-height:52px;box-sizing:border-box;font-family:var(--ff)"></textarea></div>'
+        : ''}
     </div>`;
 
   document.getElementById('dEditBtn').onclick = () => { closeM('detailM'); editProjet(id); };
@@ -794,64 +812,42 @@ function openDetail(id) {
 
 /* ═══ MENU STATUT RAPIDE ═══ */
 function buildStatusMenu(p, compact) {
-  const st  = STATUS_CFG[p.Statut] || { label: p.Statut, cls:'bg-n', color:'var(--gr4)', icon:'mdi:circle-outline' };
+  const st          = STATUS_CFG[p.Statut] || { label:p.Statut, cls:'bg-n', color:'var(--gr4)', icon:'mdi:circle-outline' };
   const transitions = STATUS_TRANSITIONS[p.Statut] || Object.keys(STATUS_CFG);
   const items = transitions.map(s => {
     const c = STATUS_CFG[s] || { label:s, icon:'mdi:circle-outline', color:'var(--gr4)' };
-    return '<button class="sm-item" onclick="event.stopPropagation();setStatut(\'' + p.ID + '\',\'' + s + '\')">'
-      + '<iconify-icon icon="' + c.icon + '" style="font-size:15px;color:' + c.color + '"></iconify-icon>'
-      + c.label + '</button>';
+    return `<button class="sm-item" onclick="event.stopPropagation();setStatut('${p.ID}','${s}')">
+      <iconify-icon icon="${c.icon}" style="font-size:15px;color:${c.color}"></iconify-icon>${c.label}
+    </button>`;
   }).join('');
 
   if (compact) {
-    // Version icône seule pour la carte Kanban
-    return '<div class="sm-wrap">'
-      + '<button class="sm-btn" onclick="event.stopPropagation();toggleStatusMenu(this)" title="Changer le statut">'
-      + '<iconify-icon icon="mdi:swap-horizontal" style="font-size:14px;color:var(--gr6)"></iconify-icon>'
-      + '</button>'
-      + '<div class="sm-dd">' + items + '</div></div>';
+    return `<div class="sm-wrap"><button class="sm-btn" onclick="event.stopPropagation();toggleStatusMenu(this)" title="Changer le statut"><iconify-icon icon="mdi:swap-horizontal" style="font-size:14px;color:var(--gr6)"></iconify-icon></button><div class="sm-dd">${items}</div></div>`;
   }
-  // Version badge cliquable pour la table
-  return '<div class="sm-wrap">'
-    + '<button class="sm-btn" onclick="toggleStatusMenu(this)">'
-    + '<span class="badge ' + st.cls + '"><span class="bd"></span>' + st.label + '</span>'
-    + '<iconify-icon icon="mdi:chevron-down" style="font-size:14px;color:var(--gr4)"></iconify-icon>'
-    + '</button>'
-    + '<div class="sm-dd">' + items + '</div></div>';
+  return `<div class="sm-wrap"><button class="sm-btn" onclick="toggleStatusMenu(this)"><span class="badge ${st.cls}"><span class="bd"></span>${st.label}</span><iconify-icon icon="mdi:chevron-down" style="font-size:14px;color:var(--gr4)"></iconify-icon></button><div class="sm-dd">${items}</div></div>`;
 }
 
 function toggleStatusMenu(btn) {
-  // Fermer tous les autres dropdowns ouverts
   document.querySelectorAll('.sm-dd.open').forEach(d => {
     if (d !== btn.nextElementSibling) d.classList.remove('open');
   });
   btn.nextElementSibling.classList.toggle('open');
-  // Fermer au clic dehors
   setTimeout(() => {
     document.addEventListener('click', function close(e) {
-      if (!e.target.closest('.sm-wrap')) {
-        document.querySelectorAll('.sm-dd.open').forEach(d => d.classList.remove('open'));
-      }
+      if (!e.target.closest('.sm-wrap')) document.querySelectorAll('.sm-dd.open').forEach(d=>d.classList.remove('open'));
       document.removeEventListener('click', close);
     });
   }, 0);
 }
 
 async function setStatut(id, newStatut) {
-  // Fermer tous les dropdowns
-  document.querySelectorAll('.sm-dd.open').forEach(d => d.classList.remove('open'));
-
-  const p = ALL.find(x => x.ID === id);
-  if (!p) return;
-  if (p.Statut === newStatut) return;
-
-  const u = getUser() || {};
-  const cfg = STATUS_CFG[newStatut] || { label: newStatut };
-
-  // Note optionnelle depuis le modal detail si disponible
+  document.querySelectorAll('.sm-dd.open').forEach(d=>d.classList.remove('open'));
+  const p = ALL.find(x=>x.ID===id);
+  if (!p || p.Statut===newStatut) return;
+  const u   = getUser() || {};
+  const cfg = STATUS_CFG[newStatut] || { label:newStatut };
   const noteEl = document.getElementById('statutNote');
   const note   = noteEl ? noteEl.value.trim() : '';
-
   try {
     const res = await FODDEB_API.projets.update(id, {
       membreId: u.ID || u.id || '',
@@ -860,26 +856,17 @@ async function setStatut(id, newStatut) {
       Notes:    note || undefined,
     });
     if (!res.success) throw new Error(res.error || 'Erreur inconnue');
-
-    // Mise a jour locale immediate
     p.Statut = newStatut;
-    if (newStatut === 'termine') p.Progression = 100;
-
-    updateStats();
-    applyFilters();
-    toast('Statut mis a jour : ' + cfg.label + '.');
-
-    // Si le modal detail est ouvert, le rafraichir
+    if (newStatut==='termine') p.Progression = 100;
+    updateStats(); applyFilters();
+    toast('Statut mis à jour : ' + cfg.label + '.');
     if (document.getElementById('detailM').classList.contains('open')) {
-      closeM('detailM');
-      setTimeout(() => openDetail(id), 150);
+      closeM('detailM'); setTimeout(()=>openDetail(id),150);
     }
-  } catch(e) {
-    toast('Erreur : ' + e.message, 'err');
-  }
+  } catch(e) { toast('Erreur : ' + e.message, 'err'); }
 }
 
-/* ═══ MISE A JOUR PROGRESSION ═══ */
+/* ═══ PROGRESSION ═══ */
 async function applyProgress(id) {
   const prog = parseInt(document.getElementById('progSlider').value);
   try {
@@ -888,144 +875,204 @@ async function applyProgress(id) {
     const p = ALL.find(x=>x.ID===id);
     if (p) { p.Progression = prog; if (prog===100) p.Statut='termine'; }
     updateStats(); applyFilters();
-    toast(`Avancement mis a jour : ${prog}%.`);
+    toast(`Avancement mis à jour : ${prog}%.`);
     closeM('detailM');
   } catch(e) { toast('Erreur : ' + e.message, 'err'); }
 }
 
-/* ═══ EDIT ═══ */
-function editProjet(id) {
+/* ═══════════════════════════════════════════════════════════════
+   ÉDITION — charge la description depuis Google Doc si disponible
+   ═══════════════════════════════════════════════════════════════ */
+async function editProjet(id) {
   const p = ALL.find(x=>x.ID===id);
   if (!p) return;
-  document.getElementById('mTitle').textContent  = 'Modifier le projet';
-  document.getElementById('editId').value         = p.ID;
-  document.getElementById('nTitle').value         = p.Titre;
-  document.getElementById('nDesc').value          = p.Description;
-  document.getElementById('nDomain').value        = p.Domaine;
-  document.getElementById('nDept').value          = p.Departement;
-  document.getElementById('nBudget').value        = p.Budget;
-  document.getElementById('nSpent').value         = p.Depense;
-  document.getElementById('nStart').value         = p.DateDebut;
-  document.getElementById('nEnd').value           = p.DateFin;
-  document.getElementById('nStatus').value        = p.Statut;
-  document.getElementById('nResp').value          = p.Responsable;
-  document.getElementById('nBenef').value         = p.Beneficiaires;
-  document.getElementById('nObj').value           = p.Objectifs;
-  document.getElementById('nPartners').value      = p.Partenaires;
+
+  // Réinitialiser l'état fichiers du formulaire
+  _resetUploadState();
+
+  document.getElementById('mTitle').textContent = 'Modifier le projet';
+  document.getElementById('editId').value        = p.ID;
+  document.getElementById('nTitle').value        = p.Titre;
+  document.getElementById('nDomain').value       = p.Domaine;
+  document.getElementById('nDept').value         = p.Departement;
+  document.getElementById('nBudget').value       = p.Budget;
+  document.getElementById('nSpent').value        = p.Depense;
+  document.getElementById('nStart').value        = p.DateDebut;
+  document.getElementById('nEnd').value          = p.DateFin;
+  document.getElementById('nStatus').value       = p.Statut;
+  document.getElementById('nResp').value         = p.Responsable;
+  document.getElementById('nBenef').value        = p.Beneficiaires;
+  document.getElementById('nObj').value          = p.Objectifs   || '';
+  document.getElementById('nPartners').value     = p.Partenaires || '';
+
+  // Pré-remplir les URLs déjà connues
+  _uploadedImageURL   = p.ImageURL   || '';
+  _uploadedFichierURL = p.FichierURL || '';
+  _uploadedFichierNom = p.FichierNom || '';
+
+  // Aperçu image si déjà uploadée
+  if (p.ImageURL) {
+    document.getElementById('imgPreview').src = p.ImageURL;
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+    document.getElementById('imgLabel').textContent = 'Image actuelle (cliquer pour remplacer)';
+  }
+
+  // Pièce jointe existante
+  if (p.FichierNom) {
+    document.getElementById('fileName').textContent = p.FichierNom;
+    document.getElementById('fileInfoWrap').style.display = 'flex';
+    document.getElementById('fileLabel').textContent = p.FichierNom;
+  }
+
+  // État Doc
+  _currentProjetId = p.ID;
+  _currentDocId    = p.DocID  || null;
+  _currentDocUrl   = p.DocURL || null;
+
+  // Afficher badge Doc dans le modal header
+  _renderDocBadge();
+
   openM('newM');
+
+  // Charger la description depuis le Doc (appel asynchrone après ouverture modal)
+  const descEl = document.getElementById('nDesc');
+  if (descEl) descEl.value = 'Chargement…';
+
+  if (_currentDocId) {
+    try {
+      const docRes = await FODDEB_API.projetsDocs.read(p.ID);
+      if (descEl) descEl.value = docRes.text || p.Description || '';
+    } catch (docErr) {
+      console.warn('[editProjet] Lecture Doc :', docErr.message);
+      if (descEl) descEl.value = p.Description || '';
+      toast('Contenu Doc non chargé — description abrégée affichée.', 'info');
+    }
+  } else {
+    if (descEl) descEl.value = p.Description || '';
+  }
 }
 
-/* ═══ CREER / MODIFIER ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   SAUVEGARDE — flux séparé : métadonnées courtes PUIS Google Doc
+   ═══════════════════════════════════════════════════════════════ */
 async function saveProjet() {
   const titre  = document.getElementById('nTitle').value.trim();
   const budget = parseFloat(document.getElementById('nBudget').value) || 0;
   if (!titre)   { toast('Titre requis.', 'err'); return; }
   if (budget<1) { toast('Budget requis.', 'err'); return; }
 
+  // Bloquer si upload en cours
+  if (_uploadingImage)   { toast('Upload image en cours — attendez la fin.', 'err'); return; }
+  if (_uploadingFichier) { toast('Upload document en cours — attendez la fin.', 'err'); return; }
+
   const btn = document.getElementById('saveBtn');
-  const resetBtn = () => {
-    btn.disabled = false;
-    btn.innerHTML = '<iconify-icon icon="mdi:content-save-outline"></iconify-icon>Enregistrer';
-  };
-  btn.disabled = true;
-  btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle"></span> Envoi...';
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled=true; btn.innerHTML='<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle"></span> Envoi…'; }
 
-  const editId   = document.getElementById('editId').value;
-  const u        = getUser() || {};
-  const membreId = u.ID || u.id || u.membreId || '';
+  const editId      = document.getElementById('editId').value;
+  const u           = getUser() || {};
+  const membreId    = u.ID || u.id || u.membreId || '';
+  const description = document.getElementById('nDesc')?.value.trim() || '';
 
-  // Upload image — try/catch isolé, ne bloque jamais le bouton
-  let imageURL = '';
-  if (_uploadFiles.image) {
-    try {
-      toast('Upload image en cours…', 'info');
-      const b64   = await fileToBase64(_uploadFiles.image);
-      const upRes = await FODDEB_API.members.uploadProjectFile(
-        b64, _uploadFiles.image.name, _uploadFiles.image.type, 'projet', editId || 'new'
-      );
-      if (upRes && upRes.success) imageURL = upRes.url || upRes.fileUrl || '';
-      else toast('Image non uploadée : ' + ((upRes && upRes.error) || 'erreur inconnue'), 'warn');
-    } catch(upErr) {
-      toast('Upload image ignoré (timeout) — le projet sera enregistré sans image.', 'warn');
-    }
-  }
-
-  // Upload pièce jointe PDF — try/catch isolé
-  let fichierURL = '', fichierNom = '';
-  if (_uploadFiles.fichier) {
-    try {
-      toast('Upload document en cours…', 'info');
-      const b64   = await fileToBase64(_uploadFiles.fichier);
-      const upRes = await FODDEB_API.members.uploadProjectFile(
-        b64, _uploadFiles.fichier.name, 'application/pdf', 'projet_doc', editId || 'new'
-      );
-      if (upRes && upRes.success) {
-        fichierURL = upRes.url || upRes.fileUrl || '';
-        fichierNom = _uploadFiles.fichier.name;
-      } else toast('Document non uploadé : ' + ((upRes && upRes.error) || 'erreur inconnue'), 'warn');
-    } catch(upErr) {
-      toast('Upload document ignoré (timeout) — le projet sera enregistré sans pièce jointe.', 'warn');
-    }
-  }
-
+  // Payload COURT — image et fichier sont déjà des URLs Drive résolues
   const payload = {
     membreId,
     role:          u.role || 'admin',
     Titre:         titre,
-    Description:   document.getElementById('nDesc').value.trim(),
+    // Description courte uniquement si <= 5000 chars (fallback Sheets)
+    Description:   description.length <= 5000 ? description : description.slice(0, 5000) + '…',
     Domaine:       document.getElementById('nDomain').value,
     Departement:   document.getElementById('nDept').value.trim() || '—',
     Budget:        budget,
-    Depense:       parseFloat(document.getElementById('nSpent').value) || 0,
+    Depense:       parseFloat(document.getElementById('nSpent').value)   || 0,
     DateDebut:     document.getElementById('nStart').value,
     DateFin:       document.getElementById('nEnd').value,
     Statut:        document.getElementById('nStatus').value,
     Responsable:   document.getElementById('nResp').value.trim(),
-    Beneficiaires: parseInt(document.getElementById('nBenef').value) || 0,
+    Beneficiaires: parseInt(document.getElementById('nBenef').value)     || 0,
     Objectifs:     document.getElementById('nObj').value.trim(),
     Partenaires:   document.getElementById('nPartners').value.trim(),
-    ImageURL:      imageURL,
-    FichierURL:    fichierURL,
-    FichierNom:    fichierNom,
+    ImageURL:      _uploadedImageURL,
+    FichierURL:    _uploadedFichierURL,
+    FichierNom:    _uploadedFichierNom,
   };
 
   try {
     let res;
+    let projetId = editId;
+
     if (editId) {
       res = await FODDEB_API.projets.update(editId, payload);
+      if (!res.success) throw new Error(res.error || 'Erreur mise à jour');
     } else {
       res = await FODDEB_API.projets.create(payload);
+      if (!res.success) throw new Error(res.error || 'Erreur création');
+      projetId = res.id || (res.data && res.data.ID);
     }
-    if (!res.success) throw new Error(res.error || 'Erreur inconnue');
+
+    // Fermer le modal immédiatement — l'utilisateur n'attend pas le Doc
     closeM('newM');
     document.getElementById('editId').value = '';
     document.getElementById('mTitle').textContent = 'Nouveau projet';
-    clearFile('image'); clearFile('fichier');
-    // Créer/mettre à jour le Google Doc de description
-    if (res.id || (res.data && res.data.ID)) {
-      const pId = res.id || res.data.ID;
-      const desc = document.getElementById('nDesc')?.value || '';
-      const titre = document.getElementById('nTitle')?.value || 'Projet';
-      try { await FODDEB_API.projetsDocs.create(pId, titre, desc); } catch(e) { console.warn('[projetDoc]', e.message); }
+    _resetUploadState();
+    toast(editId ? 'Projet mis à jour.' : 'Projet créé.');
+
+    // ÉTAPE 2 — Sauvegarder la description longue dans Google Doc (appel séparé, silencieux)
+    if (description.trim() && projetId) {
+      _saveProjetDocContent(projetId, titre, description).catch(e => {
+        console.warn('[saveProjet] Doc :', e.message);
+      });
     }
-    toast(editId ? 'Projet mis à jour.' : 'Projet créé avec succès.');
+
     await loadProjets();
+
   } catch(e) {
     toast('Erreur : ' + e.message, 'err');
+    console.error('[saveProjet]', e);
   } finally {
-    resetBtn();
+    if (btn) { btn.disabled=false; btn.innerHTML=origHtml; }
+  }
+}
+
+/**
+ * Sauvegarde la description longue dans Google Docs.
+ * Crée le Doc si inexistant, met à jour sinon.
+ * Toujours appelé APRÈS confirmation projet → pas de rollback nécessaire.
+ */
+async function _saveProjetDocContent(projetId, titre, texte) {
+  try {
+    if (_currentDocId) {
+      const r = await FODDEB_API.projetsDocs.update(projetId, texte);
+      if (r.success) {
+        _currentDocId  = r.docId  || _currentDocId;
+        toast('Description complète mise à jour dans Google Docs.', 'info');
+      }
+    } else {
+      const r = await FODDEB_API.projetsDocs.create(projetId, titre, texte);
+      if (r.success) {
+        _currentDocId  = r.docId;
+        _currentDocUrl = r.docUrl;
+        // Mettre à jour le cache local
+        const p = ALL.find(x=>x.ID===projetId);
+        if (p) { p.DocID = _currentDocId; p.DocURL = _currentDocUrl; }
+        toast('Google Doc créé pour ce projet.', 'info');
+      }
+    }
+  } catch (e) {
+    toast('Projet enregistré — Doc non sauvegardé : ' + e.message, 'err');
+    throw e;
   }
 }
 
 /* ═══ SUPPRIMER ═══ */
 async function deleteProjet(id, titre) {
-  if (!confirm(`Supprimer le projet "${titre}" ? Cette action est irreversible.`)) return;
+  if (!confirm(`Supprimer le projet "${titre}" ? Cette action est irréversible.`)) return;
   try {
     const res = await FODDEB_API.projets.delete(id);
     if (!res.success) throw new Error(res.error);
     ALL = ALL.filter(x=>x.ID!==id);
     updateStats(); applyFilters();
-    toast('Projet supprime.');
+    toast('Projet supprimé.');
   } catch(e) { toast('Erreur : ' + e.message, 'err'); }
 }
 
@@ -1033,64 +1080,117 @@ async function deleteProjet(id, titre) {
 function exportCSV() {
   const data = FILT.length ? FILT : ALL;
   const h = ['Titre','Domaine','Departement','Budget','Depense','Progression','Statut','DateDebut','DateFin','Responsable','Beneficiaires'];
-  const rows = data.map(p => h.map(k => `"${(p[k]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const rows = data.map(p => h.map(k=>`"${(p[k]||'').toString().replace(/"/g,'""')}"`).join(','));
   const csv  = [h.join(','), ...rows].join('\n');
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
   a.download = `projets_foddeb_${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
-  toast('Export CSV telecharge.');
+  toast('Export CSV téléchargé.');
 }
 
-/* ═══ UPLOAD FICHIERS ═══ */
-// State local des fichiers sélectionnés
-const _uploadFiles = { image: null, fichier: null };
-
+/* ═══════════════════════════════════════════════════════════════
+   UPLOAD FICHIERS — upload immédiat à la sélection
+   L'URL Drive est stockée localement et envoyée DANS le payload final.
+   Aucun base64 ne transite dans le même appel que le texte long.
+   ═══════════════════════════════════════════════════════════════ */
 function handleFileSelect(input, type) {
   const file = input.files[0];
   if (!file) return;
-  const maxSize = 5 * 1024 * 1024;
-  if (file.size > maxSize) { toast('Fichier trop volumineux (max 5 Mo).', 'err'); input.value = ''; return; }
-  _uploadFiles[type] = file;
+  if (file.size > 5 * 1024 * 1024) {
+    toast('Fichier trop volumineux (max 5 Mo).', 'err');
+    input.value = '';
+    return;
+  }
+
+  // Aperçu local immédiat
   if (type === 'image') {
     const reader = new FileReader();
     reader.onload = e => {
       document.getElementById('imgPreview').src = e.target.result;
       document.getElementById('imgPreviewWrap').style.display = 'block';
-      document.getElementById('imgLabel').textContent = file.name;
+      document.getElementById('imgLabel').textContent = 'Upload en cours…';
       document.getElementById('imgDropZone').style.borderColor = 'var(--g7)';
     };
     reader.readAsDataURL(file);
   } else {
-    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileName').textContent = 'Upload en cours…';
     document.getElementById('fileInfoWrap').style.display = 'flex';
-    document.getElementById('fileLabel').textContent = file.name;
+    document.getElementById('fileLabel').textContent = 'Upload en cours…';
     document.getElementById('fileDropZone').style.borderColor = 'var(--g7)';
+  }
+
+  // Upload immédiat vers Drive
+  _uploadFileToDrive(file, type);
+}
+
+async function _uploadFileToDrive(file, type) {
+  const editId = document.getElementById('editId').value;
+  const ctxId  = editId || _currentProjetId || ('draft_' + Date.now());
+  const context = type === 'image' ? 'projet_image' : 'projet_doc';
+
+  if (type === 'image') _uploadingImage   = true;
+  else                  _uploadingFichier = true;
+
+  try {
+    const b64   = await fileToBase64(file);
+    const upRes = await FODDEB_API.members.uploadProjectFile(b64, file.name, file.type, context, ctxId);
+
+    if (!upRes || !upRes.success) throw new Error((upRes && upRes.error) || 'Erreur upload');
+
+    const url = upRes.url || upRes.fileUrl || '';
+
+    if (type === 'image') {
+      _uploadedImageURL = url;
+      document.getElementById('imgLabel').textContent = file.name;
+      toast('Image de couverture uploadée.');
+    } else {
+      _uploadedFichierURL = url;
+      _uploadedFichierNom = file.name;
+      document.getElementById('fileName').textContent  = file.name;
+      document.getElementById('fileLabel').textContent = file.name;
+      toast('Document uploadé : ' + file.name);
+    }
+  } catch (err) {
+    toast('Erreur upload ' + (type==='image'?'image':'document') + ' : ' + err.message, 'err');
+    if (type === 'image') {
+      document.getElementById('imgLabel').textContent = 'Réessayer — upload échoué';
+      _uploadedImageURL = '';
+    } else {
+      document.getElementById('fileLabel').textContent = 'Réessayer — upload échoué';
+      _uploadedFichierURL = '';
+      _uploadedFichierNom = '';
+    }
+  } finally {
+    if (type === 'image') _uploadingImage   = false;
+    else                  _uploadingFichier = false;
   }
 }
 
 function handleFileDrop(event, type) {
   event.preventDefault();
-  document.getElementById(type === 'image' ? 'imgDropZone' : 'fileDropZone').style.borderColor = 'var(--brd)';
-  const file = event.dataTransfer.files[0];
+  document.getElementById(type==='image'?'imgDropZone':'fileDropZone').style.borderColor = 'var(--brd)';
+  const file  = event.dataTransfer.files[0];
   if (!file) return;
-  const input = document.getElementById(type === 'image' ? 'nImageFile' : 'nPieceJointe');
+  const input = document.getElementById(type==='image'?'nImageFile':'nPieceJointe');
   const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
   handleFileSelect(input, type);
 }
 
 function clearFile(type) {
-  _uploadFiles[type] = null;
   if (type === 'image') {
     document.getElementById('nImageFile').value = '';
     document.getElementById('imgPreviewWrap').style.display = 'none';
     document.getElementById('imgLabel').textContent = 'Cliquer ou glisser une image ici';
     document.getElementById('imgDropZone').style.borderColor = 'var(--brd)';
+    _uploadedImageURL = '';
   } else {
     document.getElementById('nPieceJointe').value = '';
     document.getElementById('fileInfoWrap').style.display = 'none';
     document.getElementById('fileLabel').textContent = 'Cliquer ou glisser un PDF ici';
     document.getElementById('fileDropZone').style.borderColor = 'var(--brd)';
+    _uploadedFichierURL = '';
+    _uploadedFichierNom = '';
   }
 }
 
@@ -1103,29 +1203,67 @@ function fileToBase64(file) {
   });
 }
 
+function _resetUploadState() {
+  _uploadedImageURL   = '';
+  _uploadedFichierURL = '';
+  _uploadedFichierNom = '';
+  _uploadingImage     = false;
+  _uploadingFichier   = false;
+  _currentProjetId    = null;
+  _currentDocId       = null;
+  _currentDocUrl      = null;
+  clearFile('image');
+  clearFile('fichier');
+  const badge = document.getElementById('projetDocBadge');
+  if (badge) badge.remove();
+}
+
+/* ═══ BADGE DOC DANS LE MODAL ═══ */
+function _renderDocBadge() {
+  let badge = document.getElementById('projetDocBadge');
+  if (_currentDocId && _currentDocUrl) {
+    if (!badge) {
+      badge = document.createElement('a');
+      badge.id      = 'projetDocBadge';
+      badge.target  = '_blank';
+      badge.rel     = 'noopener';
+      badge.style.cssText = 'display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#1565C0;background:#E3F2FD;border:1px solid #90CAF9;border-radius:6px;padding:3px 10px;text-decoration:none;margin-left:10px;flex-shrink:0';
+      badge.innerHTML = '<iconify-icon icon="mdi:file-document-outline" width="14"></iconify-icon>Google Doc';
+      const mh = document.querySelector('#newM .mh');
+      if (mh) mh.appendChild(badge);
+    }
+    badge.href = _currentDocUrl;
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
 /* ═══ MODAL ═══ */
 function openM(id) {
   document.getElementById(id).classList.add('open');
   document.body.style.overflow = 'hidden';
   if (id==='newM' && !document.getElementById('editId').value) {
     ['nTitle','nDesc','nDept','nBudget','nSpent','nStart','nEnd','nResp','nBenef','nObj','nPartners'].forEach(fid => {
-      const el = document.getElementById(fid); if(el) el.value='';
+      const el = document.getElementById(fid); if (el) el.value = '';
     });
     document.getElementById('mTitle').textContent = 'Nouveau projet';
+    _resetUploadState();
+    _renderDocBadge();
   }
 }
 function closeM(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
 document.querySelectorAll('.mo').forEach(o => o.addEventListener('click', e => { if(e.target===o){o.classList.remove('open');document.body.style.overflow='';} }));
-document.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.mo.open').forEach(o=>{o.classList.remove('open');document.body.style.overflow='';}); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.mo.open').forEach(o=>{o.classList.remove('open');document.body.style.overflow='';}) });
 
 /* ═══ TOAST ═══ */
 function toast(msg, type='ok') {
   const c = document.getElementById('tc');
+  if (!c) return;
   const t = document.createElement('div');
   t.className = 'toast ' + type;
-  t.innerHTML = `<iconify-icon icon="${type==='err'?'mdi:alert-circle-outline':'mdi:check-circle-outline'}"></iconify-icon><span>${msg}</span>`;
+  t.innerHTML = `<iconify-icon icon="${type==='err'?'mdi:alert-circle-outline':type==='info'?'mdi:information-outline':'mdi:check-circle-outline'}"></iconify-icon><span>${msg}</span>`;
   c.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},4000);
 }
 
 /* ═══ SIDEBAR ═══ */

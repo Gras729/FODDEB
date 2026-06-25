@@ -496,6 +496,20 @@
 
 <script>
   'use strict';
+  /* Convertit une URL Drive en URL thumbnail affichable dans <img src> */
+  function driveImgUrl(url) {
+    if (!url) return '';
+    if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
+    var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
+    var m2 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w800';
+    var m3 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m3) return 'https://drive.google.com/thumbnail?id=' + m3[1] + '&sz=w800';
+    return url;
+  }
+
+
 
   /* ═══════════════════════════════════════════════════════════════
      ÉTAT GLOBAL
@@ -558,7 +572,8 @@
      RENDU HTML D'UNE CARTE ARTICLE
   ═══════════════════════════════════════════════════════════════ */
   function renderCard(article, index, isFeatured) {
-    const img   = article.Image  || getImg(article.Categorie);
+    const imgRaw = article.Image ? driveImgUrl(article.Image) : '';
+    const img    = imgRaw || getImg(article.Categorie);
     const icon  = getIcon(article.Categorie);
     const color = getColor(article.Categorie);
     const date  = article.DatePublication
@@ -738,7 +753,7 @@
 
     const modal   = document.getElementById('articleModal');
     const imgEl   = document.getElementById('modalImgEl');
-    const bg      = article.Image || getImg(article.Categorie);
+    const bg      = article.Image ? driveImgUrl(article.Image) : getImg(article.Categorie);
     const color   = getColor(article.Categorie);
 
     // Image

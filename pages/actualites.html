@@ -136,6 +136,17 @@
     .article-read-btn { font-size: 12.5px; font-weight: 600; color: var(--g8); display: flex; align-items: center; gap: 4px; transition: gap .2s; }
     .article-card:hover .article-read-btn { gap: 8px; }
 
+    /* ===== BOUTON DOCUMENTS JOINTS ===== */
+    .btn-docs {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600; padding: 5px 10px;
+      border-radius: 6px; border: 1.5px solid var(--g1);
+      background: var(--g0); color: var(--g8);
+      cursor: pointer; font-family: var(--fb); white-space: nowrap;
+      transition: var(--tr);
+    }
+    .btn-docs:hover { background: var(--g1); border-color: var(--g4); }
+
     /* ===== TAGS ===== */
     .tags-row { display: flex; gap: 6px; flex-wrap: wrap; }
     .tag { font-size: 11.5px; padding: 3px 10px; border-radius: 99px; background: var(--g0); color: var(--g7); font-weight: 500; }
@@ -163,7 +174,7 @@
     .page-btn:disabled { opacity: .4; cursor: not-allowed; }
     .page-btn.wide { width: auto; padding: 0 14px; }
 
-    /* ===== MODAL LECTEUR ===== */
+    /* ===== MODAL LECTEUR ARTICLE (aperçu) ===== */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 3000; align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
     .modal-box { background: var(--white); border-radius: 20px; width: 100%; max-width: 720px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.3); margin: auto; position: relative; }
@@ -184,7 +195,64 @@
     .modal-body strong { color: var(--dark); }
     .modal-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--gr1); }
 
-    /* ===== NEWSLETTER MINI ===== */
+    /* ===== VIEWER PIÈCES JOINTES ===== */
+    #listViewerM {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.72); z-index: 4000;
+      align-items: center; justify-content: center;
+      padding: 16px; backdrop-filter: blur(4px);
+    }
+    #listViewerM.open { display: flex; }
+    #listViewerBox {
+      background: #fff; border-radius: 14px;
+      width: 95vw; max-width: 900px; height: 90vh;
+      display: flex; flex-direction: column;
+      overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.45);
+    }
+    .lv-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid #E2E8F0;
+      background: #F7FAFC; flex-shrink: 0;
+    }
+    .lv-header-left { display: flex; align-items: center; gap: 10px; }
+    .lv-name {
+      font-weight: 600; font-size: 14px; color: #1C2520;
+      max-width: 500px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .lv-close {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: #F0F0F0; border: none; cursor: pointer;
+      color: #4A5568; font-size: 16px; transition: background .2s;
+      flex-shrink: 0;
+    }
+    .lv-close:hover { background: #E2E8F0; }
+    .lv-notice {
+      padding: 6px 20px; background: #FFFDE7;
+      border-bottom: 1px solid #FDE68A;
+      font-size: 11.5px; color: #92400E;
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .lv-tabs {
+      display: none; padding: 10px 16px; gap: 8px;
+      flex-wrap: wrap; border-bottom: 1px solid #E2E8F0;
+      flex-shrink: 0; overflow-x: auto;
+    }
+    .lv-tabs.show { display: flex; }
+    .lv-tab {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 6px;
+      border: 1.5px solid #E2E8F0; background: #fff;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      color: #1C2520; white-space: nowrap;
+      font-family: var(--fb); transition: var(--tr);
+    }
+    .lv-tab:hover { border-color: var(--g4); background: var(--g0); }
+    .lv-tab.active { background: var(--g0); border-color: var(--g4); color: var(--g8); }
+    #listViewerFrame { flex: 1; border: none; width: 100%; }
+
+    /* ===== NEWSLETTER ===== */
     .nl-strip { background: var(--g9); padding: 56px 0; }
     .nl-inner { display: flex; gap: 48px; align-items: center; flex-wrap: wrap; }
     .nl-text h2 { font-family: var(--fh); font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
@@ -219,6 +287,9 @@
       .nl-inner { flex-direction: column; gap: 24px; } .nl-form { max-width: 100%; width: 100%; }
       .footer-grid { grid-template-columns: 1fr; gap: 28px; }
       .modal-content { padding: 20px 20px 28px; }
+      #listViewerBox { width: 100%; height: 100%; border-radius: 0; max-width: 100%; }
+      #listViewerM { padding: 0; }
+      .lv-name { max-width: 200px; }
     }
     @media(max-width: 480px) {
       .hero { padding: 48px 0; }
@@ -338,7 +409,6 @@
 
       <!-- Aperçu articles dans le hero — rempli dynamiquement -->
       <div class="hero-news-preview" id="heroPreview">
-        <!-- Placeholders statiques affichés pendant le chargement -->
         <div class="hnp-card">
           <div class="hnp-icon"><iconify-icon icon="mdi:trophy-outline" width="18"></iconify-icon></div>
           <div>
@@ -378,7 +448,6 @@
       </div>
       <div class="filter-pills" id="catPills">
         <button class="pill active" data-cat="tous" onclick="setFilter('tous')">Toutes</button>
-        <!-- Catégories injectées dynamiquement par JS -->
       </div>
       <div class="filter-count" id="filterCount">— articles</div>
     </div>
@@ -388,10 +457,7 @@
 <!-- ===== SECTION ARTICLES ===== -->
 <section class="section" id="actualites">
   <div class="container">
-
-    <!-- Grille articles — skeleton pendant chargement GAS -->
     <div class="news-grid fade-in" id="newsGrid">
-      <!-- Skeletons de chargement -->
       <div class="skel skel-card"></div>
       <div class="skel skel-card"></div>
       <div class="skel skel-card"></div>
@@ -399,10 +465,7 @@
       <div class="skel skel-card"></div>
       <div class="skel skel-card"></div>
     </div>
-
-    <!-- Pagination -->
     <div class="pagination" id="pagination" style="display:none"></div>
-
   </div>
 </section>
 
@@ -472,7 +535,7 @@
   </div>
 </footer>
 
-<!-- ===== MODAL LECTEUR D'ARTICLE ===== -->
+<!-- ===== MODAL LECTEUR D'ARTICLE (aperçu) ===== -->
 <div class="modal-overlay" id="articleModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal-box">
     <button class="modal-close" id="modalClose" aria-label="Fermer l'article">
@@ -494,544 +557,623 @@
   </div>
 </div>
 
+<!-- ===== VIEWER PIÈCES JOINTES (listing actualités) ===== -->
+<div id="listViewerM" role="dialog" aria-modal="true" aria-label="Lecteur de document"
+     onclick="if(event.target===this)closeListViewer()">
+  <div id="listViewerBox">
+
+    <!-- En-tête -->
+    <div class="lv-header">
+      <div class="lv-header-left">
+        <iconify-icon id="lvIcon" icon="mdi:file-document-outline" style="font-size:22px;color:var(--g8)"></iconify-icon>
+        <span id="lvName" class="lv-name">Document</span>
+      </div>
+      <button class="lv-close" onclick="closeListViewer()" title="Fermer">&#x2715;</button>
+    </div>
+
+    <!-- Bande lecture seule -->
+    <div class="lv-notice">
+      <iconify-icon icon="mdi:lock-outline" width="14"></iconify-icon>
+      Ce document est en lecture seule.
+    </div>
+
+    <!-- Onglets — affichés uniquement si plusieurs pièces -->
+    <div id="lvTabs" class="lv-tabs"></div>
+
+    <!-- Iframe viewer -->
+    <iframe id="listViewerFrame" src="" allowfullscreen
+            sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+  </div>
+</div>
+
 <script>
-  'use strict';
-  /* Convertit une URL Drive en URL thumbnail affichable dans <img src> */
-  function driveImgUrl(url) {
-    if (!url) return '';
-    if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
-    var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
-    var m2 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w800';
-    var m3 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (m3) return 'https://drive.google.com/thumbnail?id=' + m3[1] + '&sz=w800';
-    return url;
-  }
+'use strict';
 
+/* ─────────────────────────────────────────────────────────────────
+   UTILITAIRES LOCAUX
+───────────────────────────────────────────────────────────────── */
 
+/* Convertit une URL Drive en URL thumbnail affichable dans <img src> */
+function driveImgUrl(url) {
+  if (!url) return '';
+  if (url.includes('thumbnail?id=') || url.includes('lh3.googleusercontent')) return url;
+  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800';
+  var m2 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w800';
+  var m3 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m3) return 'https://drive.google.com/thumbnail?id=' + m3[1] + '&sz=w800';
+  return url;
+}
 
-  /* ═══════════════════════════════════════════════════════════════
-     ÉTAT GLOBAL
-  ═══════════════════════════════════════════════════════════════ */
-  const PER_PAGE    = 9;          // articles par page
-  let allArticles   = [];         // tous les articles publiés (depuis GAS)
-  let filtered      = [];         // après filtre catégorie + recherche
-  let currentCat    = 'tous';
-  let currentPage   = 1;
-  let searchTimeout = null;
+/* Échappe les caractères HTML dangereux */
+function _escHtml(str) {
+  return (str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
-  /* ═══════════════════════════════════════════════════════════════
-     IMAGES DE SECOURS Unsplash — peaux africaines, contexte NGO
-     TODO : remplacer par de vraies photos FODDEB quand disponibles.
-     Ces images Unsplash sont provisoires (photographies africaines/afros).
-  ═══════════════════════════════════════════════════════════════ */
-  const FALLBACK_IMAGES = {
-    'Activité':        'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=800&q=80',
-    'Plaidoyer':       'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80',
-    'Formation':       'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=800&q=80',
-    'Annonce':         'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80',
-    'Publication':     'https://images.unsplash.com/photo-1474377207190-a7d8b3334068?auto=format&fit=crop&w=800&q=80',
-    'Autonomisation':  'https://images.unsplash.com/photo-1627556704283-bc72dcd12621?auto=format&fit=crop&w=800&q=80',
-    'Protection':      'https://images.unsplash.com/photo-1590650153854-d1f9cde52e45?auto=format&fit=crop&w=800&q=80',
-    'Gouvernance':     'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=800&q=80',
-    'default':         'https://images.unsplash.com/photo-1578020190125-f4f7c18bc9cb?auto=format&fit=crop&w=800&q=80',
-  };
+/* Icône selon le type MIME */
+function _lvIcon(type) {
+  if (!type) return 'mdi:file-outline';
+  if (type === 'application/pdf')                    return 'mdi:file-pdf-box';
+  if (type.includes('word') || type.includes('document')) return 'mdi:file-word-box';
+  if (type.startsWith('image/'))                     return 'mdi:file-image-outline';
+  return 'mdi:file-document-outline';
+}
 
-  /* Icônes par catégorie */
-  const CAT_ICONS = {
-    'Activité':       'mdi:account-group-outline',
-    'Plaidoyer':      'mdi:bullhorn-outline',
-    'Formation':      'mdi:school-outline',
-    'Annonce':        'mdi:bell-outline',
-    'Publication':    'mdi:file-document-outline',
-    'Autonomisation': 'mdi:flower-outline',
-    'Protection':     'mdi:shield-account-outline',
-    'Gouvernance':    'mdi:bank-outline',
-    'default':        'mdi:newspaper-variant-outline',
-  };
+/* Couleur selon le type MIME */
+function _lvColor(type) {
+  if (!type) return '#9AA5B1';
+  if (type === 'application/pdf')  return '#C62828';
+  if (type.includes('word'))       return '#1565C0';
+  if (type.startsWith('image/'))   return '#2E7D32';
+  return '#9AA5B1';
+}
 
-  /* Couleurs de fond par catégorie (cards sans image) */
-  const CAT_COLORS = {
-    'Activité':       '#1B3A1F',
-    'Plaidoyer':      '#8B3A62',
-    'Formation':      '#1B4A6B',
-    'Annonce':        '#4A2B1B',
-    'Publication':    '#2E4A1B',
-    'Autonomisation': '#6B4C9A',
-    'Protection':     '#4A1B2F',
-    'Gouvernance':    '#1B3A4A',
-    'default':        '#1B5E20',
-  };
+/* ─────────────────────────────────────────────────────────────────
+   ÉTAT GLOBAL
+───────────────────────────────────────────────────────────────── */
+const PER_PAGE    = 9;
+var allArticles   = [];
+var filtered      = [];
+var currentCat    = 'tous';
+var currentPage   = 1;
+var searchTimeout = null;
 
-  function getImg(cat)   { return FALLBACK_IMAGES[cat] || FALLBACK_IMAGES['default']; }
-  function getIcon(cat)  { return CAT_ICONS[cat]  || CAT_ICONS['default']; }
-  function getColor(cat) { return CAT_COLORS[cat] || CAT_COLORS['default']; }
+/* ─────────────────────────────────────────────────────────────────
+   IMAGES DE SECOURS (Unsplash) — provisoires en attendant les
+   vraies photos FODDEB
+───────────────────────────────────────────────────────────────── */
+var FALLBACK_IMAGES = {
+  'Activité':       'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=800&q=80',
+  'Plaidoyer':      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80',
+  'Formation':      'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=800&q=80',
+  'Annonce':        'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80',
+  'Publication':    'https://images.unsplash.com/photo-1474377207190-a7d8b3334068?auto=format&fit=crop&w=800&q=80',
+  'Autonomisation': 'https://images.unsplash.com/photo-1627556704283-bc72dcd12621?auto=format&fit=crop&w=800&q=80',
+  'Protection':     'https://images.unsplash.com/photo-1590650153854-d1f9cde52e45?auto=format&fit=crop&w=800&q=80',
+  'Gouvernance':    'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=800&q=80',
+  'default':        'https://images.unsplash.com/photo-1578020190125-f4f7c18bc9cb?auto=format&fit=crop&w=800&q=80',
+};
 
-  /* ═══════════════════════════════════════════════════════════════
-     RENDU HTML D'UNE CARTE ARTICLE
-  ═══════════════════════════════════════════════════════════════ */
-  function renderCard(article, index, isFeatured) {
-    const imgRaw = article.Image ? driveImgUrl(article.Image) : '';
-    const img    = imgRaw || getImg(article.Categorie);
-    const icon  = getIcon(article.Categorie);
-    const color = getColor(article.Categorie);
-    const date  = article.DatePublication
-      ? FODDEB.formatDate(article.DatePublication, { day: 'numeric', month: 'long', year: 'numeric' })
-      : '';
-    const auteur = article.Auteur || 'FODDEB';
-    const initials = auteur.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const tags = article.Tags
-      ? article.Tags.split(',').map(t => t.trim()).filter(Boolean)
-      : [];
+var CAT_ICONS = {
+  'Activité':       'mdi:account-group-outline',
+  'Plaidoyer':      'mdi:bullhorn-outline',
+  'Formation':      'mdi:school-outline',
+  'Annonce':        'mdi:bell-outline',
+  'Publication':    'mdi:file-document-outline',
+  'Autonomisation': 'mdi:flower-outline',
+  'Protection':     'mdi:shield-account-outline',
+  'Gouvernance':    'mdi:bank-outline',
+  'default':        'mdi:newspaper-variant-outline',
+};
 
-    return `
-      <article class="article-card${isFeatured ? ' featured' : ''}"
-               onclick="window.location.href='/pages/article.html?id=${article.ID}'"
-               role="button" tabindex="0"
-               aria-label="Lire : ${article.Titre}"
-               onkeydown="if(event.key==='Enter')window.location.href='/pages/article.html?id=${article.ID}'">
+var CAT_COLORS = {
+  'Activité':       '#1B3A1F',
+  'Plaidoyer':      '#8B3A62',
+  'Formation':      '#1B4A6B',
+  'Annonce':        '#4A2B1B',
+  'Publication':    '#2E4A1B',
+  'Autonomisation': '#6B4C9A',
+  'Protection':     '#4A1B2F',
+  'Gouvernance':    '#1B3A4A',
+  'default':        '#1B5E20',
+};
 
-        <div class="article-img" style="background:${color}">
-          <!-- TODO : remplacer par la vraie photo de l'événement FODDEB -->
-          <!-- Image provisoire Unsplash (peaux africaines, contexte afro) -->
-          <img src="${img}" alt="${article.Titre || ''}" loading="lazy"
-               onerror="this.style.display='none'"/>
-          <div class="article-img-overlay"></div>
-          <span class="article-cat-badge">${article.Categorie || 'Actualité'}</span>
-          <iconify-icon icon="${icon}" width="48" class="article-img-icon"></iconify-icon>
-        </div>
+function getImg(cat)   { return FALLBACK_IMAGES[cat] || FALLBACK_IMAGES['default']; }
+function getIcon(cat)  { return CAT_ICONS[cat]  || CAT_ICONS['default']; }
+function getColor(cat) { return CAT_COLORS[cat] || CAT_COLORS['default']; }
 
-        <div class="article-body">
-          <div class="article-meta">
-            <span>
-              <iconify-icon icon="mdi:calendar-outline" width="13"></iconify-icon>
-              ${date}
-            </span>
-          </div>
-          <h2 class="article-title">${article.Titre || ''}</h2>
-          <p class="article-excerpt">${article.Excerpt || article.Contenu?.replace(/<[^>]+>/g,'').slice(0,200) || ''}</p>
-          ${tags.length ? `<div class="tags-row">${tags.slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : ''}
-          <div class="article-footer">
-            <div class="article-author">
-              <div class="article-author-av">${initials}</div>
-              <span class="article-author-name">${auteur}</span>
-            </div>
-            <span class="article-read-btn">
-              Lire
-              <iconify-icon icon="mdi:arrow-right" width="15"></iconify-icon>
-            </span>
-          </div>
-        </div>
-      </article>`;
-  }
+/* ─────────────────────────────────────────────────────────────────
+   RENDU HTML D'UNE CARTE ARTICLE
+   — intègre le bouton "Documents" si l'article a des pièces jointes
+───────────────────────────────────────────────────────────────── */
+function renderCard(article, index, isFeatured) {
+  var imgRaw = article.Image ? driveImgUrl(article.Image) : '';
+  var img    = imgRaw || getImg(article.Categorie);
+  var icon   = getIcon(article.Categorie);
+  var color  = getColor(article.Categorie);
+  var date   = article.DatePublication
+    ? FODDEB.formatDate(article.DatePublication, { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+  var auteur   = article.Auteur || 'FODDEB';
+  var initials = auteur.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+  var tags     = article.Tags
+    ? article.Tags.split(',').map(function(t) { return t.trim(); }).filter(Boolean)
+    : [];
 
-  /* ═══════════════════════════════════════════════════════════════
-     RENDU DE LA GRILLE + PAGINATION
-  ═══════════════════════════════════════════════════════════════ */
-  function renderGrid() {
-    const grid     = document.getElementById('newsGrid');
-    const pagDiv   = document.getElementById('pagination');
-    const countEl  = document.getElementById('filterCount');
-    const total    = filtered.length;
-    const totalPages = Math.ceil(total / PER_PAGE);
-
-    // Clamp page courante
-    if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
-
-    const start = (currentPage - 1) * PER_PAGE;
-    const slice = filtered.slice(start, start + PER_PAGE);
-
-    countEl.textContent = `${total} article${total !== 1 ? 's' : ''}`;
-
-    if (total === 0) {
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <div class="empty-state-icon">
-            <iconify-icon icon="mdi:newspaper-remove-outline" width="32" style="color:var(--g6)"></iconify-icon>
-          </div>
-          <h3>Aucun article trouvé</h3>
-          <p>Aucun article ne correspond à votre recherche. Essayez d'autres mots-clés ou une autre catégorie.</p>
-          <button class="btn btn-p" onclick="resetFilters()">Voir tous les articles</button>
-        </div>`;
-      pagDiv.style.display = 'none';
-      return;
+  /* ── Détection des pièces jointes ───────────────────────────── */
+  var hasPieces     = false;
+  var piecesEncoded = '';
+  try {
+    var pArr = JSON.parse(article.Pieces || '[]');
+    if (Array.isArray(pArr) && pArr.length) {
+      hasPieces     = true;
+      /* Encodage sécurisé pour passage en attribut onclick */
+      piecesEncoded = encodeURIComponent(JSON.stringify(pArr)).replace(/'/g, '%27');
     }
+  } catch (e) { /* Pas de pièces jointes ou JSON invalide */ }
 
-    // Premier article en vedette uniquement sur la page 1, catégorie "tous", sans recherche
-    const canFeatured = currentPage === 1 && currentCat === 'tous'
-      && !document.getElementById('searchInput').value.trim();
+  /* ── Bouton Documents (conditionnel) ─────────────────────────── */
+  var docsBtn = hasPieces
+    ? '<button class="btn-docs" onclick="openListViewer(\'' + piecesEncoded + '\',event)" title="Lire les documents joints">'
+      + '<iconify-icon icon="mdi:paperclip" width="13"></iconify-icon>'
+      + 'Documents'
+      + '</button>'
+    : '';
 
-    grid.innerHTML = slice.map((a, i) =>
-      renderCard(a, start + i, canFeatured && i === 0)
-    ).join('');
+  return ''
+    + '<article class="article-card' + (isFeatured ? ' featured' : '') + '"'
+    + ' onclick="window.location.href=\'/pages/article.html?id=' + article.ID + '\'"'
+    + ' role="button" tabindex="0"'
+    + ' aria-label="Lire : ' + _escHtml(article.Titre) + '"'
+    + ' onkeydown="if(event.key===\'Enter\')window.location.href=\'/pages/article.html?id=' + article.ID + '\'">'
 
-    // Pagination
-    if (totalPages > 1) {
-      pagDiv.style.display = 'flex';
-      let html = '';
-      html += `<button class="page-btn wide" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}><iconify-icon icon="mdi:chevron-left" width="18"></iconify-icon></button>`;
-      for (let p = 1; p <= totalPages; p++) {
-        if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
-          if (p === 2 || p === totalPages - 1) html += `<span style="padding:0 4px;color:var(--gr4)">…</span>`;
-          continue;
-        }
-        html += `<button class="page-btn${p===currentPage?' active':''}" onclick="goPage(${p})">${p}</button>`;
+    + '<div class="article-img" style="background:' + color + '">'
+    + '<img src="' + img + '" alt="' + _escHtml(article.Titre || '') + '" loading="lazy" onerror="this.style.display=\'none\'"/>'
+    + '<div class="article-img-overlay"></div>'
+    + '<span class="article-cat-badge">' + _escHtml(article.Categorie || 'Actualité') + '</span>'
+    + '<iconify-icon icon="' + icon + '" width="48" class="article-img-icon"></iconify-icon>'
+    + '</div>'
+
+    + '<div class="article-body">'
+    + '<div class="article-meta">'
+    + '<span><iconify-icon icon="mdi:calendar-outline" width="13"></iconify-icon>' + date + '</span>'
+    + '</div>'
+    + '<h2 class="article-title">' + _escHtml(article.Titre || '') + '</h2>'
+    + '<p class="article-excerpt">'
+    + _escHtml((article.Excerpt || (article.Contenu || '').replace(/<[^>]+>/g, '').slice(0, 200)))
+    + '</p>'
+    + (tags.length
+        ? '<div class="tags-row">' + tags.slice(0, 3).map(function(t) { return '<span class="tag">' + _escHtml(t) + '</span>'; }).join('') + '</div>'
+        : '')
+    + '<div class="article-footer">'
+    + '<div class="article-author">'
+    + '<div class="article-author-av">' + initials + '</div>'
+    + '<span class="article-author-name">' + _escHtml(auteur) + '</span>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:8px">'
+    + docsBtn
+    + '<span class="article-read-btn">Lire<iconify-icon icon="mdi:arrow-right" width="15"></iconify-icon></span>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    + '</article>';
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   RENDU GRILLE + PAGINATION
+───────────────────────────────────────────────────────────────── */
+function renderGrid() {
+  var grid      = document.getElementById('newsGrid');
+  var pagDiv    = document.getElementById('pagination');
+  var countEl   = document.getElementById('filterCount');
+  var total     = filtered.length;
+  var totalPages = Math.ceil(total / PER_PAGE);
+
+  if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+  var start = (currentPage - 1) * PER_PAGE;
+  var slice = filtered.slice(start, start + PER_PAGE);
+
+  countEl.textContent = total + ' article' + (total !== 1 ? 's' : '');
+
+  if (total === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">'
+      + '<div class="empty-state-icon"><iconify-icon icon="mdi:newspaper-remove-outline" width="32" style="color:var(--g6)"></iconify-icon></div>'
+      + '<h3>Aucun article trouvé</h3>'
+      + '<p>Aucun article ne correspond à votre recherche. Essayez d\'autres mots-clés ou une autre catégorie.</p>'
+      + '<button class="btn btn-p" onclick="resetFilters()">Voir tous les articles</button>'
+      + '</div>';
+    pagDiv.style.display = 'none';
+    return;
+  }
+
+  /* Carte vedette uniquement page 1 / catégorie "tous" / pas de recherche */
+  var canFeatured = currentPage === 1 && currentCat === 'tous'
+    && !document.getElementById('searchInput').value.trim();
+
+  grid.innerHTML = slice.map(function(a, i) {
+    return renderCard(a, start + i, canFeatured && i === 0);
+  }).join('');
+
+  /* Pagination */
+  if (totalPages > 1) {
+    pagDiv.style.display = 'flex';
+    var html = '';
+    html += '<button class="page-btn wide" onclick="goPage(' + (currentPage - 1) + ')" ' + (currentPage === 1 ? 'disabled' : '') + '><iconify-icon icon="mdi:chevron-left" width="18"></iconify-icon></button>';
+    for (var p = 1; p <= totalPages; p++) {
+      if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
+        if (p === 2 || p === totalPages - 1) html += '<span style="padding:0 4px;color:var(--gr4)">…</span>';
+        continue;
       }
-      html += `<button class="page-btn wide" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}><iconify-icon icon="mdi:chevron-right" width="18"></iconify-icon></button>`;
-      pagDiv.innerHTML = html;
-    } else {
-      pagDiv.style.display = 'none';
+      html += '<button class="page-btn' + (p === currentPage ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
     }
+    html += '<button class="page-btn wide" onclick="goPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages ? 'disabled' : '') + '><iconify-icon icon="mdi:chevron-right" width="18"></iconify-icon></button>';
+    pagDiv.innerHTML = html;
+  } else {
+    pagDiv.style.display = 'none';
   }
+}
 
-  function goPage(p) {
-    const totalPages = Math.ceil(filtered.length / PER_PAGE);
-    if (p < 1 || p > totalPages) return;
-    currentPage = p;
-    renderGrid();
-    document.getElementById('actualites').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+function goPage(p) {
+  var totalPages = Math.ceil(filtered.length / PER_PAGE);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderGrid();
+  document.getElementById('actualites').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-  /* ═══════════════════════════════════════════════════════════════
-     FILTRES
-  ═══════════════════════════════════════════════════════════════ */
-  function applyFilters() {
-    const query = document.getElementById('searchInput').value.trim().toLowerCase();
-    filtered = allArticles.filter(a => {
-      const matchCat = currentCat === 'tous' || (a.Categorie || '').toLowerCase() === currentCat.toLowerCase();
-      if (!matchCat) return false;
-      if (!query) return true;
-      const hay = [a.Titre, a.Excerpt, a.Contenu, a.Tags].join(' ').toLowerCase();
-      return hay.includes(query);
-    });
-    currentPage = 1;
-    renderGrid();
-  }
-
-  function setFilter(cat) {
-    currentCat = cat;
-    document.querySelectorAll('.pill').forEach(p => {
-      p.classList.toggle('active', p.dataset.cat === cat);
-    });
-    applyFilters();
-  }
-
-  function resetFilters() {
-    currentCat = 'tous';
-    document.getElementById('searchInput').value = '';
-    setFilter('tous');
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     PILLS DE CATÉGORIES (injectées depuis les données réelles)
-  ═══════════════════════════════════════════════════════════════ */
-  function buildCatPills(articles) {
-    const cats = [...new Set(articles.map(a => a.Categorie).filter(Boolean))].sort();
-    const pillsContainer = document.getElementById('catPills');
-    cats.forEach(cat => {
-      const btn = document.createElement('button');
-      btn.className = 'pill';
-      btn.dataset.cat = cat;
-      btn.textContent = cat;
-      btn.onclick = () => setFilter(cat);
-      pillsContainer.appendChild(btn);
-    });
-    // Mettre à jour le stat "catégories" dans le hero
-    const hsCats = document.getElementById('hsCats');
-    if (hsCats) hsCats.textContent = cats.length || '—';
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     MODAL LECTEUR
-     L'article est sérialisé en JSON, encodé en URI, passé en paramètre.
-  ═══════════════════════════════════════════════════════════════ */
-  function openModal(encodedArticle) {
-    let article;
-    try { article = JSON.parse(decodeURIComponent(encodedArticle)); }
-    catch { return; }
-
-    const modal   = document.getElementById('articleModal');
-    const imgEl   = document.getElementById('modalImgEl');
-    const bg      = article.Image ? driveImgUrl(article.Image) : getImg(article.Categorie);
-    const color   = getColor(article.Categorie);
-
-    // Image
-    imgEl.src = bg;
-    imgEl.style.display = 'block';
-    document.getElementById('modalImg').style.background = color;
-
-    // Catégorie + titre dans l'image
-    document.getElementById('modalCat').textContent   = article.Categorie || 'Actualité';
-    document.getElementById('modalTitle').textContent = article.Titre || '';
-
-    // Méta
-    const date   = article.DatePublication
-      ? FODDEB.formatDate(article.DatePublication, { day: 'numeric', month: 'long', year: 'numeric' })
-      : '';
-    const auteur = article.Auteur || 'FODDEB';
-    document.getElementById('modalMeta').innerHTML = `
-      ${date ? `<span><iconify-icon icon="mdi:calendar-outline" width="14"></iconify-icon>${date}</span>` : ''}
-      <span><iconify-icon icon="mdi:account-outline" width="14"></iconify-icon>${auteur}</span>
-      ${article.Categorie ? `<span><iconify-icon icon="mdi:tag-outline" width="14"></iconify-icon>${article.Categorie}</span>` : ''}`;
-
-    // Bouton vers la page article complète
-    document.getElementById('modalBody').innerHTML =
-      `<div style="text-align:center;padding:20px 0">
-        <a href="/pages/article.html?id=${article.ID}"
-           class="btn btn-p"
-           style="display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:12px 24px">
-          <iconify-icon icon="mdi:book-open-page-variant-outline" width="18"></iconify-icon>
-          Lire l'article complet
-        </a>
-        <p style="font-size:13px;color:var(--gr4);margin-top:12px">${article.Excerpt || ''}</p>
-      </div>`;
-
-    // Garder l'ancien code commenté pour référence
-    // const contenu = article.Contenu || article.Excerpt || '';
-    // document.getElementById('modalBody').innerHTML = contenu
-    //   ? contenu.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>')
-      //   : '<p><em>Contenu non disponible.</em></p>';
-
-    // Tags
-    const tags = article.Tags
-      ? article.Tags.split(',').map(t => t.trim()).filter(Boolean)
-      : [];
-    document.getElementById('modalTags').innerHTML = tags.length
-      ? tags.map(t => `<span class="tag">${t}</span>`).join('')
-      : '';
-
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    document.getElementById('modalClose').focus();
-  }
-
-  function closeModal() {
-    document.getElementById('articleModal').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  document.getElementById('modalClose').addEventListener('click', closeModal);
-  document.getElementById('articleModal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeModal();
+/* ─────────────────────────────────────────────────────────────────
+   FILTRES
+───────────────────────────────────────────────────────────────── */
+function applyFilters() {
+  var query = document.getElementById('searchInput').value.trim().toLowerCase();
+  filtered = allArticles.filter(function(a) {
+    var matchCat = currentCat === 'tous' || (a.Categorie || '').toLowerCase() === currentCat.toLowerCase();
+    if (!matchCat) return false;
+    if (!query) return true;
+    var hay = [a.Titre, a.Excerpt, a.Contenu, a.Tags].join(' ').toLowerCase();
+    return hay.includes(query);
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
+  currentPage = 1;
+  renderGrid();
+}
+
+function setFilter(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.pill').forEach(function(p) {
+    p.classList.toggle('active', p.dataset.cat === cat);
+  });
+  applyFilters();
+}
+
+function resetFilters() {
+  currentCat = 'tous';
+  document.getElementById('searchInput').value = '';
+  setFilter('tous');
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   PILLS DE CATÉGORIES
+───────────────────────────────────────────────────────────────── */
+function buildCatPills(articles) {
+  var cats = [];
+  articles.forEach(function(a) { if (a.Categorie && cats.indexOf(a.Categorie) === -1) cats.push(a.Categorie); });
+  cats.sort();
+  var container = document.getElementById('catPills');
+  cats.forEach(function(cat) {
+    var btn = document.createElement('button');
+    btn.className    = 'pill';
+    btn.dataset.cat  = cat;
+    btn.textContent  = cat;
+    btn.onclick      = function() { setFilter(cat); };
+    container.appendChild(btn);
+  });
+  var hsCats = document.getElementById('hsCats');
+  if (hsCats) hsCats.textContent = cats.length || '—';
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   VIEWER PIÈCES JOINTES
+───────────────────────────────────────────────────────────────── */
+
+/* Pièces courantes en mémoire */
+var _lvPieces = [];
+
+/**
+ * openListViewer(piecesEncoded, event)
+ * @param {string} piecesEncoded — JSON encodé en encodeURIComponent
+ * @param {Event}  event         — click du bouton (stoppe la propagation)
+ */
+function openListViewer(piecesEncoded, event) {
+  /* Bloquer la navigation vers article.html */
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+
+  var pieces = [];
+  try { pieces = JSON.parse(decodeURIComponent(piecesEncoded)); } catch (e) { pieces = []; }
+  if (!pieces.length) return;
+
+  _lvPieces = pieces;
+
+  var tabsEl = document.getElementById('lvTabs');
+
+  /* Onglets — visibles uniquement si plusieurs pièces */
+  if (pieces.length > 1) {
+    tabsEl.classList.add('show');
+    tabsEl.innerHTML = pieces.map(function(p, i) {
+      return '<button class="lv-tab' + (i === 0 ? ' active' : '') + '" id="lvTab-' + i + '" onclick="lvLoadPiece(' + i + ')">'
+        + '<iconify-icon icon="' + _lvIcon(p.type) + '" style="color:' + _lvColor(p.type) + '"></iconify-icon>'
+        + _escHtml(p.nom || ('Document ' + (i + 1)))
+        + '</button>';
+    }).join('');
+  } else {
+    tabsEl.classList.remove('show');
+    tabsEl.innerHTML = '';
+  }
+
+  /* Charger la première pièce */
+  lvLoadPiece(0);
+
+  document.getElementById('listViewerM').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+/**
+ * lvLoadPiece(index)
+ * Charge une pièce jointe dans l'iframe viewer
+ */
+function lvLoadPiece(index) {
+  var p = _lvPieces[index];
+  if (!p || !p.url) return;
+
+  /* Mettre en surbrillance l'onglet actif */
+  _lvPieces.forEach(function(_, i) {
+    var tab = document.getElementById('lvTab-' + i);
+    if (tab) tab.classList.toggle('active', i === index);
   });
 
-  /* ═══════════════════════════════════════════════════════════════
-     NEWSLETTER
-  ═══════════════════════════════════════════════════════════════ */
-  async function handleNewsletter(e) {
-    e.preventDefault();
-    const email = document.getElementById('nlEmail').value.trim();
-    if (!FODDEB.isEmail(email)) {
-      FODDEB.toast.error('Adresse email invalide.');
-      return;
-    }
-    const btn = document.getElementById('nlBtn');
-    FODDEB.loader.btn(btn, true);
-    try {
-      await FODDEB_API.newsletter.subscribe(email, '');
-      FODDEB.toast.success('Inscription confirmée ! Bienvenue dans la communauté FODDEB.', 5000);
-      e.target.reset();
-    } catch (err) {
-      FODDEB.toast.error('Erreur : ' + (err.message || 'Veuillez réessayer.'));
-    } finally {
-      FODDEB.loader.btn(btn, false);
-    }
-  }
+  /* Mise à jour en-tête */
+  document.getElementById('lvName').textContent = p.nom || 'Document';
+  document.getElementById('lvIcon').setAttribute('icon', _lvIcon(p.type));
 
-  /* ═══════════════════════════════════════════════════════════════
-     MENU MOBILE
-  ═══════════════════════════════════════════════════════════════ */
-  const hamburger  = document.getElementById('hamburger');
-  const mobileNav  = document.getElementById('mobileNav');
-  const mobileClose = document.getElementById('mobileClose');
-  hamburger.addEventListener('click', () => {
-    mobileNav.classList.add('open');
-    mobileNav.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+  var frame = document.getElementById('listViewerFrame');
+
+  if (p.type && p.type.startsWith('image/')) {
+    /* ── Image : srcdoc avec guillemets correctement échappés ── */
+    frame.removeAttribute('src');
+    frame.srcdoc = '<!DOCTYPE html><html><head>'
+      + '<style>'
+      + '*{margin:0;padding:0}'
+      + 'body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}'
+      + 'img{max-width:100%;max-height:100vh;object-fit:contain}'
+      + '.err{color:#fff;padding:20px;font-family:sans-serif}'
+      + '</style></head><body>'
+      + '<img src="' + p.url + '" alt="' + _escHtml(p.nom || '') + '"'
+      + ' onerror="this.outerHTML=\'<p class=&quot;err&quot;>Image non disponible</p>\'">'
+      + '</body></html>';
+  } else {
+    /* ── Autres fichiers : Google Docs viewer ── */
+    frame.removeAttribute('srcdoc');
+    frame.src = 'https://docs.google.com/gview?url=' + encodeURIComponent(p.url) + '&embedded=true';
+  }
+}
+
+/** Fermeture du viewer pièces jointes */
+function closeListViewer() {
+  document.getElementById('listViewerM').classList.remove('open');
+  document.body.style.overflow = '';
+  var f = document.getElementById('listViewerFrame');
+  f.src = '';
+  f.removeAttribute('srcdoc');
+  _lvPieces = [];
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   MODAL LECTEUR D'ARTICLE (aperçu rapide)
+───────────────────────────────────────────────────────────────── */
+function closeModal() {
+  document.getElementById('articleModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('articleModal').addEventListener('click', function(e) {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+/* ─────────────────────────────────────────────────────────────────
+   FERMETURE CLAVIER (Escape)
+───────────────────────────────────────────────────────────────── */
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  /* Priorité au viewer de pièces s'il est ouvert */
+  var lv = document.getElementById('listViewerM');
+  if (lv && lv.classList.contains('open')) { closeListViewer(); return; }
+  /* Sinon fermer la modal article */
+  var am = document.getElementById('articleModal');
+  if (am && am.classList.contains('open')) closeModal();
+});
+
+/* ─────────────────────────────────────────────────────────────────
+   NEWSLETTER
+───────────────────────────────────────────────────────────────── */
+async function handleNewsletter(e) {
+  e.preventDefault();
+  var email = document.getElementById('nlEmail').value.trim();
+  if (!FODDEB.isEmail(email)) { FODDEB.toast.error('Adresse email invalide.'); return; }
+  var btn = document.getElementById('nlBtn');
+  FODDEB.loader.btn(btn, true);
+  try {
+    await FODDEB_API.newsletter.subscribe(email, '');
+    FODDEB.toast.success('Inscription confirmée ! Bienvenue dans la communauté FODDEB.', 5000);
+    e.target.reset();
+  } catch (err) {
+    FODDEB.toast.error('Erreur : ' + (err.message || 'Veuillez réessayer.'));
+  } finally {
+    FODDEB.loader.btn(btn, false);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   MENU MOBILE
+───────────────────────────────────────────────────────────────── */
+var hamburger  = document.getElementById('hamburger');
+var mobileNav  = document.getElementById('mobileNav');
+var mobileClose = document.getElementById('mobileClose');
+hamburger.addEventListener('click', function() {
+  mobileNav.classList.add('open');
+  mobileNav.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+});
+function closeMobileNav() {
+  mobileNav.classList.remove('open');
+  mobileNav.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+mobileClose.addEventListener('click', closeMobileNav);
+mobileNav.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', closeMobileNav); });
+
+/* ─────────────────────────────────────────────────────────────────
+   FADE-IN AU SCROLL
+───────────────────────────────────────────────────────────────── */
+var fadeObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) { e.target.classList.add('visible'); fadeObserver.unobserve(e.target); }
   });
-  const closeMobile = () => {
-    mobileNav.classList.remove('open');
-    mobileNav.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  };
-  mobileClose.addEventListener('click', closeMobile);
-  mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMobile));
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-in').forEach(function(el) { fadeObserver.observe(el); });
 
-  /* ═══════════════════════════════════════════════════════════════
-     FADE-IN AU SCROLL
-  ═══════════════════════════════════════════════════════════════ */
-  const fadeObserver = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); fadeObserver.unobserve(e.target); } });
-  }, { threshold: 0.08 });
-  document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+/* ─────────────────────────────────────────────────────────────────
+   DONNÉES HISTORIQUES (fallback si GAS indisponible)
+───────────────────────────────────────────────────────────────── */
+var FALLBACK_ARTICLES = [
+  {
+    ID: 'ART-STATIC-001',
+    Titre: 'Cérémonie de remise de prix — 2ème édition du Concours de presse',
+    Categorie: 'Plaidoyer',
+    Excerpt: 'Le FODDEB a organisé la cérémonie de remise de prix de sa 2ème édition du concours de la meilleure production de presse liée aux thématiques de la protection de l\'enfant.',
+    Auteur: 'FODDEB', DatePublication: '2024-12-15', Statut: 'publie',
+    Tags: 'Concours,Presse,Droits de l\'enfant', Image: '', Pieces: '[]',
+  },
+  {
+    ID: 'ART-STATIC-002',
+    Titre: 'Sensibilisation des adolescentes sur les violences en ligne — Abomey-Calavi',
+    Categorie: 'Activité',
+    Excerpt: 'Atelier de sensibilisation à destination des adolescentes sur les risques liés aux violences en ligne et à la cybermaltraitance.',
+    Auteur: 'FODDEB', DatePublication: '2024-11-20', Statut: 'publie',
+    Tags: 'Sensibilisation,Adolescentes,Violences en ligne', Image: '', Pieces: '[]',
+  },
+  {
+    ID: 'ART-STATIC-003',
+    Titre: 'Elle Inspire — Autonomisation des filles et jeunes femmes, Donga',
+    Categorie: 'Autonomisation',
+    Excerpt: 'Initiative de sensibilisation, de mentoring et d\'accompagnement des adolescentes et jeunes filles vers l\'autonomisation et le leadership.',
+    Auteur: 'FODDEB', DatePublication: '2024-10-05', Statut: 'publie',
+    Tags: 'Filles,Leadership,Autonomisation', Image: '', Pieces: '[]',
+  },
+  {
+    ID: 'ART-STATIC-004',
+    Titre: 'Rencontre semestrielle — Coordination départementale de l\'Ouémé',
+    Categorie: 'Gouvernance',
+    Excerpt: 'Réunion semestrielle de la coordination départementale de l\'Ouémé regroupant les OSC membres du FODDEB.',
+    Auteur: 'FODDEB', DatePublication: '2024-09-12', Statut: 'publie',
+    Tags: 'Coordination,Ouémé,OSC', Image: '', Pieces: '[]',
+  },
+  {
+    ID: 'ART-STATIC-005',
+    Titre: 'Séance d\'entretien — Délégation FODDEB avec le Garde des Sceaux',
+    Categorie: 'Plaidoyer',
+    Excerpt: 'La délégation du FODDEB a été reçue par le Ministre de la Justice pour aborder les questions relatives à la mise en œuvre des droits de l\'enfant.',
+    Auteur: 'FODDEB', DatePublication: '2024-08-28', Statut: 'publie',
+    Tags: 'Plaidoyer,Justice,Institutions', Image: '', Pieces: '[]',
+  },
+  {
+    ID: 'ART-STATIC-006',
+    Titre: 'Atelier de renforcement de partenariat — Plan International Bénin',
+    Categorie: 'Formation',
+    Excerpt: 'Atelier organisé conjointement par le FODDEB et Plan International Bénin pour renforcer le partenariat stratégique et présenter les nouvelles orientations programmatiques.',
+    Auteur: 'FODDEB', DatePublication: '2024-07-18', Statut: 'publie',
+    Tags: 'Plan International,Partenariat,Formation', Image: '', Pieces: '[]',
+  },
+];
 
-  /* ═══════════════════════════════════════════════════════════════
-     FALLBACK STATIQUE
-     Données réelles FODDEB — affichées si le GAS ne répond pas.
-     TODO : ces données viendront uniquement du GAS une fois les
-            feuilles Google Sheets renseignées (Statut = 'publie').
-  ═══════════════════════════════════════════════════════════════ */
-  const FALLBACK_ARTICLES = [
-    {
-      ID: 'ART-STATIC-001',
-      Titre: 'Cérémonie de remise de prix — 2ème édition du Concours de presse',
-      Categorie: 'Plaidoyer',
-      Excerpt: 'Le FODDEB a organisé la cérémonie de remise de prix de sa 2ème édition du concours de la meilleure production de presse liée aux thématiques de la protection de l\'enfant, des droits en matière de santé sexuelle et reproductive (DSSR), et de l\'éducation inclusive.',
-      Contenu: 'Le FODDEB a organisé la cérémonie de remise de prix de sa 2ème édition du concours de la meilleure production de presse liée aux thématiques de la protection de l\'enfant, des droits en matière de santé sexuelle et reproductive (DSSR), et de l\'éducation inclusive. Cette initiative récompense les journalistes et blogueurs engagés pour la promotion des droits des enfants au Bénin.\n\nLa cérémonie a réuni lauréats, autorités et représentants des médias partenaires dans une ambiance festive et engagée pour les droits de l\'enfant.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-12-15',
-      Statut: 'publie',
-      Tags: 'Concours,Presse,Droits de l\'enfant',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-002',
-      Titre: 'Sensibilisation des adolescentes sur les violences en ligne — Abomey-Calavi',
-      Categorie: 'Activité',
-      Excerpt: 'Atelier de sensibilisation à destination des adolescentes sur les risques liés aux violences en ligne et à la cybermaltraitance, organisé à Abomey-Calavi dans le cadre du programme de protection de l\'enfance.',
-      Contenu: 'Atelier de sensibilisation à destination des adolescentes sur les risques liés aux violences en ligne et à la cybermaltraitance, organisé à Abomey-Calavi dans le cadre du programme de protection de l\'enfance.\n\nDes facilitatrices formées par le FODDEB ont animé des sessions interactives abordant l\'utilisation sécurisée des réseaux sociaux, la signalisation des contenus dangereux et les recours disponibles en cas de violence.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-11-20',
-      Statut: 'publie',
-      Tags: 'Sensibilisation,Adolescentes,Violences en ligne',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-003',
-      Titre: 'Elle Inspire — Autonomisation des filles et jeunes femmes, Donga',
-      Categorie: 'Autonomisation',
-      Excerpt: 'Initiative de sensibilisation, de mentoring et d\'accompagnement des adolescentes et jeunes filles vers l\'autonomisation, le leadership et l\'agentivité, mise en place dans le département de la Donga.',
-      Contenu: 'Initiative de sensibilisation, de mentoring et d\'accompagnement des adolescentes et jeunes filles vers l\'autonomisation, le leadership et l\'agentivité, mise en place dans le département de la Donga avec le soutien des autorités locales.\n\nLe programme Elle Inspire vise à renforcer la confiance en soi des jeunes filles, à les outiller en compétences de vie et à leur ouvrir des perspectives d\'avenir à travers des témoignages de femmes inspirantes.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-10-05',
-      Statut: 'publie',
-      Tags: 'Filles,Leadership,Autonomisation',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-004',
-      Titre: 'Rencontre semestrielle — Coordination départementale de l\'Ouémé',
-      Categorie: 'Gouvernance',
-      Excerpt: 'Réunion semestrielle de la coordination départementale de l\'Ouémé regroupant les OSC membres du FODDEB pour faire le bilan des activités et planifier les prochaines interventions.',
-      Contenu: 'Réunion semestrielle de la coordination départementale de l\'Ouémé regroupant les OSC membres du FODDEB pour faire le bilan des activités et planifier les prochaines interventions.\n\nCette rencontre a permis de consolider les liens entre les organisations membres, de partager les bonnes pratiques et de coordonner les actions sur le terrain pour une meilleure protection des enfants dans la région.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-09-12',
-      Statut: 'publie',
-      Tags: 'Coordination,Ouémé,OSC',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-005',
-      Titre: 'Séance d\'entretien — Délégation FODDEB avec le Garde des Sceaux',
-      Categorie: 'Plaidoyer',
-      Excerpt: 'La délégation du FODDEB a été reçue par le Ministre de la Justice pour aborder les questions relatives à la mise en œuvre effective des droits de l\'enfant et au renforcement du cadre juridique de protection.',
-      Contenu: 'La délégation du FODDEB a été reçue par le Ministre de la Justice — Garde des Sceaux à Cotonou, pour aborder les questions relatives à la mise en œuvre effective des droits de l\'enfant et au renforcement du cadre juridique de protection.\n\nLes échanges ont porté sur la révision de certaines dispositions légales, l\'accès à la justice pour les enfants victimes et les mécanismes de coordination entre la société civile et les institutions judiciaires.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-08-28',
-      Statut: 'publie',
-      Tags: 'Plaidoyer,Justice,Institutions',
-      Image: '',
-    },
-    {
-      ID: 'ART-STATIC-006',
-      Titre: 'Atelier de renforcement de partenariat — Plan International Bénin',
-      Categorie: 'Formation',
-      Excerpt: 'Atelier organisé conjointement par le FODDEB et Plan International Bénin pour renforcer le partenariat stratégique et présenter les nouvelles orientations programmatiques en faveur des enfants.',
-      Contenu: 'Atelier organisé conjointement par le FODDEB et Plan International Bénin pour renforcer le partenariat stratégique et présenter les nouvelles orientations programmatiques 2025-2028 en faveur des enfants du Bénin.\n\nLes participants — représentants d\'OSC membres et équipes de Plan International — ont travaillé sur les mécanismes de collaboration, les indicateurs de suivi et les modalités de mise en œuvre des projets communs.',
-      Auteur: 'FODDEB',
-      DatePublication: '2024-07-18',
-      Statut: 'publie',
-      Tags: 'Plan International,Partenariat,Formation',
-      Image: '',
-    },
-  ];
+/* ─────────────────────────────────────────────────────────────────
+   CHARGEMENT PRINCIPAL
+   1. Appel GAS news.list()
+   2. Filtre Statut === 'publie'
+   3. Fusion avec FALLBACK_ARTICLES si nécessaire
+   4. Construction pills, aperçu hero, grille
+───────────────────────────────────────────────────────────────── */
+async function loadActualites() {
+  var grid = document.getElementById('newsGrid');
 
-  /* ═══════════════════════════════════════════════════════════════
-     CHARGEMENT PRINCIPAL — GAS avec fallback statique
-     ─────────────────────────────────────────────────────────────
-     1. Appel FODDEB_API.news.list() → GAS
-     2. Filtre Statut === 'publie'
-     3. Si 0 résultat ou erreur → FALLBACK_ARTICLES
-     4. Mise à jour stats hero, pills catégories, grille
-  ═══════════════════════════════════════════════════════════════ */
-  async function loadActualites() {
-    const grid = document.getElementById('newsGrid');
-
-    try {
-      /* ── Appel GAS ──────────────────────────────────────────── */
-      const res = await FODDEB_API.news.list(1, 100);
-
-      let articles = [];
-      if (res && res.data && Array.isArray(res.data)) {
-        // Filtrer uniquement les articles publiés
-        articles = res.data.filter(a =>
-          (a.Statut || '').toString().trim().toLowerCase() === 'publie'
-        );
-      }
-
-      // FUSION : les nouveaux articles publiés (GAS) en premier,
-      // puis le contenu historique fixe. L'un n'efface jamais l'autre.
-      allArticles = [...articles, ...FALLBACK_ARTICLES];
-      console.info(`[FODDEB] ${articles.length} article(s) GAS + ${FALLBACK_ARTICLES.length} historique(s).`);
-
-    } catch (err) {
-      /* GAS inaccessible → on garde au minimum l'historique fixe */
-      allArticles = FALLBACK_ARTICLES;
-      console.warn('[FODDEB] news_list indisponible :', err.message, '— Affichage du contenu historique uniquement.');
+  try {
+    var res = await FODDEB_API.news.list(1, 100);
+    var gasArticles = [];
+    if (res && res.data && Array.isArray(res.data)) {
+      gasArticles = res.data.filter(function(a) {
+        return (a.Statut || '').toString().trim().toLowerCase() === 'publie';
+      });
     }
-
-    /* ── Stats hero ─────────────────────────────────────────── */
-    const hsArticles = document.getElementById('hsArticles');
-    if (hsArticles) hsArticles.textContent = allArticles.length;
-
-    /* ── Pills catégories ───────────────────────────────────── */
-    buildCatPills(allArticles);
-
-    /* ── Aperçu hero (3 premiers articles) ─────────────────── */
-    const preview = document.getElementById('heroPreview');
-    if (preview && allArticles.length > 0) {
-      preview.innerHTML = allArticles.slice(0, 3).map(a => `
-        <div class="hnp-card">
-          <div class="hnp-icon">
-            <iconify-icon icon="${getIcon(a.Categorie)}" width="18"></iconify-icon>
-          </div>
-          <div>
-            <div class="hnp-cat">${a.Categorie || 'Actualité'}</div>
-            <div class="hnp-title">${a.Titre || ''}</div>
-            <div class="hnp-date">${a.DatePublication
-              ? FODDEB.formatDate(a.DatePublication, { month: 'long', year: 'numeric' })
-              : ''}</div>
-          </div>
-        </div>`).join('');
-    }
-
-    /* ── Filtrer + rendre la grille ─────────────────────────── */
-    filtered = [...allArticles];
-    grid.classList.add('visible');
-    renderGrid();
+    /* Fusion : articles GAS d'abord, puis historique fixe */
+    allArticles = gasArticles.concat(FALLBACK_ARTICLES);
+    console.info('[FODDEB] ' + gasArticles.length + ' article(s) GAS + ' + FALLBACK_ARTICLES.length + ' historique(s).');
+  } catch (err) {
+    allArticles = FALLBACK_ARTICLES;
+    console.warn('[FODDEB] news_list indisponible :', err.message, '— Contenu historique affiché.');
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     RECHERCHE AVEC DEBOUNCE
-  ═══════════════════════════════════════════════════════════════ */
-  document.getElementById('searchInput').addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(applyFilters, 300);
+  /* Stats hero */
+  var hsArticles = document.getElementById('hsArticles');
+  if (hsArticles) hsArticles.textContent = allArticles.length;
+
+  /* Pills catégories */
+  buildCatPills(allArticles);
+
+  /* Aperçu hero (3 premiers) */
+  var preview = document.getElementById('heroPreview');
+  if (preview && allArticles.length > 0) {
+    preview.innerHTML = allArticles.slice(0, 3).map(function(a) {
+      return '<div class="hnp-card">'
+        + '<div class="hnp-icon"><iconify-icon icon="' + getIcon(a.Categorie) + '" width="18"></iconify-icon></div>'
+        + '<div>'
+        + '<div class="hnp-cat">' + _escHtml(a.Categorie || 'Actualité') + '</div>'
+        + '<div class="hnp-title">' + _escHtml(a.Titre || '') + '</div>'
+        + '<div class="hnp-date">' + (a.DatePublication ? FODDEB.formatDate(a.DatePublication, { month: 'long', year: 'numeric' }) : '') + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  /* Rendu grille */
+  filtered = allArticles.slice();
+  grid.classList.add('visible');
+  renderGrid();
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   RECHERCHE AVEC DEBOUNCE
+───────────────────────────────────────────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(applyFilters, 300);
+});
+
+/* ─────────────────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', loadActualites);
+
+/* PWA Service Worker */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').catch(function() {});
   });
-
-  /* ═══════════════════════════════════════════════════════════════
-     INIT
-  ═══════════════════════════════════════════════════════════════ */
-  document.addEventListener('DOMContentLoaded', loadActualites);
-
-  /* PWA Service Worker */
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
-  }
+}
 </script>
 </body>
 </html>

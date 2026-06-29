@@ -709,17 +709,29 @@ function openArtViewer(index, pieces) {
   var frame = document.getElementById('artViewerFrame');
 
   if (p.type && p.type.startsWith('image/')) {
+    /* ── Image : srcdoc avec guillemets correctement échappés ── */
     frame.removeAttribute('src');
-    frame.srcdoc = '<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="' + p.url + '" alt="' + _escHtml(p.nom || '') + '" onerror="document.body.innerHTML='<p style=color:#fff;padding:20px>Image non disponible</p>'"></body></html>';
+    frame.srcdoc = '<!DOCTYPE html><html><head>'
+      + '<style>'
+      + '*{margin:0;padding:0}'
+      + 'body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}'
+      + 'img{max-width:100%;max-height:100vh;object-fit:contain}'
+      + '.err{color:#fff;padding:20px;font-family:sans-serif}'
+      + '</style></head><body>'
+      + '<img src="' + p.url + '" alt="' + _escHtml(p.nom || '') + '"'
+      /* ↓ guillemets simples JS échappés en \' ; " style échappés en &quot; */
+      + ' onerror="this.outerHTML=\'<p class=&quot;err&quot;>Image non disponible</p>\'">'
+      + '</body></html>';
   } else {
+    /* ── Autres fichiers : Google Docs viewer ── */
     frame.removeAttribute('srcdoc');
-    frame.src = 'https://docs.google.com/gview?url=' + encodeURIComponent(p.url) + '&embedded=true';
+    frame.src = 'https://docs.google.com/gview?url='
+      + encodeURIComponent(p.url) + '&embedded=true';
   }
 
   document.getElementById('artViewerM').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-
 function closeArtViewer() {
   document.getElementById('artViewerM').classList.remove('open');
   document.body.style.overflow = '';

@@ -241,61 +241,59 @@
     .article-h1 { font-family: var(--fh); font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 800; line-height: 1.2; color: #fff; margin-bottom: 10px; }
     .article-byline { font-size: 13px; color: rgba(255,255,255,.75); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     .article-byline iconify-icon { opacity: .7; }
-        /* ── Contenu article — rendu Quill côté public ── */
+        /* ── Contenu article Quill ── */
     .doc-content { font-size: 16px; line-height: 1.85; color: var(--gr8); word-break: break-word; }
-    .doc-content h1, .doc-content h2, .doc-content h3 { font-family: var(--fh); color: var(--dark); margin: 32px 0 14px; line-height: 1.3; }
-    .doc-content h1 { font-size: 1.7rem; }
-    .doc-content h2 { font-size: 1.35rem; border-bottom: 2px solid var(--g1); padding-bottom: 8px; }
-    .doc-content h3 { font-size: 1.1rem; color: var(--g8); }
-    .doc-content p  { margin-bottom: 16px; }
-    .doc-content ul, .doc-content ol { padding-left: 1.6em; margin-bottom: 16px; }
-    .doc-content ul li { list-style: disc; margin: 6px 0; }
-    .doc-content ol li { list-style: decimal; margin: 6px 0; }
-    .doc-content br { display: block; margin: 6px 0; }
-    .doc-content strong { font-weight: 700; color: var(--dark); }
-    .doc-content em     { font-style: italic; }
-    .doc-content u      { text-decoration: underline; }
-    .doc-content s      { text-decoration: line-through; }
-    .doc-content .ql-align-center, .doc-content [style*="text-align: center"], .doc-content [style*="text-align:center"] { text-align: center; }
-    .doc-content .ql-align-right,  .doc-content [style*="text-align: right"],  .doc-content [style*="text-align:right"]  { text-align: right; }
-    .doc-content .ql-align-justify,.doc-content [style*="text-align: justify"],.doc-content [style*="text-align:justify"] { text-align: justify; }
-    .doc-content span[style*="color"] { color: revert; }
-    .doc-content blockquote { border-left: 4px solid var(--g4); padding: 10px 16px; background: var(--g0); border-radius: 0 var(--rs) var(--rs) 0; margin: 16px 0; color: var(--g8); font-style: italic; }
-    .doc-content a { color: var(--g7); text-decoration: underline; text-underline-offset: 2px; }
-    .doc-content a:hover { color: var(--g8); }
-    .doc-content img { max-width: 100%; height: auto; border-radius: var(--rs); margin: 12px 0; display: block; }
-    .doc-content table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14.5px; display: block; overflow-x: auto; }
-    .doc-content td, .doc-content th { border: 1px solid var(--gr2); padding: 9px 12px; vertical-align: top; text-align: left; }
-    .doc-content th { background: var(--g0); font-weight: 700; color: var(--g8); }
-    .doc-content tr:nth-child(even) td { background: var(--gr1); }
-    .doc-loading { display: flex; align-items: center; gap: 10px; color: var(--gr4); font-size: 14px; padding: 32px 0; }
-    .doc-loading iconify-icon { font-size: 24px; animation: spin 1s linear infinite; }
-    .doc-error { background: #FFEBEE; color: var(--red); padding: 16px 20px; border-radius: var(--rs); font-size: 14px; margin: 20px 0; }
-    .no-content { padding: 32px; text-align: center; color: var(--gr4); font-size: 14px; background: var(--gr1); border-radius: var(--r); }
-
+    .doc-content h1,.doc-content h2,.doc-content h3 { font-family:var(--fh);color:var(--dark);margin:32px 0 14px;line-height:1.3; }
+    .doc-content h1 { font-size:1.7rem; }
+    .doc-content h2 { font-size:1.35rem;border-bottom:2px solid var(--g1);padding-bottom:8px; }
+    .doc-content h3 { font-size:1.1rem;color:var(--g8); }
+    .doc-content p  { margin-bottom:16px; }
+    .doc-content ul,.doc-content ol { padding-left:1.6em;margin-bottom:16px; }
+    .doc-content ul li { list-style:disc;margin:6px 0; }
+    .doc-content ol li { list-style:decimal;margin:6px 0; }
+    .doc-content br { display:block;margin:6px 0; }
+    .doc-content strong { font-weight:700;color:var(--dark); }
+    .doc-content em { font-style:italic; }
+    .doc-content u  { text-decoration:underline; }
+    .doc-content s  { text-decoration:line-through; }
+    .doc-content .ql-align-center,[style*="text-align: center"],[style*="text-align:center"] { text-align:center; }
+    .doc-content .ql-align-right,[style*="text-align: right"],[style*="text-align:right"]   { text-align:right; }
+    .doc-content .ql-align-justify,[style*="text-align: justify"],[style*="text-align:justify"] { text-align:justify; }
+    .doc-content span[style*="color"] { color:revert; }
+    .doc-content blockquote { border-left:4px solid var(--g4);padding:10px 16px;background:var(--g0);border-radius:0 var(--rs) var(--rs) 0;margin:16px 0;color:var(--g8);font-style:italic; }
+    .doc-content a { color:var(--g7);text-decoration:underline;text-underline-offset:2px; }
+    .doc-content a:hover { color:var(--g8); }
+    .doc-content img { max-width:100%;height:auto;border-radius:var(--rs);margin:12px 0;display:block; }
+    .doc-content table { border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;display:block;overflow-x:auto; }
+    .doc-content td,.doc-content th { border:1px solid var(--gr2);padding:9px 12px;vertical-align:top;text-align:left; }
+    .doc-content th { background:var(--g0);font-weight:700;color:var(--g8); }
+    .doc-content tr:nth-child(even) td { background:var(--gr1); }
+    .doc-loading { display:flex;align-items:center;gap:10px;color:var(--gr4);font-size:14px;padding:32px 0; }
+    .doc-loading iconify-icon { font-size:24px;animation:spin 1s linear infinite; }
+    .doc-error { background:#FFEBEE;color:var(--red);padding:16px 20px;border-radius:var(--rs);font-size:14px;margin:20px 0; }
+    .no-content { padding:32px;text-align:center;color:var(--gr4);font-size:14px;background:var(--gr1);border-radius:var(--r); }
     /* ── Pièces jointes ── */
-    .pj-section { margin-top: 32px; padding: 20px 24px; background: #F8F9FA; border: 1px solid #E8EEE9; border-radius: 12px; }
-    .pj-section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #1B5E20; margin-bottom: 14px; }
-    .pj-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 8px; transition: .2s; }
-    .pj-item:hover { border-color: #81C784; background: #F1F8E9; }
-    .pj-item-icon { font-size: 24px; flex-shrink: 0; }
-    .pj-item-info { flex: 1; min-width: 0; }
-    .pj-item-name { font-size: 14px; font-weight: 600; color: #1C2520; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pj-item-size { font-size: 11px; color: #9AA5B1; margin-top: 2px; }
-    .pj-btn-view { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #1B5E20; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s; white-space: nowrap; flex-shrink: 0; font-family: inherit; }
-    .pj-btn-view:hover { background: #2E7D32; }
-
+    .pj-section { margin-top:32px;padding:20px 24px;background:#F8F9FA;border:1px solid #E8EEE9;border-radius:12px; }
+    .pj-section-title { display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#1B5E20;margin-bottom:14px; }
+    .pj-item { display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:8px;transition:.2s; }
+    .pj-item:hover { border-color:#81C784;background:#F1F8E9; }
+    .pj-item-icon { font-size:24px;flex-shrink:0; }
+    .pj-item-info { flex:1;min-width:0; }
+    .pj-item-name { font-size:14px;font-weight:600;color:#1C2520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .pj-item-size { font-size:11px;color:#9AA5B1;margin-top:2px; }
+    .pj-btn-view { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#1B5E20;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap;flex-shrink:0;font-family:inherit; }
+    .pj-btn-view:hover { background:#2E7D32; }
     /* ── Viewer modale ── */
-    #artViewerM { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
-    #artViewerM.open { display: flex; }
-    #artViewerBox { background: #fff; border-radius: 12px; width: 95vw; max-width: 900px; height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
-    #artViewerHeader { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #E2E8F0; background: #F7FAFC; flex-shrink: 0; }
-    .vh-info { display: flex; align-items: center; gap: 10px; }
-    .vh-name { font-weight: 600; font-size: 14px; color: #1C2520; max-width: 500px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vh-close { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #F0F0F0; border: none; cursor: pointer; color: #4A5568; transition: .2s; font-size: 16px; }
-    .vh-close:hover { background: #E2E8F0; }
-    #artViewerNote { padding: 6px 20px; background: #FFFDE7; border-bottom: 1px solid #FDE68A; font-size: 11.5px; color: #92400E; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    #artViewerFrame { flex: 1; border: none; width: 100%; }
+    #artViewerM { display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:16px; }
+    #artViewerM.open { display:flex; }
+    #artViewerBox { background:#fff;border-radius:12px;width:95vw;max-width:900px;height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4); }
+    #artViewerHeader { display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E2E8F0;background:#F7FAFC;flex-shrink:0; }
+    .vh-info { display:flex;align-items:center;gap:10px; }
+    .vh-name { font-weight:600;font-size:14px;color:#1C2520;max-width:500px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .vh-close { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#F0F0F0;border:none;cursor:pointer;color:#4A5568;font-size:16px;transition:.2s; }
+    .vh-close:hover { background:#E2E8F0; }
+    #artViewerNote { padding:6px 20px;background:#FFFDE7;border-bottom:1px solid #FDE68A;font-size:11.5px;color:#92400E;display:flex;align-items:center;gap:6px;flex-shrink:0; }
+    #artViewerFrame { flex:1;border:none;width:100%; }
     .doc-loading { display: flex; align-items: center; gap: 10px; color: var(--gr4); font-size: 14px; padding: 32px 0; }
     .doc-loading iconify-icon { font-size: 24px; animation: spin 1s linear infinite; }
     .doc-error { background: var(--redf); color: var(--red); padding: 16px 20px; border-radius: var(--rs); font-size: 14px; margin: 20px 0; }
@@ -425,7 +423,7 @@
       <button class="share-btn" onclick="share('whatsapp')"><iconify-icon icon="mdi:whatsapp" width="16"></iconify-icon>WhatsApp</button>
       <button class="share-btn" onclick="copyLink()"><iconify-icon icon="mdi:link-variant" width="16"></iconify-icon>Copier le lien</button>
     </div>
-    <!-- Pièces jointes -->
+    <!-- ══ PIÈCES JOINTES ══ -->
     <div id="pjSection" class="pj-section" style="display:none">
       <div class="pj-section-title">
         <iconify-icon icon="mdi:paperclip" style="font-size:20px"></iconify-icon>
@@ -434,7 +432,7 @@
       <div id="pjList"></div>
     </div>
 
-    <!-- Viewer pièces jointes -->
+    <!-- ══ VIEWER MODALE ══ -->
     <div id="artViewerM" onclick="if(event.target===this)closeArtViewer()">
       <div id="artViewerBox">
         <div id="artViewerHeader">
@@ -446,7 +444,7 @@
         </div>
         <div id="artViewerNote">
           <iconify-icon icon="mdi:lock-outline" width="14"></iconify-icon>
-          Ce document est en lecture seule. Le téléchargement n'est pas autorisé.
+          Ce document est en lecture seule.
         </div>
         <iframe id="artViewerFrame" src="" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
       </div>
@@ -605,7 +603,7 @@ async function loadArticle() {
     document.getElementById('docContent').style.display = 'block';
     document.getElementById('shareBar').style.display   = 'flex';
 
-    // Pièces jointes
+    // Afficher les pièces jointes
     renderPiecesJointes(a);
 
   } catch (err) {
@@ -666,15 +664,18 @@ if (hamburger && mobileNav && mobileClose) {
 document.addEventListener('DOMContentLoaded', loadArticle);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 
-
-/* ══ PIÈCES JOINTES ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   PIÈCES JOINTES — lecture publique avec viewer modale
+   ══════════════════════════════════════════════════════════════ */
 function renderPiecesJointes(article) {
   var section = document.getElementById('pjSection');
   var list    = document.getElementById('pjList');
   if (!section || !list) return;
 
   var pieces = [];
-  try { pieces = JSON.parse(article.Pieces || article.pieces || '[]'); } catch(e) { pieces = []; }
+  try {
+    pieces = JSON.parse(article.Pieces || article.pieces || '[]');
+  } catch(e) { pieces = []; }
 
   if (!pieces.length) { section.style.display = 'none'; return; }
 
@@ -683,17 +684,17 @@ function renderPiecesJointes(article) {
   list.innerHTML = pieces.map(function(p, i) {
     var icon  = _artPjIcon(p.type);
     var color = _artPjColor(p.type);
-    return '<div class="pj-item">' +
-      '<iconify-icon icon="' + icon + '" class="pj-item-icon" style="color:' + color + '"></iconify-icon>' +
-      '<div class="pj-item-info">' +
-        '<div class="pj-item-name">' + _escHtml(p.nom || ('Document ' + (i + 1))) + '</div>' +
-        '<div class="pj-item-size">' + _escHtml(p.taille || '') + '</div>' +
-      '</div>' +
-      '<button class="pj-btn-view" onclick="openArtViewer(' + i + ', window.artPieces)">' +
-        '<iconify-icon icon="mdi:eye-outline" style="font-size:16px"></iconify-icon>' +
-        'Lire' +
-      '</button>' +
-    '</div>';
+    return '<div class="pj-item">'
+      + '<iconify-icon icon="' + icon + '" class="pj-item-icon" style="color:' + color + '"></iconify-icon>'
+      + '<div class="pj-item-info">'
+        + '<div class="pj-item-name">' + _escPj(p.nom || ('Document ' + (i + 1))) + '</div>'
+        + '<div class="pj-item-size">' + _escPj(p.taille || '') + '</div>'
+      + '</div>'
+      + '<button class="pj-btn-view" onclick="openArtViewer(' + i + ',window.artPieces)">'
+        + '<iconify-icon icon="mdi:eye-outline" style="font-size:16px"></iconify-icon>'
+        + 'Lire'
+      + '</button>'
+    + '</div>';
   }).join('');
 
   section.style.display = 'block';
@@ -709,29 +710,26 @@ function openArtViewer(index, pieces) {
   var frame = document.getElementById('artViewerFrame');
 
   if (p.type && p.type.startsWith('image/')) {
-    /* ── Image : srcdoc avec guillemets correctement échappés ── */
     frame.removeAttribute('src');
-    frame.srcdoc = '<!DOCTYPE html><html><head>'
-      + '<style>'
-      + '*{margin:0;padding:0}'
-      + 'body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}'
+    frame.srcdoc = '<!DOCTYPE html><html><head><style>'
+      + '*{margin:0;padding:0}body{background:#111;display:flex;align-items:center;'
+      + 'justify-content:center;min-height:100vh}'
       + 'img{max-width:100%;max-height:100vh;object-fit:contain}'
-      + '.err{color:#fff;padding:20px;font-family:sans-serif}'
       + '</style></head><body>'
-      + '<img src="' + p.url + '" alt="' + _escHtml(p.nom || '') + '"'
-      /* ↓ guillemets simples JS échappés en \' ; " style échappés en &quot; */
-      + ' onerror="this.outerHTML=\'<p class=&quot;err&quot;>Image non disponible</p>\'">'
+      + '<img src="' + p.url + '" alt="' + _escPj(p.nom || '') + '">'
       + '</body></html>';
   } else {
-    /* ── Autres fichiers : Google Docs viewer ── */
+    // PDF + Word → Google Docs Viewer sans bouton téléchargement
     frame.removeAttribute('srcdoc');
     frame.src = 'https://docs.google.com/gview?url='
-      + encodeURIComponent(p.url) + '&embedded=true';
+              + encodeURIComponent(p.url)
+              + '&embedded=true';
   }
 
   document.getElementById('artViewerM').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+
 function closeArtViewer() {
   document.getElementById('artViewerM').classList.remove('open');
   document.body.style.overflow = '';
@@ -742,19 +740,19 @@ function closeArtViewer() {
 
 function _artPjIcon(type) {
   if (!type) return 'mdi:file-outline';
-  if (type === 'application/pdf') return 'mdi:file-pdf-box';
+  if (type === 'application/pdf')                          return 'mdi:file-pdf-box';
   if (type.includes('word') || type.includes('document')) return 'mdi:file-word-box';
-  if (type.startsWith('image/')) return 'mdi:file-image-outline';
+  if (type.startsWith('image/'))                          return 'mdi:file-image-outline';
   return 'mdi:file-document-outline';
 }
 function _artPjColor(type) {
   if (!type) return '#9AA5B1';
-  if (type === 'application/pdf') return '#C62828';
-  if (type.includes('word'))      return '#1565C0';
-  if (type.startsWith('image/')) return '#2E7D32';
+  if (type === 'application/pdf')                          return '#C62828';
+  if (type.includes('word'))                               return '#1565C0';
+  if (type.startsWith('image/'))                          return '#2E7D32';
   return '#9AA5B1';
 }
-function _escHtml(str) {
+function _escPj(str) {
   return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
